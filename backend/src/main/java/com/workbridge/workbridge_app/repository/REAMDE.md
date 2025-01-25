@@ -1,1 +1,0 @@
-This folder is to write custom queries for the entities and the jpa standard auto-generated queries.
