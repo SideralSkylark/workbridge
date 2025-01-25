@@ -1,0 +1,1 @@
+This folder is to be used for the builder patter, it is necessary to employ a DTO.

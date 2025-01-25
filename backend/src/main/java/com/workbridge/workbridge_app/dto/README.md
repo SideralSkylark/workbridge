@@ -1,0 +1,1 @@
+This folder is to be used for applying the DTO pattern, to avoid overservind certain data such as user credentials, and confidential details or unnecessary information.

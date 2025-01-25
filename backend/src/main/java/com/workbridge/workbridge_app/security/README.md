@@ -1,0 +1,1 @@
+This folder is to be used for authentication with jwt, and filter configuration of spring security.
