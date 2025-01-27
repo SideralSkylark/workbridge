@@ -1,1 +1,0 @@
-This folder is for the API configuration, such as CORS, Authentication or data injection on startup.

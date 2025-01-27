@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.workbridge.workbridge_app.entity.User;
+import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.service.UserService;
 
 @RestController
@@ -18,9 +18,9 @@ public class UserController {
 
     //Exemplo de um endpoint, podes tambem usar PostMapping Create, Delete, etc.
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<ApplicationUser>> getAllUsers() {
         try {
-            List<User> users = userService.findAllUsers();
+            List<ApplicationUser> users = userService.findAllUsers();
             if (users == null || users.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }

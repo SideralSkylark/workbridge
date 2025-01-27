@@ -1,7 +1,12 @@
 package com.workbridge.workbridge_app.entity;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
@@ -12,8 +17,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @EqualsAndHashCode(callSuper = true)
-public class ServiceSeeker extends User {
-    
+@DiscriminatorValue("SERVICE_SEEKER")
+public class ServiceSeeker extends ApplicationUser {
+
     @OneToMany(mappedBy = "seeker")
     private List<Booking> bookings;
 
@@ -22,4 +28,9 @@ public class ServiceSeeker extends User {
 
     @OneToMany(mappedBy = "seeker")
     private List<Payment> paymentHistory;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + getRole().name()));
+    }
 }
