@@ -1,5 +1,6 @@
 FROM debian:bullseye-slim
 
+# Install essential tools and certificates
 RUN apt-get update && apt-get install -y \
     curl \
     maven \
@@ -8,25 +9,33 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-    RUN curl -fsSL https://download.oracle.com/java/23/latest/jdk-23_linux-x64_bin.deb -o /tmp/jdk-23.deb \
+# Download and install Oracle JDK dynamically
+RUN curl -fsSL https://download.oracle.com/java/23/latest/jdk-23_linux-x64_bin.deb -o /tmp/jdk-23.deb \
     && dpkg -i /tmp/jdk-23.deb \
-    # Find the installed JDK directory dynamically and rename it
     && JDK_DIR=$(find /usr/lib/jvm -type d -name "jdk-23*" | head -n 1) \
     && mv "$JDK_DIR" /usr/lib/jvm/jdk-23 \
     && rm /tmp/jdk-23.deb
 
+# Set JAVA_HOME and update PATH
 ENV JAVA_HOME=/usr/lib/jvm/jdk-23
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
+# Maven project setup
 WORKDIR /app
 
-COPY pom.xml .         
-COPY src ./src         
+# Copy pom.xml first to cache dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
+# Copy source code and build the project
+COPY src ./src
 RUN mvn clean package -DskipTests
 
+# Expose the application's port
 EXPOSE 8080
 
+# Copy the final JAR file to the root of the container
 RUN cp target/*.jar app.jar
 
+# Set the default command
 CMD ["java", "-jar", "app.jar"]
