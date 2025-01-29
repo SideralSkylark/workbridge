@@ -34,7 +34,10 @@ public abstract class ApplicationUser implements UserDetails {
 
     private LocalDateTime updatedAt;
 
-    // Default implementations; can be overridden by subclasses
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean enabled = false;
+
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -53,6 +56,10 @@ public abstract class ApplicationUser implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override

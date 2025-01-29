@@ -10,13 +10,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.service.UserService;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
-@RequestMapping("api/v1/Users")
+@RequestMapping("api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
     
-    private UserService userService;
+    private final UserService userService;
 
-    //Exemplo de um endpoint, podes tambem usar PostMapping Create, Delete, etc.
     @GetMapping
     public ResponseEntity<List<ApplicationUser>> getAllUsers() {
         try {
