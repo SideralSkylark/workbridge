@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,24 @@ import lombok.RequiredArgsConstructor;
 public class AdminController {
     
     private final UserService userService;
+
+    //TODO: implement
+    @GetMapping("/notAdmin")
+    public ResponseEntity<String> getAllNonAdmin() {
+        try {
+            // two collections for sekker, provider.
+            // return custo DTO
+            /* 
+             *List<CustomUserResponseDTO> seekers = userService.generateCustomUserResponse(userService.findAllUsersByRole(UserRole.SERVICE_SEEKER));
+             *List<CustomUserResponseDTO> providers = userService.generateCustomUserResponse(userService.findAllUsersByRole(UserRole.SERVICE_PROVIDERS));
+             *return CustomResponseObjectDTO.build(setSeekers(seekers), setProviders(providers));
+            */
+            
+        } catch (Exception exception) {
+
+        }
+        return ResponseEntity.ok("");
+    }
 
     @PutMapping("/enable")
     public ResponseEntity<String> enableUserAccount(@RequestParam String email) {

@@ -1,5 +1,6 @@
 package com.workbridge.workbridge_app.service;
 
+import java.lang.module.ModuleDescriptor.Builder;
 import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -49,7 +50,7 @@ public class AuthenticationService {
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
-
+        //TODO: implement new authenticationResponse object with builder pattern
         String token = jwtService.generateToken(user);
         return new AuthenticationResponseDTO(token);
     }
