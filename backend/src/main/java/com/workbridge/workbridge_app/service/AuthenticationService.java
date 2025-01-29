@@ -1,6 +1,5 @@
 package com.workbridge.workbridge_app.service;
 
-import java.lang.module.ModuleDescriptor.Builder;
 import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +13,8 @@ import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.ServiceProvider;
 import com.workbridge.workbridge_app.entity.ServiceSeeker;
 import com.workbridge.workbridge_app.entity.UserRole;
+import com.workbridge.workbridge_app.exception.UserAlreadyExistsException;
+import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.repository.UserRepository;
 import com.workbridge.workbridge_app.security.JwtService;
 
@@ -29,30 +30,30 @@ public class AuthenticationService {
 
     public AuthenticationResponseDTO register(RegisterRequestDTO registerRequestDTO) {
         if (userRepository.existsByUsername(registerRequestDTO.getUsername())) {
-            throw new RuntimeException("Username is already taken");
+            throw new UserAlreadyExistsException("Username is already taken");
         }
 
         if (userRepository.existsByEmail(registerRequestDTO.getEmail())) {
-            throw new RuntimeException("Email is already in use");
+            throw new UserAlreadyExistsException("Email is already in use");
         }
 
         ApplicationUser user = createUserFromDTO(registerRequestDTO);
         userRepository.save(user);
         String token = jwtService.generateToken(user);
 
-        return new AuthenticationResponseDTO(token);
+        return buildAuthenticationResponse(user, token);
     }
 
     public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO) {
         ApplicationUser user = userRepository.findByEmail(loginRequestDTO.getEmail())
-            .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+            .orElseThrow(() -> new UserNotFoundException("Invalid credentials"));
 
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new UserNotFoundException("Invalid credentials");
         }
-        //TODO: implement new authenticationResponse object with builder pattern
+
         String token = jwtService.generateToken(user);
-        return new AuthenticationResponseDTO(token);
+        return buildAuthenticationResponse(user, token);
     }
 
     private ApplicationUser createUserFromDTO(RegisterRequestDTO dto) {
@@ -68,7 +69,7 @@ public class AuthenticationService {
                 user = new ServiceSeeker();
                 break;
             default:
-                throw new RuntimeException("Unsupported role: " + role);
+                throw new IllegalArgumentException("Unsupported role: " + role);
         }
 
         user.setUsername(dto.getUsername());
@@ -79,5 +80,16 @@ public class AuthenticationService {
         user.setUpdatedAt(LocalDateTime.now());
 
         return user;
+    }
+
+    private AuthenticationResponseDTO buildAuthenticationResponse(ApplicationUser user, String token) {
+        return AuthenticationResponseDTO.builder()
+            .token(token)
+            .id(user.getId())
+            .username(user.getUsername())
+            .email(user.getEmail())
+            .role(user.getRole().name())
+            .updatedAt(user.getUpdatedAt())
+            .build();
     }
 }

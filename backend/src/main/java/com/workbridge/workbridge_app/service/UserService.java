@@ -1,12 +1,12 @@
 package com.workbridge.workbridge_app.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.workbridge.workbridge_app.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.UserRole;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
@@ -21,14 +21,16 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public List<ApplicationUser> findAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponseDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+            .map(this::convertToDTO)
+            .toList();
     }
 
-    public List<ApplicationUser> findAllUsersByRole(UserRole role) {
-        //TODO: implement a filter that returns a collection based on the role parameter
-        List<ApplicationUser> output = new ArrayList<>();
-        return output;
+    public List<UserResponseDTO> getUsersByRole(UserRole role) {
+        return userRepository.findByRole(role).stream()
+            .map(this::convertToDTO)
+            .toList();
     }
 
     public Optional<ApplicationUser> findById(Long id) {
@@ -53,41 +55,31 @@ public class UserService {
 
     @Transactional
     public boolean enableAccount(String email) {
-        Optional<ApplicationUser> userOptional = userRepository.findByEmail(email);
-
-        if (userOptional.isPresent()) {
-            ApplicationUser user = userOptional.get();
-
-            if (user.isEnabled()) {
-                return false;
-            }
-            user.setEnabled(true);
-            user.setUpdatedAt(LocalDateTime.now());
-            userRepository.save(user);
-            return true;
-        }
-
-        throw new UserNotFoundException("No user found with email: " + email);
+        return updateAccountStatus(email, true);
     }
 
     @Transactional
     public boolean disableAccount(String email) {
-        Optional<ApplicationUser> userOptional = userRepository.findByEmail(email);
-
-        if (userOptional.isPresent()) {
-            ApplicationUser user = userOptional.get();
-
-            if (!user.isEnabled()) {
-                return false;
-            }
-            user.setEnabled(false);
-            user.setUpdatedAt(LocalDateTime.now());
-            userRepository.save(user);
-            return true;
-        }
-        throw new UserNotFoundException("No user found with email: " + email);
+        return updateAccountStatus(email, false);
     }
 
-    //TODO: public method that returns custom userResponse object, insted of entity
-    //TODO: public method that returns a collection of custom userResponse object, insted of entity
+    private boolean updateAccountStatus(String email, boolean enable) {
+        ApplicationUser user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UserNotFoundException("No user found with email: " + email));
+
+        if (user.isEnabled() == enable) {
+            return false;
+        }
+
+        user.setEnabled(enable);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        return true;
+    }
+
+    private UserResponseDTO convertToDTO(ApplicationUser user) {
+        return new UserResponseDTO(
+            user.getId(), user.getUsername(), user.getEmail(), user.getRole().toString(), user.isEnabled()
+        );
+    }
 }

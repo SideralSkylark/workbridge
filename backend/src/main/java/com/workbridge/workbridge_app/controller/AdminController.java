@@ -1,12 +1,12 @@
 package com.workbridge.workbridge_app.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.workbridge.workbridge_app.dto.UserResponseDTO;
+import com.workbridge.workbridge_app.entity.UserRole;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.UserService;
 
@@ -19,53 +19,41 @@ public class AdminController {
     
     private final UserService userService;
 
-    //TODO: implement
     @GetMapping("/notAdmin")
-    public ResponseEntity<String> getAllNonAdmin() {
+    public ResponseEntity<List<UserResponseDTO>> getAllNonAdminUsers() {
         try {
-            // two collections for sekker, provider.
-            // return custo DTO
-            /* 
-             *List<CustomUserResponseDTO> seekers = userService.generateCustomUserResponse(userService.findAllUsersByRole(UserRole.SERVICE_SEEKER));
-             *List<CustomUserResponseDTO> providers = userService.generateCustomUserResponse(userService.findAllUsersByRole(UserRole.SERVICE_PROVIDERS));
-             *return CustomResponseObjectDTO.build(setSeekers(seekers), setProviders(providers));
-            */
-            
-        } catch (Exception exception) {
+            List<UserResponseDTO> seekers = userService.getUsersByRole(UserRole.SERVICE_SEEKER);
+            List<UserResponseDTO> providers = userService.getUsersByRole(UserRole.SERVICE_PROVIDER);
 
+            seekers.addAll(providers);
+            return ResponseEntity.ok(seekers);
+        } catch (Exception exception) {
+            return ResponseEntity.status(500).build();
         }
-        return ResponseEntity.ok("");
     }
 
     @PutMapping("/enable")
     public ResponseEntity<String> enableUserAccount(@RequestParam String email) {
-        try {
-            boolean isEnabled = userService.enableAccount(email);
-            if (isEnabled) {
-                return ResponseEntity.ok("Account enabled successfully.");
-            } else {
-                return ResponseEntity.status(400).body("User not found or already enabled.");
-            }
-        } catch (UserNotFoundException exception) {
-            return ResponseEntity.status(404).body("User with the specified email does not exist.");
-        } catch (Exception exception) {
-            return ResponseEntity.status(500).body("An error ocured while enabling the account.");
-        }
+        return updateAccountStatus(email, true);
     }
 
     @PutMapping("/disable")
     public ResponseEntity<String> disableUserAccount(@RequestParam String email) {
+        return updateAccountStatus(email, false);
+    }
+
+    private ResponseEntity<String> updateAccountStatus(String email, boolean enable) {
         try {
-            boolean isDisabled = userService.disableAccount(email);
-            if (isDisabled) {
-                return ResponseEntity.ok("User disabled successfully.");
+            boolean statusUpdated = enable ? userService.enableAccount(email) : userService.disableAccount(email);
+            if (statusUpdated) {
+                return ResponseEntity.ok("User " + (enable ? "enabled" : "disabled") + " successfully.");
             } else {
-                return ResponseEntity.status(400).body("User not found or already disabled.");
+                return ResponseEntity.status(400).body("User not found or already " + (enable ? "enabled" : "disabled") + ".");
             }
         } catch (UserNotFoundException exception) {
             return ResponseEntity.status(404).body("User with the specified email does not exist.");
         } catch (Exception exception) {
-            return ResponseEntity.status(500).body("An error ocurred while enabling the account.");
+            return ResponseEntity.status(500).body("An error occurred while updating the account status.");
         }
     }
 }
