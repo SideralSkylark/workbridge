@@ -77,7 +77,7 @@ public class UserService {
         return true;
     }
 
-    private UserResponseDTO convertToDTO(ApplicationUser user) {
+    public UserResponseDTO convertToDTO(ApplicationUser user) {
         return new UserResponseDTO(
             user.getId(), user.getUsername(), user.getEmail(), user.getRole().toString(), user.isEnabled()
         );
