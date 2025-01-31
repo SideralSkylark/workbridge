@@ -2,28 +2,26 @@ package com.workbridge.workbridge_app.unit.controller;
 
 import com.workbridge.workbridge_app.controller.UserController;
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
-import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.ServiceSeeker;
 import com.workbridge.workbridge_app.entity.UserRole;
+import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
-@ExtendWith(MockitoExtension.class) // Anotação para inicializar o Mockito
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
 
     @Mock
@@ -32,191 +30,101 @@ public class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
+    private void mockAuthentication(String username) {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+    }
 
-//     @Test
-// void testFindByUsername() {
-//     // Teste para garantir que findByUsername está funcionando corretamente
-//     String username = "usuarioTeste";
-//     ServiceSeeker user = new ServiceSeeker();
-//     user.setId(1L);
-//     user.setUsername("usuarioTeste");
-//     user.setEmail("usuario@teste.com");
-//     user.setRole(UserRole.SERVICE_SEEKER);
-//     user.setEnabled(true);
-
-//     when(userService.findByUsername(username)).thenReturn(Optional.of(user));
-
-//     Optional<ApplicationUser> foundUser = userService.findByUsername(username);
-//     assertTrue(foundUser.isPresent());
-//     assertEquals(user.getUsername(), foundUser.get().getUsername());
-// }
-
-
-// @Test
-// void testConvertToDTO() {
-//     // Teste para garantir que convertToDTO está funcionando corretamente
-//     ServiceSeeker user = new ServiceSeeker();
-//     user.setId(1L);
-//     user.setUsername("usuarioTeste");
-//     user.setEmail("usuario@teste.com");
-//     user.setRole(UserRole.SERVICE_SEEKER);
-//     user.setEnabled(true);
-
-//     UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(),
-//             user.getRole().toString(), user.isEnabled());
-
-//     when(userService.convertToDTO(user)).thenReturn(userResponseDTO);
-
-//     UserResponseDTO dto = userService.convertToDTO(user);
-//     assertNotNull(dto);
-//     assertEquals(user.getUsername(), dto.getUsername());
-// }
-
-@Test
-void testGetUserDetails() {
-    // Configuração do mock de autenticação
-    String username = "usuarioTeste";
-
-    // Criando uma instância concreta de ApplicationUser (por exemplo, ServiceSeeker)
-    ServiceSeeker user = new ServiceSeeker();
-    user.setId(1L);
-    user.setUsername("usuarioTeste");
-    user.setEmail("usuario@teste.com");
-    user.setRole(UserRole.SERVICE_SEEKER);
-    user.setEnabled(true);
-
-    // Mocking SecurityContextHolder
-    Authentication authentication = Mockito.mock(Authentication.class);
-    when(authentication.getName()).thenReturn(username);
-    SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-    when(securityContext.getAuthentication()).thenReturn(authentication);
-    SecurityContextHolder.setContext(securityContext);
-
-    // Verifique se a autenticação foi configurada corretamente
-    assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-    assertEquals(username, SecurityContextHolder.getContext().getAuthentication().getName());
-
-    // Mocking o serviço para retornar um Optional<ApplicationUser>
-    when(userService.findByUsername(username)).thenAnswer(invocation -> {
-        System.out.println("Calling findByUsername for username: " + username); // Log de depuração
-        Optional<ApplicationUser> userOptional = Optional.of(user);
-        if (userOptional.isPresent()) {
-            System.out.println("User found: " + userOptional.get().getUsername()); // Log de depuração
-        } else {
-            System.out.println("User not found"); // Log de depuração
-        }
-        return userOptional;
-    });
-
-    // Mocking a conversão do usuário para UserResponseDTO
-    UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(),
-            user.getRole().toString(), user.isEnabled());
-    when(userService.convertToDTO(user)).thenReturn(userResponseDTO);
-
-    // Chamando o endpoint
-    System.out.println("Calling getUserDetails endpoint..."); // Log de depuração
-    ResponseEntity<UserResponseDTO> response = userController.getUserDetails();
-
-    // Verificando a resposta
-    assertNotNull(response); // Verifique se o response não é null
-    System.out.println("Response received: " + response); // Log de depuração
-    assertEquals(200, response.getStatusCodeValue()); // Verifique se o status é 200 OK
-
-    assertNotNull(response.getBody()); // Verifique se o body não é null
-    System.out.println("Response body: " + response.getBody()); // Log de depuração
-    assertEquals(user.getId(), response.getBody().getId());
-    assertEquals(user.getUsername(), response.getBody().getUsername());
-    assertEquals(user.getEmail(), response.getBody().getEmail());
-    assertEquals(user.getRole().toString(), response.getBody().getRole());
-    assertEquals(user.isEnabled(), response.getBody().isEnabled());
-}
-
-    
-
-    @Test
-    void testUpdateUserDetails() {
-        // Configuração do mock de autenticação
-        String username = "usuarioTeste";
-
-        // Criando uma instância concreta de ApplicationUser (por exemplo,
-        // ServiceSeeker)
+    private ServiceSeeker createTestUser() {
         ServiceSeeker user = new ServiceSeeker();
         user.setId(1L);
         user.setUsername("usuarioTeste");
         user.setEmail("usuario@teste.com");
         user.setRole(UserRole.SERVICE_SEEKER);
         user.setEnabled(true);
-
-        // Criando o UserResponseDTO com os dados atualizados
-        UserResponseDTO userUpdateDTO = new UserResponseDTO(1L, "novoUsername", "novoEmail@teste.com", "SERVICE_SEEKER",
-                true);
-
-        // Mocking SecurityContextHolder
-        Authentication authentication = Mockito.mock(Authentication.class);
-        when(authentication.getName()).thenReturn(username);
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        // Mocking o serviço para retornar o usuário
-        when(userService.findByUsername(username)).thenReturn(Optional.of(user));
-
-        // Mocking o serviço para salvar o usuário atualizado
-        when(userService.saveUser(any(ApplicationUser.class))).thenReturn(user);
-
-        // Mocking o serviço para converter o usuário para DTO
-        UserResponseDTO updatedUserResponseDTO = new UserResponseDTO(1L, "novoUsername", "novoEmail@teste.com",
-                "SERVICE_SEEKER", true);
-        when(userService.convertToDTO(user)).thenReturn(updatedUserResponseDTO);
-
-        // Chamando o endpoint
-        ResponseEntity<UserResponseDTO> response = userController.updateUserDetails(userUpdateDTO);
-
-        // Verificando a resposta
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(updatedUserResponseDTO, response.getBody());
-
-        // Verificando que o método saveUser foi chamado
-        verify(userService, times(1)).saveUser(any(ApplicationUser.class));
+        return user;
     }
 
     @Test
-    void testDeleteUser() {
-        // Configuração do mock de autenticação
+    void testGetUserDetails_Success() {
         String username = "usuarioTeste";
+        mockAuthentication(username);
+        ServiceSeeker user = createTestUser();
+        UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole().toString(), user.isEnabled());
 
-        // Criando uma instância concreta de ApplicationUser (por exemplo,
-        // ServiceSeeker)
-        ServiceSeeker user = new ServiceSeeker();
-        user.setId(1L);
-        user.setUsername("usuarioTeste");
-        user.setEmail("usuario@teste.com");
-        user.setRole(UserRole.SERVICE_SEEKER);
-        user.setEnabled(true);
-
-        // Mocking SecurityContextHolder
-        Authentication authentication = Mockito.mock(Authentication.class);
-        when(authentication.getName()).thenReturn(username);
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        // Mocking o serviço para retornar o usuário
         when(userService.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userService.convertToDTO(user)).thenReturn(userResponseDTO);
 
-        // Mocking o serviço para deletar o usuário
-        doNothing().when(userService).deleteUserById(user.getId());
+        ResponseEntity<?> response = userController.getUserDetails();
 
-        // Chamando o endpoint
-        ResponseEntity<Void> response = userController.deleteUser();
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(userResponseDTO, response.getBody());
+    }
 
-        // Verificando a resposta
-        assertNotNull(response);
-        assertEquals(204, response.getStatusCodeValue()); // Código 204 (No Content) indicando que a exclusão foi
-                                                          // bem-sucedida
+    @Test
+    void testGetUserDetails_UserNotFound() {
+        String username = "usuarioTeste";
+        mockAuthentication(username);
+        when(userService.findByUsername(username)).thenReturn(Optional.empty());
 
-        // Verificando se o método deleteUserById foi chamado
-        verify(userService, times(1)).deleteUserById(user.getId());
+        ResponseEntity<?> response = userController.getUserDetails();
+
+        assertEquals(404, response.getStatusCode().value());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    void testUpdateUserDetails_Success() {
+        String username = "usuarioTeste";
+        mockAuthentication(username);
+        ServiceSeeker user = createTestUser();
+        UserResponseDTO userUpdateDTO = new UserResponseDTO(user.getId(), "novoUsername", "novoEmail@teste.com", "SERVICE_SEEKER", true);
+        when(userService.updateUser(username, userUpdateDTO)).thenReturn(user);
+        when(userService.convertToDTO(user)).thenReturn(userUpdateDTO);
+
+        ResponseEntity<?> response = userController.updateUserDetails(userUpdateDTO);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(userUpdateDTO, response.getBody());
+    }
+
+    @Test
+    void testUpdateUserDetails_UserNotFound() {
+        String username = "usuarioTeste";
+        mockAuthentication(username);
+        UserResponseDTO userUpdateDTO = new UserResponseDTO(1L, "novoUsername", "novoEmail@teste.com", "SERVICE_SEEKER", true);
+        when(userService.updateUser(username, userUpdateDTO)).thenThrow(new UserNotFoundException("User not found"));
+
+        ResponseEntity<?> response = userController.updateUserDetails(userUpdateDTO);
+
+        assertEquals(404, response.getStatusCode().value());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    void testDeleteUser_Success() {
+        String username = "usuarioTeste";
+        mockAuthentication(username);
+        doNothing().when(userService).deleteByUsername(username);
+
+        ResponseEntity<?> response = userController.deleteUser();
+
+        assertEquals(204, response.getStatusCode().value());
+    }
+
+    @Test
+    void testDeleteUser_UserNotFound() {
+        String username = "usuarioTeste";
+        mockAuthentication(username);
+        doThrow(new UserNotFoundException("User not found")).when(userService).deleteByUsername(username);
+
+        ResponseEntity<?> response = userController.deleteUser();
+
+        assertEquals(404, response.getStatusCode().value());
+        assertEquals("User not found", response.getBody());
     }
 }

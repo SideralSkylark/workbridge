@@ -49,8 +49,26 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public ApplicationUser updateUser(String username, UserResponseDTO userResponseDTO) {
+        ApplicationUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        user.setUsername(userResponseDTO.getUsername());
+        user.setEmail(userResponseDTO.getEmail());
+        user.setEnabled(userResponseDTO.isEnabled());
+        user.setUpdatedAt(LocalDateTime.now());
+        
+        return userRepository.save(user);
+    }
+
     public void deleteUserById(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public void deleteByUsername(String username) {
+        ApplicationUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        userRepository.delete(user);
     }
 
     @Transactional

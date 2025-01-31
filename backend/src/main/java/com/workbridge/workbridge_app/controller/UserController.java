@@ -2,8 +2,11 @@ package com.workbridge.workbridge_app.controller;
 
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
+import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -11,75 +14,62 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/v1/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
 
-    // Endpoint para obter detalhes do usuário logado
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> getUserDetails() {
+    public ResponseEntity<?> getUserDetails() {
         try {
-            // Obtém o username do usuário autenticado
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            
-            // Busca o ApplicationUser com base no username
+            String username = getAuthenticatedUsername();
             ApplicationUser user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Converte ApplicationUser para UserResponseDTO
-            UserResponseDTO userResponseDTO = userService.convertToDTO(user);
-            return ResponseEntity.ok(userResponseDTO);
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            return ResponseEntity.ok(userService.convertToDTO(user));
+        } catch (UserNotFoundException e) {
+            log.warn("User not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(null);
+            log.error("Error retrieving user details", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
 
-    // Endpoint para atualizar os dados do usuário logado
     @PutMapping("/me")
-    public ResponseEntity<UserResponseDTO> updateUserDetails(@RequestBody UserResponseDTO userResponseDTO) {
+    public ResponseEntity<?> updateUserDetails(@RequestBody UserResponseDTO userResponseDTO) {
         try {
-            // Obtém o username do usuário autenticado
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-            // Atualiza os dados do usuário com base no username e no DTO
-            ApplicationUser user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Atualiza os campos do ApplicationUser
-            user.setUsername(userResponseDTO.getUsername());
-            user.setEmail(userResponseDTO.getEmail());
-            user.setEnabled(userResponseDTO.isEnabled());
-
-            // Salva a atualização
-            userService.saveUser(user);
-
-            // Converte o ApplicationUser atualizado para UserResponseDTO
-            UserResponseDTO updatedUserResponseDTO = userService.convertToDTO(user);
-            return ResponseEntity.ok(updatedUserResponseDTO);
+            String username = getAuthenticatedUsername();
+            ApplicationUser updatedUser = userService.updateUser(username, userResponseDTO);
+            return ResponseEntity.ok(userService.convertToDTO(updatedUser));
+        } catch (UserNotFoundException e) {
+            log.warn("User update failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(null);
+            log.error("Error updating user details", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
 
-    // Endpoint para excluir o usuário logado
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteUser() {
+    public ResponseEntity<?> deleteUser() {
         try {
-            // Obtém o username do usuário autenticado
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-            // Busca o ApplicationUser com base no username
-            ApplicationUser user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Exclui o usuário
-            userService.deleteUserById(user.getId());
+            String username = getAuthenticatedUsername();
+            userService.deleteByUsername(username);
             return ResponseEntity.noContent().build();
+        } catch (UserNotFoundException e) {
+            log.warn("User deletion failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).build();
+            log.error("Error deleting user", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
+    }
+
+    private String getAuthenticatedUsername() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (username == null || username.isBlank()) {
+            throw new IllegalStateException("Authenticated user not found.");
+        }
+        return username;
     }
 }

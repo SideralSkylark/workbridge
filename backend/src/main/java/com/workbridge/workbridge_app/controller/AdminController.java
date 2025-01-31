@@ -2,6 +2,7 @@ package com.workbridge.workbridge_app.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +29,7 @@ public class AdminController {
             seekers.addAll(providers);
             return ResponseEntity.ok(seekers);
         } catch (Exception exception) {
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -48,12 +49,12 @@ public class AdminController {
             if (statusUpdated) {
                 return ResponseEntity.ok("User " + (enable ? "enabled" : "disabled") + " successfully.");
             } else {
-                return ResponseEntity.status(400).body("User not found or already " + (enable ? "enabled" : "disabled") + ".");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or already " + (enable ? "enabled" : "disabled") + ".");
             }
         } catch (UserNotFoundException exception) {
-            return ResponseEntity.status(404).body("User with the specified email does not exist.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User with the specified email does not exist.");
         } catch (Exception exception) {
-            return ResponseEntity.status(500).body("An error occurred while updating the account status.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the account status.");
         }
     }
 }
