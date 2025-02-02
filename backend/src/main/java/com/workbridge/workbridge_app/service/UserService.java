@@ -3,6 +3,8 @@ package com.workbridge.workbridge_app.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -28,7 +30,8 @@ public class UserService {
     }
 
     public List<UserResponseDTO> getUsersByRole(UserRole role) {
-        return userRepository.findByRole(role).stream()
+        return userRepository.findAll().stream()
+            .filter(user -> user.getRoles().stream().anyMatch(r -> r.getRole() == role))
             .map(this::convertToDTO)
             .toList();
     }
@@ -96,8 +99,16 @@ public class UserService {
     }
 
     public UserResponseDTO convertToDTO(ApplicationUser user) {
+        Set<String> roleNames = user.getRoles().stream()
+            .map(role -> role.getRole().name())
+            .collect(Collectors.toSet());
+
         return new UserResponseDTO(
-            user.getId(), user.getUsername(), user.getEmail(), user.getRole().toString(), user.isEnabled()
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            roleNames,
+            user.isEnabled()
         );
     }
 }

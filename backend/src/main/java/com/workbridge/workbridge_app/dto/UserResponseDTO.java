@@ -1,5 +1,7 @@
 package com.workbridge.workbridge_app.dto;
 
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -9,6 +11,6 @@ public class UserResponseDTO {
     private Long id;
     private String username;
     private String email;
-    private String role;
+    private Set<String> roles;
     private boolean enabled;
 }

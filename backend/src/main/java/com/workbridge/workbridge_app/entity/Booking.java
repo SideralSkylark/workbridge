@@ -2,14 +2,7 @@ package com.workbridge.workbridge_app.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,7 +19,7 @@ public class Booking {
     private Service service;
 
     @ManyToOne
-    private ServiceSeeker seeker;
+    private ApplicationUser seeker; 
 
     private LocalDateTime date;
 
@@ -35,4 +28,8 @@ public class Booking {
 
     @OneToOne
     private Payment payment;
+
+    public boolean isSeeker(ApplicationUser user) {
+        return user != null && user.hasRole(UserRole.SERVICE_SEEKER);
+    }
 }

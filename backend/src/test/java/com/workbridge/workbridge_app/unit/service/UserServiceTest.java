@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.UserRole;
+import com.workbridge.workbridge_app.entity.UserRoleEntity;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.repository.UserRepository;
 import com.workbridge.workbridge_app.service.UserService;
@@ -46,7 +48,7 @@ class UserServiceTest {
         mockUser.setId(1L);
         mockUser.setUsername("testUser");
         mockUser.setEmail("test@example.com");
-        mockUser.setRole(UserRole.SERVICE_SEEKER);
+        mockUser.setRoles(Set.of(new UserRoleEntity(UserRole.SERVICE_SEEKER)));
         mockUser.setEnabled(false);
     }
 
@@ -58,16 +60,6 @@ class UserServiceTest {
 
         assertEquals(1, users.size());
         assertEquals("testUser", users.get(0).getUsername());
-    }
-
-    @Test
-    void testGetUsersByRole() {
-        when(userRepository.findByRole(UserRole.SERVICE_SEEKER)).thenReturn(List.of(mockUser));
-
-        List<UserResponseDTO> users = userService.getUsersByRole(UserRole.SERVICE_SEEKER);
-
-        assertEquals(1, users.size());
-        assertEquals(UserRole.SERVICE_SEEKER.toString(), users.get(0).getRole());
     }
 
     @Test

@@ -2,13 +2,7 @@ package com.workbridge.workbridge_app.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 public class Payment {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,10 +21,14 @@ public class Payment {
     private Service service;
 
     @ManyToOne
-    private ServiceSeeker seeker;
+    private ApplicationUser payer; 
 
     private LocalDateTime paymentDate;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
+
+    public boolean isPayer(ApplicationUser user) {
+        return user != null && user.hasRole(UserRole.SERVICE_SEEKER);
+    }
 }

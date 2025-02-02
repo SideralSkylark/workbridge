@@ -1,1 +1,0 @@
-this folder is to be used for the services, this is a service based aprouch on which logic is writen here to avoid overcrouded and dificult to read controllers and repositories, so the logic for data processing should be writen here.

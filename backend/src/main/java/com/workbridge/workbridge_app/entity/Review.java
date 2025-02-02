@@ -2,11 +2,7 @@ package com.workbridge.workbridge_app.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 public class Review {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,10 +20,18 @@ public class Review {
     private String comment;
 
     @ManyToOne
-    private ServiceProvider provider;
+    private ApplicationUser reviewer; 
 
     @ManyToOne
-    private ServiceSeeker seeker;
+    private ApplicationUser reviewed; 
 
     private LocalDateTime createdAt;
+
+    public boolean isReviewer(ApplicationUser user) {
+        return user != null && user.hasRole(UserRole.SERVICE_SEEKER);
+    }
+
+    public boolean isReviewed(ApplicationUser user) {
+        return user != null && user.hasRole(UserRole.SERVICE_PROVIDER);
+    }
 }

@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.dto;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,6 @@ public class AuthenticationResponseDTO {
     private Long id;
     private String username;
     private String email;
-    private String role;
+    private Set<String> roles;
     private LocalDateTime updatedAt;  
 }

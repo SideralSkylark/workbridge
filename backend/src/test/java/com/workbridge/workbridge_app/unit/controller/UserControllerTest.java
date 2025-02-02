@@ -2,8 +2,9 @@ package com.workbridge.workbridge_app.unit.controller;
 
 import com.workbridge.workbridge_app.controller.UserController;
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
-import com.workbridge.workbridge_app.entity.ServiceSeeker;
+import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.UserRole;
+import com.workbridge.workbridge_app.entity.UserRoleEntity;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -38,12 +41,12 @@ public class UserControllerTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
-    private ServiceSeeker createTestUser() {
-        ServiceSeeker user = new ServiceSeeker();
+    private ApplicationUser createTestUser() {
+        ApplicationUser user = new ApplicationUser();
         user.setId(1L);
         user.setUsername("usuarioTeste");
         user.setEmail("usuario@teste.com");
-        user.setRole(UserRole.SERVICE_SEEKER);
+        user.setRoles(Set.of(new UserRoleEntity(UserRole.SERVICE_SEEKER)));  // Use roles instead of ServiceSeeker/Provider
         user.setEnabled(true);
         return user;
     }
@@ -52,8 +55,11 @@ public class UserControllerTest {
     void testGetUserDetails_Success() {
         String username = "usuarioTeste";
         mockAuthentication(username);
-        ServiceSeeker user = createTestUser();
-        UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(), user.getRole().toString(), user.isEnabled());
+        ApplicationUser user = createTestUser();
+        Set<String> roleNames = user.getRoles().stream()
+            .map(role -> role.getRole().name())
+            .collect(Collectors.toSet());
+        UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getUsername(), user.getEmail(), roleNames, user.isEnabled());
 
         when(userService.findByUsername(username)).thenReturn(Optional.of(user));
         when(userService.convertToDTO(user)).thenReturn(userResponseDTO);
@@ -81,8 +87,8 @@ public class UserControllerTest {
     void testUpdateUserDetails_Success() {
         String username = "usuarioTeste";
         mockAuthentication(username);
-        ServiceSeeker user = createTestUser();
-        UserResponseDTO userUpdateDTO = new UserResponseDTO(user.getId(), "novoUsername", "novoEmail@teste.com", "SERVICE_SEEKER", true);
+        ApplicationUser user = createTestUser();
+        UserResponseDTO userUpdateDTO = new UserResponseDTO(user.getId(), "novoUsername", "novoEmail@teste.com", Set.of("SERVICE_SEEKER"), true);
         when(userService.updateUser(username, userUpdateDTO)).thenReturn(user);
         when(userService.convertToDTO(user)).thenReturn(userUpdateDTO);
 
@@ -96,7 +102,7 @@ public class UserControllerTest {
     void testUpdateUserDetails_UserNotFound() {
         String username = "usuarioTeste";
         mockAuthentication(username);
-        UserResponseDTO userUpdateDTO = new UserResponseDTO(1L, "novoUsername", "novoEmail@teste.com", "SERVICE_SEEKER", true);
+        UserResponseDTO userUpdateDTO = new UserResponseDTO(1L, "novoUsername", "novoEmail@teste.com", Set.of("SERVICE_SEEKER"), true);
         when(userService.updateUser(username, userUpdateDTO)).thenThrow(new UserNotFoundException("User not found"));
 
         ResponseEntity<?> response = userController.updateUserDetails(userUpdateDTO);

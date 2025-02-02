@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
@@ -20,6 +21,7 @@ public class AdminController {
     
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/notAdmin")
     public ResponseEntity<List<UserResponseDTO>> getAllNonAdminUsers() {
         try {
@@ -33,11 +35,13 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/enable")
     public ResponseEntity<String> enableUserAccount(@RequestParam String email) {
         return updateAccountStatus(email, true);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/disable")
     public ResponseEntity<String> disableUserAccount(@RequestParam String email) {
         return updateAccountStatus(email, false);
