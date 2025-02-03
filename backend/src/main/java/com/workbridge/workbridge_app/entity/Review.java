@@ -24,7 +24,7 @@ public class Review {
 
     @ManyToOne
     private ApplicationUser reviewed; 
-
+    //TODO: add a prepersistance anotation to define date on creatinon of object
     private LocalDateTime createdAt;
 
     public boolean isReviewer(ApplicationUser user) {

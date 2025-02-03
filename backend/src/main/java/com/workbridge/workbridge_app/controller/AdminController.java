@@ -15,7 +15,7 @@ import com.workbridge.workbridge_app.service.UserService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/v1/admins")
+@RequestMapping("/api/v1/admins")
 @RequiredArgsConstructor
 public class AdminController {
     
