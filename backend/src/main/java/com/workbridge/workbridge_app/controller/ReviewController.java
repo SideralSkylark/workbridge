@@ -35,9 +35,11 @@ public class ReviewController {
             boolean result = reviewService.reviewProvider(reviewRequestDTO);
             if (result) {
                 return ResponseEntity.status(HttpStatus.CREATED).body("Review atributed to the user successfully.");
-            } 
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service seekers or provider not found");
+            }
         } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error ocured when atributing your review to the service provider.")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error ocured when atributing your review to the service provider.");
         }
     }
 

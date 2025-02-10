@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.workbridge.workbridge_app.dto.BookingResponseDTO;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.BookingService;
 
@@ -24,7 +25,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PreAuthorize("hasrole('SERVICE_SEEKER')")
-    @GetMapping()
+    @GetMapping("/me")
     public ResponseEntity<?> getMyBookings() {
         try {
             String username = getAuthenticatedUsername();
@@ -40,16 +41,16 @@ public class BookingController {
     @PreAuthorize("hasrole('SERVICE_SEEKER')")
     @PostMapping("/book")
     public ResponseEntity<?> bookService() {
-        
+        return ResponseEntity.ok(null);
     }
 
     @PreAuthorize("hasrole('SERVICE_SEEKER')")
-    @PostMapping("/book")
-    public ResponseEntity<?> updateBooking() {}
+    @PostMapping("/update")
+    public ResponseEntity<?> updateBooking() { return ResponseEntity.ok(null);}
 
     @PreAuthorize("hasrole('SERVICE_SEEKER')")
-    @PostMapping("/book")
-    public ResponseEntity<?> cancelBooking() {}
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelBooking() { return ResponseEntity.ok(null);}
 
     private String getAuthenticatedUsername() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
