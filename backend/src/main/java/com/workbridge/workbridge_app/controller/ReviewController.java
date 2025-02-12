@@ -28,6 +28,7 @@
 //         return ResponseEntity.ok(r);
 //     }
 
+<<<<<<< HEAD
 //     @PreAuthorize("hasrole('ROLE_SERVICE_SEEKER')")
 //     @PostMapping("/review")
 //     public ResponseEntity<?> reviewServiceProvider(@RequestParam ReviewRequestDTO reviewRequestDTO) {
@@ -40,6 +41,22 @@
 //             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error ocured when atributing your review to the service provider.")
 //         }
 //     }
+=======
+    @PreAuthorize("hasrole('ROLE_SERVICE_SEEKER')")
+    @PostMapping("/review")
+    public ResponseEntity<?> reviewServiceProvider(@RequestParam ReviewRequestDTO reviewRequestDTO) {
+        try {
+            boolean result = reviewService.reviewProvider(reviewRequestDTO);
+            if (result) {
+                return ResponseEntity.status(HttpStatus.CREATED).body("Review atributed to the user successfully.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service seekers or provider not found");
+            }
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error ocured when atributing your review to the service provider.");
+        }
+    }
+>>>>>>> 6f3ce38c808287948161f1ad78dce9fd25175c57
 
 //     //TODO:implement pagination on an endpoint to get reviews by a  list of providers
     
