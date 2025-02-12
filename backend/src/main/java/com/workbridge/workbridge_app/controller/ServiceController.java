@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("api/v1/services")
 @RequiredArgsConstructor
@@ -28,6 +29,21 @@ public class ServiceController {
     public ResponseEntity<List<ServiceDTO>> getServicesByProvider() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(serviceService.getServicesByProvider(username));
+    }
+
+    @PreAuthorize("hasRole('SERVICE_PROVIDER')")
+    @PutMapping("/{serviceId}")
+    public ResponseEntity<ServiceDTO> updateService(
+            @PathVariable Long serviceId,
+            @RequestBody ServiceDTO serviceDTO) {
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(serviceService.updateService(serviceId, serviceDTO, username));
+    }
+
+    @GetMapping("/{serviceId}")
+    public ResponseEntity<ServiceDTO> getServiceById(@PathVariable Long serviceId) {
+        return ResponseEntity.ok(serviceService.getServiceById(serviceId));
     }
 
     @DeleteMapping("/{serviceId}")
