@@ -123,6 +123,3 @@ This will spin up a temporary database for test execution. However, an active da
 
 These changes will help streamline filtering and searching for services based on both availability and category.
 
----
-
-Let me know if you need further updates!
