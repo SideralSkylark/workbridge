@@ -19,6 +19,9 @@ public class Review {
 
     private String comment;
 
+    @OneToOne
+    private Booking booking;
+
     @ManyToOne
     private ApplicationUser reviewer; 
 
