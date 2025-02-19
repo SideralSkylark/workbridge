@@ -32,7 +32,7 @@ public class BookingService {
     private final ServiceRepository serviceRepository;
 
     public List<BookingResponseDTO> getUsersBookings(String username) {
-        List<Booking> bookings = bookingRepository.findByUserUsername(username);
+        List<Booking> bookings = bookingRepository.findBySeeker_Username(username);
         return bookings.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
