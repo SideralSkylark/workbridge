@@ -8,17 +8,20 @@
  import org.springframework.security.core.context.SecurityContextHolder;
  import org.springframework.web.bind.annotation.GetMapping;
  import org.springframework.web.bind.annotation.PostMapping;
- import org.springframework.web.bind.annotation.RequestMapping;
- import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-
- import com.workbridge.workbridge_app.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.exception.BookingNotFoundException;
+import com.workbridge.workbridge_app.exception.ServiceListingNotFoundException;
+import com.workbridge.workbridge_app.exception.UserNotFoundException;
  import com.workbridge.workbridge_app.service.BookingService;
-
+import com.workbridge.workbridge_app.dto.BookingRequestDTO;
 import com.workbridge.workbridge_app.dto.BookingResponseDTO;
+import com.workbridge.workbridge_app.dto.UpdateBookingRequestDTO;
 
-
- import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
  @RestController
  @RequestMapping("/api/v1/bookings")
@@ -27,7 +30,7 @@ import com.workbridge.workbridge_app.dto.BookingResponseDTO;
     
      private final BookingService bookingService;
 
-    @PreAuthorize("hasrole('SERVICE_SEEKER')")
+    @PreAuthorize("hasRole('SERVICE_SEEKER')")
     @GetMapping("/me")
     public ResponseEntity<?> getMyBookings() {
         try {
@@ -41,19 +44,49 @@ import com.workbridge.workbridge_app.dto.BookingResponseDTO;
         }
     }
 
-    @PreAuthorize("hasrole('SERVICE_SEEKER')")
+    @PreAuthorize("hasRole('SERVICE_SEEKER')")
     @PostMapping("/book")
-    public ResponseEntity<?> bookService() {
-        return ResponseEntity.ok(null);
+    public ResponseEntity<?> bookService(@RequestBody BookingRequestDTO bookingRequestDTO) {
+        try {
+            String username = getAuthenticatedUsername();
+            BookingResponseDTO booking = bookingService.createBooking(username, bookingRequestDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(booking);
+        } catch (ServiceListingNotFoundException exception) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found.");
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error ocured.");
+        }
     }
 
-    @PreAuthorize("hasrole('SERVICE_SEEKER')")
+    @PreAuthorize("hasRole('SERVICE_SEEKER')")
     @PostMapping("/update")
-    public ResponseEntity<?> updateBooking() { return ResponseEntity.ok(null);}
+    public ResponseEntity<?> updateBooking(@RequestBody UpdateBookingRequestDTO updateBookingRequestDTO ) { 
+        try {
+            String username = getAuthenticatedUsername();
+            BookingResponseDTO updatedBooking = bookingService.updateBooking(username, updateBookingRequestDTO);
+            return ResponseEntity.ok(updatedBooking);
+        } catch (ServiceListingNotFoundException exception) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found.");
+        } catch(BookingNotFoundException exception) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
 
-    @PreAuthorize("hasrole('SERVICE_SEEKER')")
+    @PreAuthorize("hasRole('SERVICE_SEEKER')")
     @PostMapping("/cancel")
-    public ResponseEntity<?> cancelBooking() { return ResponseEntity.ok(null);}
+    public ResponseEntity<?> cancelBooking(@RequestParam Long bookingId) {
+        try {
+            String username = getAuthenticatedUsername();
+            bookingService.cancelBooking(username, bookingId);
+            return ResponseEntity.ok("Booking canceled successfully.");
+        } catch (BookingNotFoundException exception) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+     }
 
     private String getAuthenticatedUsername() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
