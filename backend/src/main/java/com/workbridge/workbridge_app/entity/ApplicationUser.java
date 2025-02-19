@@ -30,12 +30,9 @@ public class ApplicationUser implements UserDetails {
     @Column(nullable = false)
     private boolean enabled = false;
 
+
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<UserRoleEntity> roles = new HashSet<>();
 
     @Override
@@ -54,16 +51,24 @@ public class ApplicationUser implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isEnabled() { return enabled; }
+    public boolean isEnabled() {
+        return enabled;
+    }
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
