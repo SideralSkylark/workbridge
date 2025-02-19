@@ -116,3 +116,13 @@ This will spin up a temporary database for test execution. However, an active da
 ### **Class Diagram**
 
 ![Class Diagram](diagrams/workbridge.jpg)
+
+**Future Updates:**
+- **Availability Entity**: A new entity will be added to track the availability of service providers for their services.
+- **Category Entity**: A new category structure will be added to classify services based on type (e.g., graphic design, plumbing, etc.).
+
+These changes will help streamline filtering and searching for services based on both availability and category.
+
+---
+
+Let me know if you need further updates!
