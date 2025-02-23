@@ -46,7 +46,7 @@ public class UserControllerTest {
         user.setId(1L);
         user.setUsername("usuarioTeste");
         user.setEmail("usuario@teste.com");
-        user.setRoles(Set.of(new UserRoleEntity(UserRole.SERVICE_SEEKER)));  // Use roles instead of ServiceSeeker/Provider
+        user.setRoles(Set.of(new UserRoleEntity(UserRole.SERVICE_SEEKER))); 
         user.setEnabled(true);
         return user;
     }

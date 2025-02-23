@@ -27,8 +27,9 @@ public class Review {
 
     @ManyToOne
     private ApplicationUser reviewed; 
-    //TODO: add a prepersistance anotation to define date on creatinon of object
+    
     private LocalDateTime createdAt;
+
 
     public boolean isReviewer(ApplicationUser user) {
         return user != null && user.hasRole(UserRole.SERVICE_SEEKER);
@@ -36,5 +37,10 @@ public class Review {
 
     public boolean isReviewed(ApplicationUser user) {
         return user != null && user.hasRole(UserRole.SERVICE_PROVIDER);
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 }

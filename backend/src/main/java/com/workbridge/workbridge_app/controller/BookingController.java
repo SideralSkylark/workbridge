@@ -1,14 +1,14 @@
  package com.workbridge.workbridge_app.controller;
 
  import java.util.List;
+import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
- import org.springframework.http.ResponseEntity;
- import org.springframework.security.access.prepost.PreAuthorize;
- import org.springframework.security.core.context.SecurityContextHolder;
- import org.springframework.web.bind.annotation.GetMapping;
- import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.workbridge.workbridge_app.exception.BookingNotFoundException;
 import com.workbridge.workbridge_app.exception.ServiceListingNotFoundException;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
- import com.workbridge.workbridge_app.service.BookingService;
+import com.workbridge.workbridge_app.security.SecurityUtil;
+import com.workbridge.workbridge_app.service.BookingService;
 import com.workbridge.workbridge_app.dto.BookingRequestDTO;
 import com.workbridge.workbridge_app.dto.BookingResponseDTO;
 import com.workbridge.workbridge_app.dto.UpdateBookingRequestDTO;
@@ -29,7 +30,6 @@ import lombok.RequiredArgsConstructor;
  @RequiredArgsConstructor
  public class BookingController {
     
-    @Autowired
     private final BookingService bookingService;
 
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
@@ -42,7 +42,7 @@ import lombok.RequiredArgsConstructor;
         } catch (UserNotFoundException UserNotFoundException) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error ocured.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
         }
     }
 
@@ -56,13 +56,13 @@ import lombok.RequiredArgsConstructor;
         } catch (ServiceListingNotFoundException exception) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found.");
         } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error ocured.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
         }
     }
 
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
-    @PostMapping("/update")
-    public ResponseEntity<?> updateBooking(@RequestBody UpdateBookingRequestDTO updateBookingRequestDTO ) { 
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateBooking(@RequestBody UpdateBookingRequestDTO updateBookingRequestDTO) { 
         try {
             String username = getAuthenticatedUsername();
             BookingResponseDTO updatedBooking = bookingService.updateBooking(username, updateBookingRequestDTO);
@@ -71,8 +71,8 @@ import lombok.RequiredArgsConstructor;
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found.");
         } catch(BookingNotFoundException exception) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
         }
     }
 
@@ -82,18 +82,18 @@ import lombok.RequiredArgsConstructor;
         try {
             String username = getAuthenticatedUsername();
             bookingService.cancelBooking(username, bookingId);
-            return ResponseEntity.ok("Booking canceled successfully.");
+            return ResponseEntity.ok(Map.of("message", "Booking canceled successfully."));
         } catch (BookingNotFoundException exception) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
         } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
         }
      }
-
+     //TODO: Apply the same type of descriptive exception handling on internal server erros for all controllers
     private String getAuthenticatedUsername() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = SecurityUtil.getAuthenticatedUsername();
          if (username == null || username.isBlank()) {
-             throw new IllegalStateException("Authenticated user not found.");
+             throw new UserNotFoundException("Authenticated user not found.");
          }
          return username;
      }

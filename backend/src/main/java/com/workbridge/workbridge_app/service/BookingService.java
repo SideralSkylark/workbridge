@@ -32,7 +32,10 @@ public class BookingService {
     private final ServiceRepository serviceRepository;
 
     public List<BookingResponseDTO> getUsersBookings(String username) {
-        List<Booking> bookings = bookingRepository.findBySeeker_Username(username);
+        ApplicationUser user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new UserNotFoundException("User not found."));
+
+        List<Booking> bookings = bookingRepository.findBySeeker_Id(user.getId());
         return bookings.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

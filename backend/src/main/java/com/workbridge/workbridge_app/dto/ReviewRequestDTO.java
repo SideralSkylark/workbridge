@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.dto;
 
 import com.workbridge.workbridge_app.entity.ApplicationUser;
+import com.workbridge.workbridge_app.entity.Booking;
 
 import lombok.Data;
 
@@ -9,5 +10,7 @@ import lombok.Data;
 public class ReviewRequestDTO {
     private Double rating;
     private String comment;
-    private ApplicationUser reviewed;
+    private Long bookingId;
+    private Long reviewedId;
+    private Long reviewerId;
 }
