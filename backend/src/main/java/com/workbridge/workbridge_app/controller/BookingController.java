@@ -84,12 +84,12 @@ import lombok.RequiredArgsConstructor;
             bookingService.cancelBooking(username, bookingId);
             return ResponseEntity.ok(Map.of("message", "Booking canceled successfully."));
         } catch (BookingNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Booking not found."));
         } catch (Exception exception) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
         }
      }
-     //TODO: Apply the same type of descriptive exception handling on internal server erros for all controllers
+     
     private String getAuthenticatedUsername() {
         String username = SecurityUtil.getAuthenticatedUsername();
          if (username == null || username.isBlank()) {
