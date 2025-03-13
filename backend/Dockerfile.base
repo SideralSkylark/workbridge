@@ -1,0 +1,15 @@
+FROM debian:bullseye-slim
+
+# Install essential tools (while online)
+RUN apt-get update && apt-get install -y \
+    curl \
+    maven \
+    gnupg2 \
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Mark this image as "prepped" for offline use
+LABEL version="1.0" description="Debian with JDK and Maven for offline builds"
+
+# comand: docker build -t workbridge-base:1.0 -f Dockerfile.base .
