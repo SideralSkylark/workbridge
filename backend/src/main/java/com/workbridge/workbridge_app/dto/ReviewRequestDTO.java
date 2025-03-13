@@ -1,8 +1,5 @@
 package com.workbridge.workbridge_app.dto;
 
-import com.workbridge.workbridge_app.entity.ApplicationUser;
-import com.workbridge.workbridge_app.entity.Booking;
-
 import lombok.Data;
 
 @Data
