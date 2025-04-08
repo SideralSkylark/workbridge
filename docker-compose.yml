@@ -29,6 +29,18 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: workbridge-frontend
+    ports:
+      - "4200:4000"  # SSR Angular default port is 4000
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
