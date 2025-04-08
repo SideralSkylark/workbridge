@@ -1,20 +1,12 @@
-# Build Stage
-FROM node:22 AS builder
+FROM node:23 as build
+
 WORKDIR /app
 COPY . .
-RUN npm install
-RUN npm run build:ssr
+RUN npm install && npm run build --prod
 
-# Run Stage
-FROM node:22-alpine
-WORKDIR /app
+FROM nginx:alpine
+# Copy built Angular app to NGINX's public directory
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
-# Copy browser + server builds separately
-COPY --from=builder /app/dist/frontend /app/dist/frontend
-COPY --from=builder /app/dist/frontend-server /app/dist/frontend-server
-
-COPY --from=builder /app/package.json /app/
-RUN npm install --only=production
-
-# Run the SSR server
-CMD ["node", "dist/frontend-server/main.js"]
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

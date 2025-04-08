@@ -36,7 +36,7 @@ services:
       dockerfile: Dockerfile
     container_name: workbridge-frontend
     ports:
-      - "4200:4000"  # SSR Angular default port is 4000
+      - "4200:80"  # SSR Angular default port is 4000
     depends_on:
       - backend
     networks:
