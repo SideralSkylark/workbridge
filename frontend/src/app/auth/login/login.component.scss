@@ -1,0 +1,27 @@
+.login-container {
+    background: linear-gradient(135deg, #e0f7fa, #e3f2fd);
+    padding: 2rem;
+  
+    .card {
+      border-radius: 1rem;
+      background-color: #ffffff;
+    }
+  
+    .btn-primary {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+  
+    .form-label {
+      font-weight: 500;
+    }
+  
+    .form-control.is-invalid {
+      border-color: #dc3545;
+    }
+  
+    .invalid-feedback {
+      font-size: 0.875rem;
+    }
+  }
+  
