@@ -1,1 +1,13 @@
-<p>dashboard works!</p>
+<aside class="sidebar">
+  <ul>
+    <li *ngFor="let item of visibleMenuItems">
+      <a [routerLink]="item.route">
+        <i [class]="item.icon"></i> {{ item.label }}
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<main class="dashboard-content">
+  <router-outlet></router-outlet> <!-- This is where your pages will load -->
+</main>

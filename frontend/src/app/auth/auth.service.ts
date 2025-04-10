@@ -17,12 +17,19 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/v1/auth/login`, { email, password }).pipe(
       tap(response => {
         localStorage.setItem('jwt', response.token);
+        localStorage.setItem('user', JSON.stringify({
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          roles: response.roles
+        }));
       })
     );
   }
 
   logout() {
     localStorage.removeItem('jwt');
+    localStorage.removeItem('user')
     this.router.navigate(['/login']);
   }
 
@@ -33,4 +40,13 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem('jwt');
   }
+
+  getUserRoles(): string[] {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user).roles : [];
+  }
+
+  hasRole(role: string): boolean {
+    return this.getUserRoles().includes(role);
+  }  
 }
