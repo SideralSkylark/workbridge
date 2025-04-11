@@ -13,6 +13,8 @@ import { CommonModule } from '@angular/common';
 })
 export class DashboardComponent implements OnInit {
   userRoles: string[] = [];
+  isSidebarOpen = false;
+
   menuItems: MenuItem[] = [
     { label: 'Admin Panel', icon: 'bi bi-shield-lock', route: '/dashboard/admin', roles: ['ADMIN'] },
     { label: 'Service Requests', icon: 'bi bi-box', route: '/dashboard/requests', roles: ['SERVICE_SEEKER'] },
@@ -30,5 +32,9 @@ export class DashboardComponent implements OnInit {
     return this.menuItems.filter(item =>
       item.roles.some(role => this.userRoles.includes(role))
     );
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
   }
 }
