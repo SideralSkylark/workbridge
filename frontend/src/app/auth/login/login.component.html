@@ -8,6 +8,16 @@
             <h2 class="h3 mt-3 fw-normal">Please sign in</h2>
           </div>
 
+          <!-- 🔐 Quick Access Dev Buttons -->
+          <div class="mb-4 text-center">
+            <small class="text-muted d-block mb-2">Quick Login (Dev Only)</small>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+              <button class="btn btn-outline-primary btn-sm" (click)="quickLogin('admin')">Admin</button>
+              <button class="btn btn-outline-success btn-sm" (click)="quickLogin('seeker')">Service Seeker</button>
+              <button class="btn btn-outline-warning btn-sm" (click)="quickLogin('provider')">Service Provider</button>
+            </div>
+          </div>
+
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
             <div class="mb-3">
               <label for="email" class="form-label">Email address</label>

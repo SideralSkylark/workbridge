@@ -43,7 +43,24 @@
     
       this.authService.login(email, password).subscribe({
         next: () => {
-          this.router.navigate(['dashboard']);
+          this.loading = false;
+
+          const role = this.authService.getCurrentUserRole();
+          console.log("role: " + role);
+
+          switch (role) {
+            case 'ADMIN':
+              this.router.navigate(['dashboard', 'admin']);
+              break;
+            case 'SERVICE_SEEKER':
+              this.router.navigate(['dashboard', 'requests']);
+              break;
+            case 'SERVICE_PROVIDER':
+              this.router.navigate(['dashboard', 'manage']);
+              break;
+            default:
+              this.router.navigate(['dashboard']);
+          }
         },
         error: (err) => {
           this.error = 'Invalid credentials or server error';
@@ -51,4 +68,21 @@
         }
       });
     }
+
+    quickLogin(role: 'admin' | 'seeker' | 'provider') {
+      const credentials = {
+        admin:    { email: 'sidik@gmail.com',    password: 'sidik123' },
+        seeker:   { email: 'sidik@gmail.com',   password: 'sidik123' },
+        provider: { email: 'provider@gmail.com', password: 'provider123' }
+      };
+    
+      const selected = credentials[role];
+    
+      this.loginForm.patchValue({
+        email: selected.email,
+        password: selected.password
+      });
+    
+      this.onSubmit(); 
+    }    
   }

@@ -46,6 +46,11 @@ export class AuthService {
     return user ? JSON.parse(user).roles : [];
   }
 
+  getCurrentUserRole(): string | null {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.roles?.[0] ?? null; 
+  }
+
   hasRole(role: string): boolean {
     return this.getUserRoles().includes(role);
   }  

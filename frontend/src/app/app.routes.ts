@@ -20,7 +20,7 @@ export const routes: Routes = [
             { path: 'requests', component: ServiceRequestsComponent, canActivate: [RoleGuard], data: { roles: ['SERVICE_SEEKER'] } },
             { path: 'manage', component: ManageServicesComponent, canActivate: [RoleGuard], data: { roles: ['SERVICE_PROVIDER'] } },
             { path: 'chat', component: ChatComponent, canActivate: [RoleGuard], data: {roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER']}},
-            { path: '', redirectTo: 'requests', pathMatch: 'full' } // optional default
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' } 
         ]
     },
     { path: '**', redirectTo: '/login' },
