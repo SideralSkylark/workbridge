@@ -3,23 +3,21 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-manage-services',
+  selector: 'app-booked-services',
   standalone: true,
   imports: [CommonModule, RouterOutlet],
-  templateUrl: './manage-services.component.html',
-  styleUrl: './manage-services.component.scss'
+  templateUrl: './booked-services.component.html',
+  styleUrl: './booked-services.component.scss'
 })
-export class ManageServicesComponent {
-
-  constructor(router: Router) {}
-
+export class BookedServicesComponent {
   bookings = [
     {
-      serviceTitle: 'somt',
-      date: '--39',
-      customerName: 'john'
+      serviceTitle: 'Website Design',
+      date: '2025-04-15',
+      customerName: 'John Doe'
     }
-  ]
+  ];
+  
   services = [
     {
       id: 1,
@@ -52,24 +50,4 @@ export class ManageServicesComponent {
       price: 1200.00,
     }
   ];
-  
-  openForm(): void {
-    console.log("")
-  }
-
-  editService(service: Object): void {
-
-  }
-
-  deleteService(serviceId: number) {
-
-  }
-
-  openBookedServices(): void {
-
-  }
-
-  viewBookings(): void {
-    
-  }
 }

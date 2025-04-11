@@ -18,7 +18,7 @@ export class DashboardComponent implements OnInit {
   menuItems: MenuItem[] = [
     { label: 'Admin Panel', icon: 'bi bi-shield-lock', route: '/dashboard/admin', roles: ['ADMIN'] },
     { label: 'Service Requests', icon: 'bi bi-box', route: '/dashboard/requests', roles: ['SERVICE_SEEKER'] },
-    { label: 'Manage Services', icon: 'bi bi-gear', route: '/dashboard/manage', roles: ['SERVICE_PROVIDER'] },
+    { label: 'Manage Services', icon: 'bi bi-gear', route: '/dashboard/manage', roles: ['SERVICE_PROVIDER'], },
     { label: 'Chat', icon: 'bi bi-chat-dots', route: '/dashboard/chat', roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER'] },
   ];
 
@@ -36,5 +36,11 @@ export class DashboardComponent implements OnInit {
 
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  toggleChildMenu(item: MenuItem): void {
+    if (item.children) {
+      item.isOpen = !item.isOpen; // Toggle open state for children
+    }
   }
 }

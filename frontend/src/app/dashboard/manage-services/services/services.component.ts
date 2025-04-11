@@ -3,23 +3,21 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-manage-services',
+  selector: 'app-services',
   standalone: true,
   imports: [CommonModule, RouterOutlet],
-  templateUrl: './manage-services.component.html',
-  styleUrl: './manage-services.component.scss'
+  templateUrl: './services.component.html',
+  styleUrls: ['./services.component.scss']
 })
-export class ManageServicesComponent {
-
-  constructor(router: Router) {}
-
+export class ServicesComponent {
   bookings = [
     {
-      serviceTitle: 'somt',
-      date: '--39',
-      customerName: 'john'
+      serviceTitle: 'Website Design',
+      date: '2025-04-15',
+      customerName: 'John Doe'
     }
-  ]
+  ];
+  
   services = [
     {
       id: 1,
@@ -53,23 +51,29 @@ export class ManageServicesComponent {
     }
   ];
   
+  // Opens a form to add a new service
   openForm(): void {
-    console.log("")
+    console.log("Opening the form to add a new service");
   }
 
-  editService(service: Object): void {
-
+  // Edit a service
+  editService(service: any): void {
+    console.log("Editing service:", service);
   }
 
-  deleteService(serviceId: number) {
-
+  // Delete a service
+  deleteService(serviceId: number): void {
+    console.log("Deleting service with ID:", serviceId);
+    this.services = this.services.filter(service => service.id !== serviceId); // Remove the service from the array
   }
 
+  // Open booked services
   openBookedServices(): void {
-
+    console.log("Opening booked services");
   }
 
+  // View bookings
   viewBookings(): void {
-    
+    console.log("Viewing all bookings");
   }
 }

@@ -3,5 +3,7 @@ export interface MenuItem {
     icon: string;
     route: string;
     roles: string[];
+    children?: MenuItem[];
+    isOpen?: boolean;
 }
   

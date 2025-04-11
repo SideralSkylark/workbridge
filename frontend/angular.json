@@ -37,7 +37,6 @@
               "src/assets/bootstrap/bootstrap-icons-1.11.3/font/bootstrap-icons.css"
             ],
             "scripts": [
-              "src/assets/bootstrap/js/bootstrap.bundle.js",
               "src/assets/bootstrap/js/bootstrap.bundle.min.js"
             ]
           },
@@ -132,7 +131,6 @@
               "src/assets/bootstrap/bootstrap-icons-1.11.3/font/bootstrap-icons.css"
             ],
             "scripts": [
-              "src/assets/bootstrap/js/bootstrap.bundle.js",
               "src/assets/bootstrap/js/bootstrap.bundle.min.js"
             ]
           }
