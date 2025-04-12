@@ -46,7 +46,6 @@
           this.loading = false;
 
           const role = this.authService.getCurrentUserRole();
-          console.log("role: " + role);
 
           switch (role) {
             case 'ADMIN':

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
+import { ServiceService } from '../../../services/service.service';
+import { Service } from '../../../models/service.model';
 
 @Component({
   selector: 'app-services',
@@ -10,69 +12,56 @@ import { Router, RouterOutlet } from '@angular/router';
   styleUrls: ['./services.component.scss']
 })
 export class ServicesComponent {
-  bookings = [
-    {
-      serviceTitle: 'Website Design',
-      date: '2025-04-15',
-      customerName: 'John Doe'
-    }
-  ];
+  services: Service[] = [];
+  bookings = [];
+
+  constructor(private serviceService: ServiceService, router: Router) { }
   
-  services = [
-    {
-      id: 1,
-      title: 'Website Design',
-      description: 'Professional responsive websites tailored to your brand.',
-      price: 750.00,
-    },
-    {
-      id: 2,
-      title: 'SEO Optimization',
-      description: 'Improve your site ranking on search engines.',
-      price: 450.00,
-    },
-    {
-      id: 3,
-      title: 'Social Media Management',
-      description: 'Daily posting and audience engagement on Instagram and Facebook.',
-      price: 650.00,
-    },
-    {
-      id: 4,
-      title: 'Logo Design',
-      description: 'Minimalist and modern logos delivered in multiple formats.',
-      price: 200.00,
-    },
-    {
-      id: 5,
-      title: 'eCommerce Setup',
-      description: 'Complete WooCommerce/Shopify setup and configuration.',
-      price: 1200.00,
-    }
-  ];
-  
-  // Opens a form to add a new service
+  ngOnInit(): void {
+    this.fetchServices();
+  }
+
+  fetchServices(): void {
+    this.serviceService.getServicesByProvider().subscribe({
+      next: (serviceDTOs) => {
+        this.services = serviceDTOs.map(dto => ({
+          id: dto.id, 
+          title: dto.title,
+          description: dto.description,
+          price: dto.price,
+          providerId: dto.providerId
+        }));
+      },
+      error: (error) => {
+        console.error('Failed to fetch services:', error);
+      }
+    });
+  }  
+
   openForm(): void {
     console.log("Opening the form to add a new service");
   }
 
-  // Edit a service
-  editService(service: any): void {
+  editService(service: Service): void {
     console.log("Editing service:", service);
   }
 
-  // Delete a service
   deleteService(serviceId: number): void {
     console.log("Deleting service with ID:", serviceId);
-    this.services = this.services.filter(service => service.id !== serviceId); // Remove the service from the array
+    this.serviceService.deleteService(serviceId).subscribe({
+      next: () => {
+        this.services = this.services.filter(service => service.id !== serviceId);
+      },
+      error: (error) => {
+        console.error('Failed to delete service:', error);
+      }
+    });
   }
 
-  // Open booked services
   openBookedServices(): void {
     console.log("Opening booked services");
   }
 
-  // View bookings
   viewBookings(): void {
     console.log("Viewing all bookings");
   }
