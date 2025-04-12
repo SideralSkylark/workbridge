@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { ServiceFormStateService } from '../../services/service-form-state.service';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-manage-services',
@@ -11,11 +12,20 @@ import { ServiceFormStateService } from '../../services/service-form-state.servi
   styleUrl: './manage-services.component.scss'
 })
 export class ManageServicesComponent {
+  currentRoute: string = '';
 
   constructor(
     private router: Router,
     private formStateService: ServiceFormStateService
-  ) {}
+  ) {
+    this.currentRoute = this.router.url;
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.currentRoute = event.urlAfterRedirects;
+    });
+  }
 
   openForm(): void {
     this.router.navigate(['dashboard', 'manage', 'services']).then(() => {
@@ -29,5 +39,9 @@ export class ManageServicesComponent {
 
   viewBookings(): void {
     this.router.navigate(['dashboard', 'manage', 'bookings']);
+  }
+
+  isOnServicesPage(): boolean {
+    return this.currentRoute.endsWith('/services');
   }
 }
