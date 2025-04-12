@@ -1,27 +1,65 @@
 <!-- My Services Section -->
 <h5 class="section-title">My Services</h5>
-  
-<div *ngIf="services.length === 0" class="empty-state text-center py-5">
-  <i class="bi bi-briefcase" style="font-size: 3rem;"></i>
-  <p class="lead mt-3">You haven’t added any services yet.</p>
-  <button class="btn btn-primary mt-2" (click)="openForm()">Add Your First Service</button>
+
+<!-- Empty State -->
+<div *ngIf="services.length === 0" class="empty-state text-center">
+  <i class="bi bi-briefcase"></i>
+  <p class="lead">You haven’t added any services yet.</p>
+  <button class="btn btn-primary" (click)="openForm()">Add Your First Service</button>
 </div>
 
+<!-- Service Cards -->
 <div *ngIf="services.length > 0" class="row g-4">
   <div class="col-md-6 col-lg-4" *ngFor="let service of services">
-    <div class="card h-100 shadow-sm border-0">
+    <div class="card service-card h-100">
       <div class="card-body">
-        <h5 class="card-title text-primary">{{ service.title }}</h5>
-        <p class="card-text text-muted mb-3">{{ service.description }}</p>
-        <p class="card-subtitle text-muted">€{{ service.price | number: '1.2-2' }}</p>
+        <h5 class="card-title">{{ service.title }}</h5>
+        <p class="card-text">{{ service.description }}</p>
+        <p class="card-subtitle">€{{ service.price | number: '1.2-2' }}</p>
       </div>
-      <div class="card-footer bg-transparent border-top-0 d-flex justify-content-end gap-2">
+      <div class="card-footer">
         <button class="btn btn-outline-secondary btn-sm" (click)="editService(service)">
           <i class="bi bi-pencil"></i>
         </button>
         <button class="btn btn-outline-danger btn-sm" (click)="deleteService(service.id)">
           <i class="bi bi-trash"></i>
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Service Modal -->
+<div *ngIf="showForm" class="modal-overlay">
+  <div class="modal-card">
+    <div class="card add-service-card">
+      <div class="card-body">
+        <h5 class="card-title mb-4">
+          {{ editingServiceId ? 'Edit Service' : 'Add New Service' }}
+        </h5>
+        <form (ngSubmit)="submitForm()" #serviceForm="ngForm" novalidate>
+          <div class="mb-3">
+            <label for="title" class="form-label">Service Title</label>
+            <input type="text" id="title" class="form-control" required [(ngModel)]="newService.title" name="title" placeholder="Enter service title">
+          </div>
+        
+          <div class="mb-3">
+            <label for="description" class="form-label">Service Description</label>
+            <textarea id="description" class="form-control" rows="4" required [(ngModel)]="newService.description" name="description" placeholder="Describe your service..."></textarea>
+          </div>
+        
+          <div class="mb-4">
+            <label for="price" class="form-label">Price (€)</label>
+            <input type="number" id="price" class="form-control" required [(ngModel)]="newService.price" name="price" step="0.01" placeholder="e.g. 49.99">
+          </div>
+        
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelForm()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!serviceForm.form.valid">
+              {{ editingServiceId ? 'Update Service' : 'Create Service' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

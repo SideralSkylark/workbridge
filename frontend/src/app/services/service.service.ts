@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 
+import { CreateServiceDTO } from '../models/createServiceDTO.model';
+
 export interface ServiceDTO {
   id: number;
   title: string;
@@ -20,7 +22,7 @@ export class ServiceService {
   constructor(private http: HttpClient) {}
 
   /** Create a new service */
-  createService(service: ServiceDTO): Observable<ServiceDTO> {
+  createService(service: CreateServiceDTO): Observable<ServiceDTO> {
     return this.http.post<ServiceDTO>(`${this.apiUrl}`, service);
   }
 

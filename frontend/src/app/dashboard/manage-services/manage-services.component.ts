@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
+import { ServiceFormStateService } from '../../services/service-form-state.service';
 
 @Component({
   selector: 'app-manage-services',
@@ -11,9 +12,16 @@ import { Router, RouterOutlet } from '@angular/router';
 })
 export class ManageServicesComponent {
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private formStateService: ServiceFormStateService
+  ) {}
 
-  openForm(): void { }
+  openForm(): void {
+    this.router.navigate(['dashboard', 'manage', 'services']).then(() => {
+      this.formStateService.showForm(); 
+    });
+  }
 
   viewServices(): void {
     this.router.navigate(['dashboard', 'manage', 'services']); 

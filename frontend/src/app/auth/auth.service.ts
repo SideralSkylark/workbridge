@@ -51,6 +51,19 @@ export class AuthService {
     return user?.roles?.[0] ?? null; 
   }
 
+  getUserId(): number | null {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) return null;
+  
+    try {
+      const user = JSON.parse(userJson);
+      return user?.id ?? null;
+    } catch (e) {
+      console.error('Failed to parse user from localStorage', e);
+      return null;
+    }
+  }
+
   hasRole(role: string): boolean {
     return this.getUserRoles().includes(role);
   }  
