@@ -8,5 +8,5 @@ public class ServiceDTO {
     private String title;
     private String description;
     private double price;
-    private Long providerId; // ID do ServiceProvider dono do serviço
+    private Long providerId; 
 }

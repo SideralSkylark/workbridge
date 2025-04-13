@@ -70,11 +70,18 @@ public class ServiceService {
         }).collect(Collectors.toList());
     }
 
+    //TODO: implement tests for the new method
     public List<ServiceFeedDTO> getServiceFeed() {
         return serviceRepository.findAll().stream()
                 .map(service -> {
                     Double avgRating = reviewRepository.findAverageRatingByProviderId(service.getProvider().getId());
-                    return new ServiceFeedDTO(serviceMapper.toDTO(service), avgRating != null ? avgRating : 0.0);
+                    String name = service.getProvider().getUsername();
+                    String email = service.getProvider().getEmail();
+                    return new ServiceFeedDTO(
+                        serviceMapper.toDTO(service), 
+                        avgRating != null ? avgRating : 0.0,
+                        name,
+                        email);
                 })
                 .sorted(Comparator.comparingDouble(ServiceFeedDTO::getProviderRating).reversed())
                 .collect(Collectors.toList());

@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 public class ServiceFeedDTO {
     private ServiceDTO service;
     private Double providerRating;
+    private String providerUsername;
+    private String providerEmail;
 }

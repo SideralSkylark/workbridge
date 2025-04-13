@@ -26,7 +26,7 @@ public class ServiceMapper {
         service.setTitle(dto.getTitle());
         service.setDescription(dto.getDescription());
         service.setPrice(dto.getPrice());
-        service.setProvider(provider); // assumes provider is fetched beforehand
+        service.setProvider(provider); 
         return service;
     }
 }

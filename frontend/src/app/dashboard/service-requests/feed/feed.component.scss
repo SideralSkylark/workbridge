@@ -1,0 +1,164 @@
+:host {
+  display: block;
+
+  .section-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .input-group {
+      max-width: 500px;
+
+      .input-group-text {
+        border-radius: 0.5rem 0 0 0.5rem;
+        border-color: #ced4da;
+      }
+
+      .form-control {
+        border-radius: 0 0.5rem 0.5rem 0;
+        border-color: #ced4da;
+      }
+    }
+
+    .btn-outline-primary {
+      border-color: #6c63ff;
+      color: #6c63ff;
+
+      &:hover {
+        background-color: #6c63ff;
+        color: #fff;
+      }
+
+      i {
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 4rem 1rem;
+    background-color: #f9f9fb;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+
+    i {
+      font-size: 3.5rem;
+      color: #adb5bd;
+    }
+
+    .lead {
+      margin-top: 1rem;
+      font-size: 1.15rem;
+      color: #6c757d;
+    }
+  }
+
+  .service-card {
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.06);
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+
+    .card-body {
+      .card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #6c63ff;
+      }
+
+      .card-text {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+      }
+
+      .card-subtitle {
+        font-size: 0.95rem;
+        color: #6c757d;
+      }
+    }
+
+    .card-footer {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+
+      .btn-sm {
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+
+      .btn-outline-secondary {
+        border-color: #cfd3dc;
+        color: #495057;
+
+        &:hover {
+          background-color: #f1f3f5;
+        }
+      }
+
+      .btn-outline-danger {
+        border-color: #ffccd5;
+        color: #c1121f;
+
+        &:hover {
+          background-color: #ffe2e6;
+        }
+      }
+    }
+  }
+
+  .skeleton-card {
+    height: auto;
+    border-radius: 1rem;
+    background: linear-gradient(
+      90deg,
+      #d4d3fe 25%,
+      #5546fe 37%,
+      #c4bffc 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.2s ease-in-out infinite;
+
+    .skeleton-title,
+    .skeleton-text {
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 0.5rem;
+    }
+
+    .skeleton-title {
+      width: 60%;
+    }
+
+    .skeleton-text {
+      width: 90%;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -400px 0;
+    }
+    100% {
+      background-position: 400px 0;
+    }
+  }
+}

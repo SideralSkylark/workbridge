@@ -1,1 +1,34 @@
-<p>service-requests works!</p>
+<div class="dashboard-content">
+    <!-- Title and Quick Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-semibold text-dark">Service Requests</h2>
+      
+      <!-- Quick Access Dropdown Button -->
+      <div class="dropdown">
+        <button
+          class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false">
+          <i class="bi bi-gear-fill"></i> Quick Actions
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" (click)="viewFeed()">
+              <i class="bi bi-globe2 text-info"></i> Service Feed
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item d-flex align-items-center gap-2" (click)="viewBookings()">
+              <i class="bi bi-journal-check text-success"></i> View Booked Services
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  
+    <!-- Main Outlet -->
+    <div class="manage-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>  

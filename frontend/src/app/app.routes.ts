@@ -9,6 +9,8 @@ import { ServiceRequestsComponent } from './dashboard/service-requests/service-r
 import { ChatComponent } from './dashboard/chat/chat.component';
 import { ServicesComponent } from './dashboard/manage-services/services/services.component';
 import { BookedServicesComponent } from './dashboard/manage-services/booked-services/booked-services.component';
+import { FeedComponent } from './dashboard/service-requests/feed/feed.component';
+import { MyBookingsComponent } from './dashboard/service-requests/my-bookings/my-bookings.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent},
@@ -19,7 +21,17 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
         children: [
             { path: 'admin', component: AdminPanelComponent, canActivate: [RoleGuard], data: { roles: ['ADMIN'] } },
-            { path: 'requests', component: ServiceRequestsComponent, canActivate: [RoleGuard], data: { roles: ['SERVICE_SEEKER'] } },
+            { 
+                path: 'requests', 
+                component: ServiceRequestsComponent, 
+                canActivate: [RoleGuard], 
+                data: { roles: ['SERVICE_SEEKER'] },
+                children: [
+                    { path: 'feed', component: FeedComponent },
+                    { path: 'bookings', component: MyBookingsComponent },
+                    { path: '', redirectTo: 'feed', pathMatch: 'full' }
+                ]
+            },
             { 
                 path: 'manage', 
                 component: ManageServicesComponent, 
