@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.controller;
 
 import com.workbridge.workbridge_app.dto.ServiceDTO;
+import com.workbridge.workbridge_app.dto.ServiceFeedDTO;
 import com.workbridge.workbridge_app.service.ServiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +27,22 @@ public class ServiceController {
 
     @PreAuthorize("hasRole('SERVICE_PROVIDER')")
     @GetMapping("/me")
-    public ResponseEntity<List<ServiceDTO>> getServicesByProvider() {
+    public ResponseEntity<List<ServiceDTO>> getMyServices() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(serviceService.getServicesByProvider(username));
+    }
+
+    // TODO: implement new method in service controller and new tests
+    @GetMapping("/provider/{providerId}")
+    public ResponseEntity<List<ServiceDTO>> getServicesByProvider(@PathVariable Long providerId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(serviceService.getServicesByProvider(username));
+    }
+
+    @GetMapping("/feed")
+    @PreAuthorize("hasRole('SERVICE_SEEKER')")
+    public ResponseEntity<List<ServiceFeedDTO>> getServiceFeed() {
+        return ResponseEntity.ok(serviceService.getServiceFeed());
     }
 
     @PreAuthorize("hasRole('SERVICE_PROVIDER')")

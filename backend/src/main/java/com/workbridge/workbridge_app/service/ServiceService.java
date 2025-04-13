@@ -1,12 +1,17 @@
 package com.workbridge.workbridge_app.service;
 
 import com.workbridge.workbridge_app.dto.ServiceDTO;
+import com.workbridge.workbridge_app.dto.ServiceFeedDTO;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.Service;
 import com.workbridge.workbridge_app.entity.UserRole;
+import com.workbridge.workbridge_app.mapper.ServiceMapper;
+import com.workbridge.workbridge_app.repository.ReviewRepository;
 import com.workbridge.workbridge_app.repository.ServiceRepository;
 import com.workbridge.workbridge_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +23,8 @@ public class ServiceService {
 
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
+    private final ServiceMapper serviceMapper;
 
     public ServiceDTO createService(ServiceDTO serviceDTO, String username) {
         // Obtém o usuário autenticado
@@ -62,6 +69,17 @@ public class ServiceService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    public List<ServiceFeedDTO> getServiceFeed() {
+        return serviceRepository.findAll().stream()
+                .map(service -> {
+                    Double avgRating = reviewRepository.findAverageRatingByProviderId(service.getProvider().getId());
+                    return new ServiceFeedDTO(serviceMapper.toDTO(service), avgRating != null ? avgRating : 0.0);
+                })
+                .sorted(Comparator.comparingDouble(ServiceFeedDTO::getProviderRating).reversed())
+                .collect(Collectors.toList());
+    }
+
 
     public ServiceDTO updateService(Long serviceId, ServiceDTO serviceDTO, String username) {
         Service service = serviceRepository.findById(serviceId)

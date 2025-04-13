@@ -64,14 +64,14 @@ public class ServiceControllerTest {
     }
 
     @Test
-    void testGetServicesByProvider_Success() {
+    void testGetMyServices_Success() {
         String username = "providerUser";
         mockAuthentication(username);
 
         List<ServiceDTO> services = Collections.singletonList(mockServiceDTO);
         when(serviceService.getServicesByProvider(username)).thenReturn(services);
 
-        ResponseEntity<List<ServiceDTO>> response = serviceController.getServicesByProvider();
+        ResponseEntity<List<ServiceDTO>> response = serviceController.getMyServices();
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
