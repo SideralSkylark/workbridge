@@ -41,6 +41,16 @@
         <div class="card-body">
           <h5 class="card-title">{{ service.service.title }}</h5>
           <p class="card-text">{{ service.service.description }}</p>
+          <div class="mb-2">
+            <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+              <i class="bi" 
+                 [ngClass]="{
+                   'bi-star-fill': star <= service.providerRating,
+                   'bi-star': star > service.providerRating
+                 }"
+                 class="accent-star"></i>
+            </ng-container>
+          </div>
           <h6 class="card-subtitle">Price: ${{ service.service.price }}</h6>
         </div>
         <div class="card-footer">
@@ -55,25 +65,39 @@
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="serviceDetailsModal" tabindex="-1" aria-labelledby="serviceDetailsLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="serviceDetailsLabel">{{ selectedService?.service.title }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" *ngIf="selectedService">
-        <p><strong>Description:</strong> {{ selectedService.service.description }}</p>
-        <p><strong>Price:</strong> ${{ selectedService.service.price }}</p>
-        <p><strong>Provider Rating:</strong> {{ selectedService.providerRating }}</p>
-        <p><strong>Provider Name:</strong> {{ selectedService.providerName }}</p>
-        <p><strong>Provider Email:</strong> {{ selectedService.providerEmail }}</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary">Book Service</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+<div
+  class="modal-backdrop-custom"
+  *ngIf="showModal"
+  (click)="closeModal()">
+</div>
+
+<div class="modal-card-wrapper" *ngIf="showModal">
+  <div class="modal-card card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">{{ selectedService?.service?.title }}</h5>
+      <button class="btn-close" (click)="closeModal()"></button>
+    </div>
+    <div class="card-body">
+      <p><strong>Description:</strong> {{ selectedService?.service?.description }}</p>
+      <p><strong>Price:</strong> €{{ selectedService?.service?.price }}</p>
+      <p><strong>Provider:</strong> {{ selectedService?.providerUsername }}</p>
+      <p><strong>Email:</strong> {{ selectedService?.providerEmail }}</p>
+      <p>
+        <strong>Rating: </strong>
+        <ng-container *ngFor="let star of [1,2,3,4,5]">
+          <i class="bi"
+             [ngClass]="{
+               'bi-star-fill': star <= (selectedService?.providerRating || 0),
+               'bi-star': star > (selectedService?.providerRating || 0)
+             }"
+             class="accent-star"></i>
+        </ng-container>
+      </p>
+    </div>
+    <div class="card-footer text-end">
+      <button class="btn btn-primary" (click)="bookService()">
+        Book Service
+      </button>
     </div>
   </div>
 </div>
