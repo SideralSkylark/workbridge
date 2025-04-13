@@ -5,5 +5,6 @@ export interface MenuItem {
     roles: string[];
     children?: MenuItem[];
     isOpen?: boolean;
+    action?: () => void;
 }
   

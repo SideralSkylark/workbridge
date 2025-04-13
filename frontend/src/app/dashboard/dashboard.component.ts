@@ -20,6 +20,12 @@ export class DashboardComponent implements OnInit {
     { label: 'Service Requests', icon: 'bi bi-box', route: '/dashboard/requests', roles: ['SERVICE_SEEKER'] },
     { label: 'Manage Services', icon: 'bi bi-gear', route: '/dashboard/manage', roles: ['SERVICE_PROVIDER'], },
     { label: 'Chat', icon: 'bi bi-chat-dots', route: '/dashboard/chat', roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER'] },
+    { 
+      label: 'Logout', 
+      icon: 'bi bi-box-arrow-right', 
+      route: '/', 
+      roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER'], 
+      action: () => this.logout() },
   ];
 
   constructor(private authService: AuthService) {}
@@ -40,7 +46,12 @@ export class DashboardComponent implements OnInit {
 
   toggleChildMenu(item: MenuItem): void {
     if (item.children) {
-      item.isOpen = !item.isOpen; // Toggle open state for children
+      item.isOpen = !item.isOpen; 
     }
   }
+
+  logout(): void {
+    this.authService.logout(); 
+    this.isSidebarOpen = false;
+  }  
 }

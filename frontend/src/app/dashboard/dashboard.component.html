@@ -1,5 +1,5 @@
 <button class="btn d-md-none m-3" (click)="toggleSidebar()">
-  <i class="bi bi-lightning-charge-fill fs-3"></i>
+  <i class="bi bi-lightning-charge-fill fs-3"></i> WorkBridge
 </button>
 
 <aside class="sidebar" [ngClass]="{ 'open': isSidebarOpen }">
@@ -8,11 +8,22 @@
   </div>
   <ul>
     <li *ngFor="let item of visibleMenuItems" [ngClass]="{ 'has-children': item.children }">
-      <a [routerLink]="item.route" routerLinkActive="active" (click)="toggleChildMenu(item)">
+      <a 
+        *ngIf="!item.action"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        (click)="toggleChildMenu(item)">
         <i [class]="item.icon"></i> {{ item.label }}
-      </a>      
+      </a>
+      <a 
+        *ngIf="item.action"
+        href="#" 
+        (click)="item.action(); $event.preventDefault();">
+        <i [class]="item.icon"></i> {{ item.label }}
+      </a>
     </li>
-  </ul> 
+  </ul>
+  
 </aside>
 
 <main class="dashboard-content">
