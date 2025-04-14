@@ -1,15 +1,32 @@
 <!-- My Services Section -->
 <h5 class="section-title">My Services</h5>
 
+<!-- Skeleton Loader -->
+<div *ngIf="isLoading" class="row g-4">
+  <div class="col-md-6 col-lg-4" *ngFor="let skeleton of [1,2,3]">
+    <div class="card service-card h-100 loading">
+      <div class="card-body">
+        <div class="skeleton skeleton-title mb-3"></div>
+        <div class="skeleton skeleton-text mb-2"></div>
+        <div class="skeleton skeleton-text short"></div>
+      </div>
+      <div class="card-footer d-flex gap-2">
+        <div class="skeleton skeleton-btn me-2"></div>
+        <div class="skeleton skeleton-btn"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Empty State -->
-<div *ngIf="services.length === 0" class="empty-state text-center">
+<div *ngIf="!isLoading && services.length === 0" class="empty-state text-center">
   <i class="bi bi-briefcase"></i>
   <p class="lead">You haven’t added any services yet.</p>
   <button class="btn btn-primary" (click)="openForm()">Add Your First Service</button>
 </div>
 
 <!-- Service Cards -->
-<div *ngIf="services.length > 0" class="row g-4">
+<div *ngIf="!isLoading && services.length > 0" class="row g-4">
   <div class="col-md-6 col-lg-4" *ngFor="let service of services">
     <div class="card service-card h-100">
       <div class="card-body">

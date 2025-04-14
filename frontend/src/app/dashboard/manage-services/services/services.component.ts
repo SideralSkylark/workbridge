@@ -19,7 +19,8 @@ export class ServicesComponent implements OnInit {
   services: Service[] = [];
   showForm: boolean = false;
   newService!: CreateServiceDTO;
-  editingServiceId: number | null = null; 
+  editingServiceId: number | null = null;
+  isLoading: boolean = true; 
 
   constructor(
     private authService: AuthService,
@@ -54,6 +55,7 @@ export class ServicesComponent implements OnInit {
   }
 
   fetchServices(): void {
+    this.isLoading = true;
     this.serviceService.getServicesByProvider().subscribe({
       next: (serviceDTOs) => {
         this.services = serviceDTOs.map(dto => ({
@@ -63,9 +65,11 @@ export class ServicesComponent implements OnInit {
           price: dto.price,
           providerId: dto.providerId
         }));
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Failed to fetch services:', error);
+        this.isLoading = false;
       }
     });
   }

@@ -3,15 +3,22 @@
     <h2 class="section-title mb-0">My Bookings</h2>
   </div>
 
-  <div *ngIf="loading">
-    <div *ngFor="let skeleton of [1, 2, 3]" class="mb-4">
-      <div class="skeleton-card p-3">
-        <div class="skeleton-title mb-2"></div>
-        <div class="skeleton-text mb-2"></div>
-        <div class="skeleton-text w-75"></div>
+  <!-- Skeleton Loading with Shimmer -->
+<div *ngIf="loading" class="row loading">
+  <div *ngFor="let skeleton of [1, 2, 3]" class="col-md-6 col-lg-4 mb-4">
+    <div class="card service-card h-100">
+      <div class="card-body">
+        <div class="skeleton skeleton-title mb-2"></div>
+        <div class="skeleton skeleton-text mb-2"></div>
+        <div class="skeleton skeleton-text w-75"></div>
+      </div>
+      <div class="card-footer d-flex gap-2">
+        <div class="skeleton skeleton-btn"></div>
+        <div class="skeleton skeleton-btn"></div>
       </div>
     </div>
   </div>
+</div>
 
   <div *ngIf="errorMessage && !loading" class="empty-state text-center text-danger">
     <i class="bi bi-exclamation-triangle"></i>
