@@ -1,0 +1,13 @@
+.card {
+    border-radius: 1rem;
+    transition: transform 0.2s ease-in-out;
+  
+    &:hover {
+      transform: scale(1.01);
+    }
+  }
+  
+  .card-title {
+    color: #0d6efd;
+  }
+  

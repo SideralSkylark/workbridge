@@ -46,7 +46,7 @@ class BookingControllerTest {
     void testGetMyBookings_Success() {
         String username = "usuarioTeste";
         mockAuthentication(username);
-        List<BookingResponseDTO> bookings = List.of(new BookingResponseDTO(1L, "Seeker", "Service", 100.0, "Provider", LocalDateTime.now(), "CONFIRMED"));
+        List<BookingResponseDTO> bookings = List.of(new BookingResponseDTO(1L, "Seeker", "Service", "someservicedescription", 100.0, "Provider", LocalDateTime.now(), "CONFIRMED"));
         when(bookingService.getUsersBookings(username)).thenReturn(bookings);
 
         ResponseEntity<?> response = bookingController.getMyBookings();
@@ -72,7 +72,7 @@ class BookingControllerTest {
         String username = "usuarioTeste";
         mockAuthentication(username);
         BookingRequestDTO request = new BookingRequestDTO(1L, LocalDateTime.now());
-        BookingResponseDTO responseDTO = new BookingResponseDTO(1L, "Seeker", "Service", 100.0, "Provider", LocalDateTime.now(), "PENDING");
+        BookingResponseDTO responseDTO = new BookingResponseDTO(1L, "Seeker", "Service", "someservicedescription", 100.0, "Provider", LocalDateTime.now(), "PENDING");
         when(bookingService.createBooking(username, request)).thenReturn(responseDTO);
 
         ResponseEntity<?> response = bookingController.bookService(request);
@@ -99,7 +99,7 @@ class BookingControllerTest {
         String username = "usuarioTeste";
         mockAuthentication(username);
         UpdateBookingRequestDTO updateRequest = new UpdateBookingRequestDTO(1L, LocalDateTime.now());
-        BookingResponseDTO updatedBooking = new BookingResponseDTO(1L, "Seeker", "Service", 100.0, "Provider", LocalDateTime.now(), "UPDATED");
+        BookingResponseDTO updatedBooking = new BookingResponseDTO(1L, "Seeker", "Service", "someservicedescription", 100.0, "Provider", LocalDateTime.now(), "UPDATED");
         when(bookingService.updateBooking(username, updateRequest)).thenReturn(updatedBooking);
 
         ResponseEntity<?> response = bookingController.updateBooking(updateRequest);

@@ -41,6 +41,18 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    //TODO: write tests for this service
+    public List<BookingResponseDTO> getBookingsByProviderId(Long providerId) {
+        ApplicationUser provider = userRepository.findById(providerId)
+            .orElseThrow(() -> new UserNotFoundException("Provider not found"));
+    
+        List<Booking> bookings = bookingRepository.findByService_Provider(provider);
+    
+        return bookings.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
+
     @Transactional
     public BookingResponseDTO createBooking(String username, BookingRequestDTO request) {
         ApplicationUser user = userRepository.findByUsername(username)
@@ -94,6 +106,7 @@ public class BookingService {
             booking.getId(),
             booking.getSeeker().getUsername(),
             booking.getService().getTitle(),
+            booking.getService().getDescription(),
             booking.getService().getPrice(),
             booking.getService().getProvider().getUsername(),
             booking.getDate(),

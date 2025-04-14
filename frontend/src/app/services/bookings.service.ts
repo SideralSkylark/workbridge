@@ -13,7 +13,19 @@ export class BookingService {
 
   constructor(private http: HttpClient) {}
 
-  createBooking(bookingRequest: BookingRequestDTO): Observable<BookingResponseDTO> {
-    return this.http.post<BookingResponseDTO>(`${this.baseUrl}/book`, bookingRequest);
+  getMyBookings(): Observable<BookingResponseDTO> {
+    return this.http.get<BookingResponseDTO>(`${this.baseUrl}/me`);
   }
+
+  getMyBookedServices(providerId: number): Observable<BookingResponseDTO[]> {
+    return this.http.get<BookingResponseDTO[]>(`${this.baseUrl}/provider`, {
+      params: {providerId: providerId.toString()}
+    });
+  }
+
+  createBooking(bookingRequest: BookingRequestDTO): Observable<BookingResponseDTO[]> {
+    return this.http.post<BookingResponseDTO[]>(`${this.baseUrl}/book`, bookingRequest);
+  }
+
+
 }

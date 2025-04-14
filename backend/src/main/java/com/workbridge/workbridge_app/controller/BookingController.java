@@ -46,6 +46,20 @@ import lombok.RequiredArgsConstructor;
         }
     }
 
+    // TODO: write teste for this endpoint
+    @PreAuthorize("hasRole('SERVICE_PROVIDER')")
+    @GetMapping("/provider")
+    public ResponseEntity<?> getMyBookedServices(@RequestParam Long providerId) {
+        try {
+            List<BookingResponseDTO> bookings = bookingService.getBookingsByProviderId(providerId);
+            return ResponseEntity.ok(bookings);
+        } catch (UserNotFoundException UserNotFoundException) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
+        }
+    }
+
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
     @PostMapping("/book")
     public ResponseEntity<?> bookService(@RequestBody BookingRequestDTO bookingRequestDTO) {
