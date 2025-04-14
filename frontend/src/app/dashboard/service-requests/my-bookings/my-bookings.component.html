@@ -1,32 +1,47 @@
-<div class="container mt-4">
-    <h2 class="mb-4">My Bookings</h2>
-  
-    <div *ngIf="loading" class="text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+<div class="dashboard-content">
+  <div class="search-bar d-flex align-items-center gap-3 mb-4">
+    <h2 class="section-title mb-0">My Bookings</h2>
+  </div>
+
+  <div *ngIf="loading">
+    <div *ngFor="let skeleton of [1, 2, 3]" class="mb-4">
+      <div class="skeleton-card p-3">
+        <div class="skeleton-title mb-2"></div>
+        <div class="skeleton-text mb-2"></div>
+        <div class="skeleton-text w-75"></div>
       </div>
     </div>
-  
-    <div *ngIf="errorMessage && !loading" class="alert alert-danger">
-      {{ errorMessage }}
-    </div>
-  
-    <div *ngIf="!loading && bookings.length === 0" class="alert alert-info">
-      You have no bookings.
-    </div>
-  
-    <div *ngIf="bookings.length > 0" class="row row-cols-1 row-cols-md-2 g-4">
-      <div *ngFor="let booking of bookings" class="col">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">{{ booking.serviceTitle }}</h5>
-            <p class="card-text mb-1"><strong>Description:</strong> {{ booking.serviceDescription }}</p>
-            <p class="card-text mb-1"><strong>Price:</strong> ${{ booking.price }}</p>
-            <p class="card-text mb-1"><strong>Status:</strong> {{ booking.status }}</p>
-            <p class="card-text text-muted"><small>Booked on: {{ booking.date | date:'medium' }}</small></p>
-          </div>
+  </div>
+
+  <div *ngIf="errorMessage && !loading" class="empty-state text-center text-danger">
+    <i class="bi bi-exclamation-triangle"></i>
+    <p class="lead">{{ errorMessage }}</p>
+  </div>
+
+  <div *ngIf="!loading && bookings.length === 0" class="empty-state text-center">
+    <i class="bi bi-calendar-x"></i>
+    <p class="lead">You have no bookings.</p>
+  </div>
+
+  <div *ngIf="!loading && bookings.length > 0" class="row g-4">
+    <div class="col-md-6 col-lg-4" *ngFor="let booking of bookings">
+      <div class="card service-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ booking.serviceTitle }}</h5>
+          <p class="card-text">{{ booking.serviceDescription }}</p>
+          <p class="card-subtitle mb-2">Booked with <strong>{{ booking.providerName }}</strong> on <strong>{{ booking.date | date: 'medium' }}</strong></p>
+          <p class="card-subtitle mb-2">Status: <strong class="accent-star">{{ booking.status }}</strong></p>
+          <h6 class="card-subtitle">Price: ${{ booking.price }}</h6>
+        </div>
+        <div class="card-footer">
+          <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat()">
+            <i class="bi bi-chat-dots"></i> Chat
+          </button>
+          <button class="btn btn-outline-danger btn-sm" (click)="cancelBooking(booking.id)">
+            <i class="bi bi-x-circle"></i> Cancel
+          </button>
         </div>
       </div>
     </div>
   </div>
-  
+</div>

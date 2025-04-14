@@ -13,11 +13,11 @@ export class BookingService {
 
   constructor(private http: HttpClient) {}
 
-  getMyBookings(): Observable<BookingResponseDTO> {
-    return this.http.get<BookingResponseDTO>(`${this.baseUrl}/me`);
+  getMyBookings(): Observable<BookingResponseDTO[]> {
+    return this.http.get<BookingResponseDTO[]>(`${this.baseUrl}/me`);
   }
 
-  getMyBookedServices(providerId: number): Observable<BookingResponseDTO[]> {
+  getMyBookedServices(providerId: number): Observable<BookingResponseDTO[]> { 
     return this.http.get<BookingResponseDTO[]>(`${this.baseUrl}/provider`, {
       params: {providerId: providerId.toString()}
     });
@@ -27,5 +27,9 @@ export class BookingService {
     return this.http.post<BookingResponseDTO[]>(`${this.baseUrl}/book`, bookingRequest);
   }
 
-
+  cancelBooking(bookingId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/cancel`, null, {
+      params: { bookingId: bookingId.toString() }
+    });
+  } 
 }
