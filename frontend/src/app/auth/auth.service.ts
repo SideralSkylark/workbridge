@@ -4,6 +4,17 @@ import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { RegisterRequestDTO } from '../models/register-requestDTO.model';
+import { RegisterResponseDTO } from '../models/register-responseDTO.model';
+
+interface AuthResponse {
+  token: string;
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
+  updatedAt?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +23,22 @@ export class AuthService {
   private apiUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient, private router: Router) {}
+
+  register(data: RegisterRequestDTO): Observable<RegisterResponseDTO> {
+    return this.http.post<RegisterResponseDTO>(`${this.apiUrl}/v1/auth/register`, data);
+  }
+
+  verify(email: string, code: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/v1/auth/verify`, { email, code });
+  }
+
+  resendVerification(email: string): Observable<RegisterResponseDTO> {
+    return this.http.post<RegisterResponseDTO>(`${this.apiUrl}/v1/auth/resend-verification`, { email });
+  }
+  
+  verifyCode(email: string, code: string) {
+    return this.verify(email, code);
+  }
 
   login(email: string, password: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/v1/auth/login`, { email, password }).pipe(

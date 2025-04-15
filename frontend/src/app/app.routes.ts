@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './auth/login/login.component';
+import { RegisterComponent } from './auth/register/register.component';
+import { VerifyComponent } from './auth/verify/verify.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AuthGuard } from './auth/auth.guard';
 import { RoleGuard } from './auth/role.guard';
@@ -13,7 +15,9 @@ import { FeedComponent } from './dashboard/service-requests/feed/feed.component'
 import { MyBookingsComponent } from './dashboard/service-requests/my-bookings/my-bookings.component';
 
 export const routes: Routes = [
-    { path: 'login', component: LoginComponent},
+    { path: 'login', component: LoginComponent },
+    { path: 'register', component: RegisterComponent },
+    { path: 'verify', component: VerifyComponent },
     { path: '', redirectTo: '/login', pathMatch: 'full' },
     { 
         path: 'dashboard', 

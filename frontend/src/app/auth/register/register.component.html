@@ -1,0 +1,85 @@
+<div class="login-wrapper">
+  <div class="login-card shadow">
+    <div class="text-center mb-4">
+      <i class="bi bi-person-plus display-3 text-primary"></i>
+      <h2 class="h4 mt-2 fw-semibold">Create Account</h2>
+      <p class="text-muted small mb-0">Register to get started</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input
+          type="text"
+          id="username"
+          class="form-control"
+          formControlName="username"
+          [ngClass]="{ 'is-invalid': submitted && f.username.errors }"
+          placeholder="JohnDoe"
+        />
+        <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
+          Username is required
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input
+          type="email"
+          id="email"
+          class="form-control"
+          formControlName="email"
+          [ngClass]="{ 'is-invalid': submitted && f.email.errors }"
+          placeholder="name@example.com"
+        />
+        <div *ngIf="submitted && f.email.errors" class="invalid-feedback">
+          <span *ngIf="f.email.errors['required']">Email is required</span>
+          <span *ngIf="f.email.errors['email']">Please enter a valid email</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          id="password"
+          class="form-control"
+          formControlName="password"
+          [ngClass]="{ 'is-invalid': submitted && f.password.errors }"
+          placeholder="Password"
+        />
+        <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
+          <span *ngIf="f.password.errors['required']">Password is required</span>
+          <span *ngIf="f.password.errors['minlength']">Min 6 characters</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          class="form-control"
+          formControlName="confirmPassword"
+          [ngClass]="{ 'is-invalid': submitted && registerForm.errors?.['mismatch'] }"
+          placeholder="Confirm Password"
+        />
+        <div *ngIf="submitted && registerForm.errors?.['mismatch']" class="invalid-feedback">
+          Passwords do not match
+        </div>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+      <input type="hidden" formControlName="roles" />
+      <input type="hidden" formControlName="status" />
+
+      <div class="d-grid">
+        <button [disabled]="loading" class="btn btn-primary">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          Register
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

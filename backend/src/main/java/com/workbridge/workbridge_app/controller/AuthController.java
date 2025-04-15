@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 import com.workbridge.workbridge_app.dto.AuthenticationResponseDTO;
+import com.workbridge.workbridge_app.dto.EmailVerificationDTO;
 import com.workbridge.workbridge_app.dto.LoginRequestDTO;
 import com.workbridge.workbridge_app.dto.RegisterRequestDTO;
+import com.workbridge.workbridge_app.dto.RegisterResponseDTO;
 import com.workbridge.workbridge_app.exception.UserAlreadyExistsException;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.AuthenticationService;
@@ -25,9 +27,21 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponseDTO> register(@RequestBody RegisterRequestDTO registerRequest) {
-        AuthenticationResponseDTO response = authenticationService.register(registerRequest);
+    public ResponseEntity<RegisterResponseDTO> register(@RequestBody RegisterRequestDTO registerRequest) {
+        RegisterResponseDTO response = authenticationService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<AuthenticationResponseDTO> verify(@RequestBody EmailVerificationDTO emailVerificationDTO) {
+        AuthenticationResponseDTO response = authenticationService.verify(emailVerificationDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<RegisterResponseDTO> resendVerification(@RequestBody EmailVerificationDTO request) {
+        RegisterResponseDTO response = authenticationService.resendVerificationCode(request.getEmail());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -38,16 +52,26 @@ public class AuthController {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException ex) {
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception ex) {
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
     }
 }
