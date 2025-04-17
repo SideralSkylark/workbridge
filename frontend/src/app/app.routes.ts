@@ -13,6 +13,8 @@ import { ServicesComponent } from './dashboard/manage-services/services/services
 import { BookedServicesComponent } from './dashboard/manage-services/booked-services/booked-services.component';
 import { FeedComponent } from './dashboard/service-requests/feed/feed.component';
 import { MyBookingsComponent } from './dashboard/service-requests/my-bookings/my-bookings.component';
+import { ManageUsersComponent } from './dashboard/admin-panel/manage-users/manage-users.component';
+import { AproveProvidersComponent } from './dashboard/admin-panel/aprove-providers/aprove-providers.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent },
@@ -24,7 +26,17 @@ export const routes: Routes = [
         component: DashboardComponent, 
         canActivate: [AuthGuard],
         children: [
-            { path: 'admin', component: AdminPanelComponent, canActivate: [RoleGuard], data: { roles: ['ADMIN'] } },
+            { 
+                path: 'admin', 
+                component: AdminPanelComponent, 
+                canActivate: [RoleGuard], 
+                data: { roles: ['ADMIN'] },
+                children: [
+                    { path: 'manage-users', component: ManageUsersComponent },
+                    { path: 'approve-providers', component: AproveProvidersComponent },
+                    { path: '', redirectTo: 'manage-users', pathMatch: 'full' }
+                ]
+            },
             { 
                 path: 'requests', 
                 component: ServiceRequestsComponent, 
