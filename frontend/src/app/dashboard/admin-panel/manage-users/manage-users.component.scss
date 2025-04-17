@@ -1,0 +1,92 @@
+@import '../../manage-services/services/services.component.scss'; 
+
+:host {
+  .section-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+  }
+
+  .user-card {
+    @extend .service-card;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.08);
+    }
+
+    .card-title {
+      color: #5a4fcf;
+      font-size: 1.25rem;
+    }
+
+    .card-text {
+      color: #495057;
+      font-size: 1rem;
+    }
+
+    .user-roles {
+      margin-bottom: 0.5rem;
+    
+      .role-badge {
+        font-size: 0.65rem; // smaller font
+        font-weight: 500;
+        padding: 0.25em 0.5em;
+        border-radius: 0.4rem;
+        text-transform: capitalize; // makes "service provider" look nicer
+        letter-spacing: 0.02em;
+        color: #fff;
+      }
+    }    
+
+    .card-subtitle {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: #6c757d;
+
+      strong {
+        color: #212529;
+      }
+    }
+
+    .btn-outline-warning {
+      color: #ffc107;
+      border-color: #ffc107;
+
+      &:hover {
+        background-color: #ffc107;
+        color: #212529;
+      }
+    }
+
+    .btn-outline-success {
+      color: #198754;
+      border-color: #198754;
+
+      &:hover {
+        background-color: #198754;
+        color: #fff;
+      }
+    }
+  }
+
+  .empty-state {
+    @extend .empty-state;
+
+    i {
+      font-size: 3.5rem;
+      color: #adb5bd;
+    }
+
+    .lead {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+    }
+  }
+
+  .loading {
+    @extend .loading;
+  }
+}

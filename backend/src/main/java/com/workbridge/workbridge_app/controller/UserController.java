@@ -6,8 +6,12 @@ import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,6 +68,37 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
+
+    @PreAuthorize("hasRole('ROLE_SERVICE_SEEKER')")
+    @PostMapping("/me/request-to-become-provider")
+    public ResponseEntity<?> requestToBecomeProvider() {
+        try {
+            String username = getAuthenticatedUsername();
+            userService.requestToBecomeProvider(username);
+
+            return ResponseEntity.ok("Request to become a service provider sent.");
+        } catch (Exception e) {
+            log.error("Error requesting to become provider", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+    @GetMapping("/me/provider-request-status")
+    public ResponseEntity<?> getProviderRequestStatus() {
+        try {
+            String username = getAuthenticatedUsername();
+            boolean hasPendingRequest = userService.hasPendingProviderRequest(username);
+            boolean isProvider = userService.isServiceProvider(username);
+            return ResponseEntity.ok(Map.of(
+                "requested", hasPendingRequest,
+                "approved", isProvider
+            ));
+        } catch (Exception e) {
+            log.error("Error checking provider request status", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get status.");
+        }
+    }
+
 
     private String getAuthenticatedUsername() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

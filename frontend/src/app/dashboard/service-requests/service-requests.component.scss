@@ -55,4 +55,39 @@
         border-top: 1px solid #f0f0f0;
       }
     }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .confirmation-card {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 1rem;
+      text-align: center;
+      box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      animation: fadeInUp 0.4s ease;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }    
   }

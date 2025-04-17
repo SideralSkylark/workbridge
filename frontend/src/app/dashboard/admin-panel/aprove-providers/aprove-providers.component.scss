@@ -1,0 +1,23 @@
+@import '../manage-users/manage-users.component.scss';
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(33, 33, 33, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+  }
+  
+  .confirmation-card {
+    background: white;
+    padding: 2rem 3rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  
