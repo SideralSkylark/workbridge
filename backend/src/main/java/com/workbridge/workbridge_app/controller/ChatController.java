@@ -1,6 +1,6 @@
 package com.workbridge.workbridge_app.controller;
 
-import com.workbridge.workbridge_app.dto.ChatMessage;
+import com.workbridge.workbridge_app.entity.ChatMessage;
 import com.workbridge.workbridge_app.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void sendMessage(ChatMessage message) {
-        log.info("Mensagem recebida de {} para {}: {}", message.getSenderId(), message.getRecipientId(), message.getContent());
+        log.info("Mensagem recebida de {} para {}: {}", message.getSenderUsername(), message.getRecipientUsername(), message.getContent());
         chatService.sendPrivateMessage(message);
     }
 }

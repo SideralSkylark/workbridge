@@ -66,11 +66,11 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 COPY pom.xml . 
 
 # Download dependencies **while online** so we can build offline later
-RUN mvn dependency:go-offline -B
+RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B
 
 # Copy the source code and build the project
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
 
 # Expose the application port
 EXPOSE 8080

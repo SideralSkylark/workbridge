@@ -1,120 +1,118 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TruncatePipe } from '../../shared/pipes/truncate.pipe';
+// import { Component, OnInit } from '@angular/core';
+// import { CommonModule } from '@angular/common';
+// import { FormsModule } from '@angular/forms';
+// import { TruncatePipe } from '../../shared/pipes/truncate.pipe';
+// // import { ChatService } from '../../services/chat.service';
 
+// interface ChatUser {
+//   id: string;
+//   name: string;
+//   avatar?: string;
+// }
 
-interface ChatUser {
-  id: string;
-  name: string;
-  avatar: string;
-  online: boolean;
-}
+// interface ChatMessage {
+//   content: string;
+//   senderId: string;
+//   recipientId: string;
+//   timestamp: Date;
+// }
 
-interface ChatMessage {
-  id: string;
-  content: string;
-  sender: 'me' | string;
-  timestamp: Date;
-}
+// interface Conversation {
+//   id: string; // normalmente o ID do outro usuário
+//   user: ChatUser;
+//   messages: ChatMessage[];
+//   lastMessage: string;
+//   lastMessageTime: Date;
+//   unreadCount: number;
+// }
 
-interface Conversation {
-  id: string;
-  user: ChatUser;
-  lastMessage: string;
-  lastMessageTime: Date;
-  unreadCount: number;
-  messages: ChatMessage[];
-}
+// @Component({
+//   selector: 'app-chat',
+//   standalone: true,
+//   imports: [CommonModule, FormsModule, TruncatePipe],
+//   templateUrl: './chat.component.html',
+//   styleUrls: ['./chat.component.scss']
+// })
+// export class ChatComponent implements OnInit {
+//   conversations: Conversation[] = [];
+//   activeChatId: string | null = null;
+//   newMessage = '';
+//   currentUserId: string = '';
 
-@Component({
-  selector: 'app-chat',
-  standalone: true,
-  imports: [CommonModule, FormsModule, TruncatePipe ],
-  templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss'],
-  
+//   // constructor(private chatService: ChatService) {}
 
-})
-export class ChatComponent implements OnInit {
-  conversations: Conversation[] = [
-    {
-      id: '1',
-      user: {
-        id: 'provider1',
-        name: 'João Eletricista',
-        avatar: 'https://i.pravatar.cc/150?img=5',
-        online: true
-      },
-      lastMessage: 'Posso ir amanhã às 14h',
-      lastMessageTime: new Date(),
-      unreadCount: 2,
-      messages: [
-        {
-          id: '1',
-          content: 'Olá, preciso de um eletricista',
-          sender: 'me',
-          timestamp: new Date(Date.now() - 3600000)
-        },
-        {
-          id: '2',
-          content: 'Bom dia! Em que posso ajudar?',
-          sender: 'provider1',
-          timestamp: new Date(Date.now() - 1800000)
-        },
-        {
-          id: '3',
-          content: 'Posso ir amanhã às 14h',
-          sender: 'provider1',
-          timestamp: new Date()
-        }
-      ]
-    },
-    // Mais conversas...
-  ];
+//   get activeConversation(): Conversation | undefined {
+//     return this.conversations.find(c => c.id === this.activeChatId);
+//   }
 
-  activeChatId: string | null = null;
-  newMessage = '';
+//   ngOnInit(): void {
+//     this.chatService.connect();
 
-  get activeConversation(): Conversation | undefined {
-    return this.conversations.find(c => c.id === this.activeChatId);
-  }
+//     this.currentUserId = this.chatService['decodeJwtUsername'](
+//       localStorage.getItem('jwt') || ''
+//     ) || '';
 
-  ngOnInit(): void {
-    // Carregar conversas do serviço
-  }
+//     this.chatService.onMessage().subscribe((msg: ChatMessage) => {
+//       this.handleIncomingMessage(msg);
+//     });
+//   }
 
-  selectChat(chatId: string): void {
-    this.activeChatId = chatId;
-    // Marcar mensagens como lidas
-    const conv = this.conversations.find(c => c.id === chatId);
-    if (conv) conv.unreadCount = 0;
-  }
+//   handleIncomingMessage(msg: ChatMessage) {
+//     const partnerId = msg.senderId === this.currentUserId ? msg.recipientId : msg.senderId;
+//     let conversation = this.conversations.find(c => c.id === partnerId);
 
-  sendMessage(): void {
-    if (!this.newMessage.trim() || !this.activeChatId) return;
+//     if (!conversation) {
+//       conversation = {
+//         id: partnerId,
+//         user: {
+//           id: partnerId,
+//           name: partnerId, // você pode substituir pelo nome real se tiver um endpoint
+//         },
+//         messages: [],
+//         lastMessage: '',
+//         lastMessageTime: new Date(),
+//         unreadCount: 0
+//       };
+//       this.conversations.push(conversation);
+//     }
 
-    const activeConv = this.activeConversation;
-    if (activeConv) {
-      const newMsg: ChatMessage = {
-        id: Date.now().toString(),
-        content: this.newMessage,
-        sender: 'me',
-        timestamp: new Date()
-      };
+//     conversation.messages.push(msg);
+//     conversation.lastMessage = msg.content;
+//     conversation.lastMessageTime = new Date(msg.timestamp);
 
-      activeConv.messages.push(newMsg);
-      activeConv.lastMessage = this.newMessage;
-      activeConv.lastMessageTime = new Date();
-      this.newMessage = '';
+//     if (conversation.id !== this.activeChatId) {
+//       conversation.unreadCount += 1;
+//     }
+//   }
 
-      // Aqui você enviaria a mensagem para o backend
-      // this.chatService.sendMessage(activeConv.id, this.newMessage);
-    }
-  }
+//   selectChat(chatId: string): void {
+//     this.activeChatId = chatId;
+//     const conv = this.conversations.find(c => c.id === chatId);
+//     if (conv) conv.unreadCount = 0;
+//   }
 
-  startNewChat(): void {
-    // Lógica para iniciar nova conversa
-    console.log('Nova conversa iniciada');
-  }
-}
+//   sendMessage(): void {
+//     if (!this.newMessage.trim() || !this.activeChatId) return;
+
+//     const msg: ChatMessage = {
+//       content: this.newMessage,
+//       senderId: this.currentUserId,
+//       recipientId: this.activeChatId,
+//       timestamp: new Date()
+//     };
+
+//     this.chatService.sendMessage({
+//       recipientId: msg.recipientId,
+//       content: msg.content,
+//       timestamp: msg.timestamp.toISOString()
+//     });
+
+//     this.handleIncomingMessage(msg);
+//     this.newMessage = '';
+//   }
+
+//   startNewChat(): void {
+//     console.log('Iniciar nova conversa...');
+//     // lógica futura para buscar contatos, etc
+//   }
+// }

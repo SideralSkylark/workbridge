@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatMessage {
+@Builder
+public class ChatMessageDTO {
     private String senderId;
     private String recipientId;
     private String content;

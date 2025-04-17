@@ -8,7 +8,7 @@ import { RoleGuard } from './auth/role.guard';
 import { AdminPanelComponent } from './dashboard/admin-panel/admin-panel.component';
 import { ManageServicesComponent } from './dashboard/manage-services/manage-services.component';
 import { ServiceRequestsComponent } from './dashboard/service-requests/service-requests.component';
-import { ChatComponent } from './dashboard/chat/chat.component';
+// import { ChatComponent } from './dashboard/chat/chat.component';
 import { ServicesComponent } from './dashboard/manage-services/services/services.component';
 import { BookedServicesComponent } from './dashboard/manage-services/booked-services/booked-services.component';
 import { FeedComponent } from './dashboard/service-requests/feed/feed.component';
@@ -46,7 +46,7 @@ export const routes: Routes = [
                     { path: 'bookings', component: BookedServicesComponent },
                     { path: '', redirectTo: 'services', pathMatch: 'full' }
                 ] },
-            { path: 'chat', component: ChatComponent, canActivate: [RoleGuard], data: {roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER']}},
+            // { path: 'chat', component: ChatComponent, canActivate: [RoleGuard], data: {roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER']}},
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' } 
         ]
     },
