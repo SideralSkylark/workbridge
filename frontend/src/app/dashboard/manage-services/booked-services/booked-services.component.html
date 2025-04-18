@@ -27,7 +27,7 @@
         <p class="card-subtitle text-muted">Customer: {{ booking.seekerName }}</p>
       </div>
       <div class="card-footer">
-        <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat()">
+        <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat(booking.seekerName  )">
           <i class="bi bi-chat-dots"></i> Chat
         </button>
       </div>

@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { BookingService } from '../../../services/bookings.service';
 import { BookingResponseDTO } from '../../../models/booking-responseDTO.model';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { ChatService } from '../../../services/chat.service';
+
 
 @Component({
   selector: 'app-my-bookings',
@@ -15,7 +18,7 @@ export class MyBookingsComponent implements OnInit {
   loading = true;
   errorMessage = '';
 
-  constructor(private bookingService: BookingService) {}
+  constructor(private bookingService: BookingService,   private router: Router, private chatService: ChatService) {}
 
   ngOnInit(): void {
     this.loadMyBookings();
@@ -52,7 +55,10 @@ export class MyBookingsComponent implements OnInit {
     }
   }
 
-  openChat(): void {
-    // You can implement chat redirection here
+  openChat(providerId: string): void {
+    this.chatService.ensureConnection(); // A gente vai criar isso também (pra resolver o problema 2)
+    this.router.navigate(['/dashboard/chat'], {
+      queryParams: { recipient: providerId }
+    });
   }
 }

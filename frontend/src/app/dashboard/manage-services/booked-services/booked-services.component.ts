@@ -4,6 +4,8 @@ import { RouterOutlet } from '@angular/router';
 import { BookingService } from '../../../services/bookings.service';
 import { AuthService } from '../../../auth/auth.service';
 import { BookingResponseDTO } from '../../../models/booking-responseDTO.model';
+import { Router } from '@angular/router';
+import { ChatService } from '../../../services/chat.service';
 
 @Component({
   selector: 'app-booked-services',
@@ -18,7 +20,9 @@ export class BookedServicesComponent implements OnInit {
 
   constructor(
     private bookingService: BookingService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router,
+    private chatService: ChatService
   ) {}
 
   ngOnInit() {
@@ -41,7 +45,10 @@ export class BookedServicesComponent implements OnInit {
     }
   }
 
-  openChat(): void {
-    
+  openChat(customerId: string): void {
+    this.chatService.ensureConnection(); // A gente vai criar isso também (pra resolver o problema 2)
+    this.router.navigate(['/dashboard/chat'], {
+      queryParams: { recipient: customerId }
+    });
   }
 }

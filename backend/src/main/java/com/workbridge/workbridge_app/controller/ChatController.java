@@ -5,8 +5,18 @@ import com.workbridge.workbridge_app.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Slf4j
 @Controller
@@ -17,7 +27,29 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void sendMessage(ChatMessage message) {
-        log.info("Mensagem recebida de {} para {}: {}", message.getSenderUsername(), message.getRecipientUsername(), message.getContent());
+        log.info("Mensagem recebida de {} para {}: {}", message.getSenderUsername(), message.getRecipientUsername(),
+                message.getContent());
         chatService.sendPrivateMessage(message);
     }
+
+    @GetMapping("/api/v1/chat/{username}")
+    @ResponseBody
+    public List<ChatMessage> getMessagesForUser(@PathVariable String username) {
+        return chatService.getMessages(username);
+    }
+
+    @DeleteMapping("/api/v1/chat/conversation/{otherUsername}")
+    public ResponseEntity<?> deleteConversation(@RequestParam String currentUsername,
+            @PathVariable String otherUsername) {
+        chatService.deleteConversationForUser(currentUsername, otherUsername);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/api/v1/chat/message/{id}/delete")
+    public ResponseEntity<?> deleteMessage(@PathVariable Long id, @RequestParam String currentUsername,
+            @RequestParam boolean deleteForAll) {
+        chatService.deleteMessage(id, currentUsername, deleteForAll);
+        return ResponseEntity.ok().build();
+    }
+
 }

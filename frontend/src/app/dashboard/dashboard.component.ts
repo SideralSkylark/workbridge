@@ -3,6 +3,7 @@ import { AuthService } from '../auth/auth.service';
 import { MenuItem } from '../models/menu-item.model';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ChatService } from '../services/chat.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,10 +29,11 @@ export class DashboardComponent implements OnInit {
       action: () => this.logout() },
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private chatService: ChatService) {}
 
   ngOnInit(): void {
     this.userRoles = this.authService.getUserRoles();
+    this.chatService.connect();
   }
 
   get visibleMenuItems(): MenuItem[] {
