@@ -1,12 +1,12 @@
 <div class="chat-container">
-  <!-- Corpo do chat (layout dividido) -->
+
   <div class="chat-body">
-    <!-- Lista de conversas -->
+
     <div class="conversation-list">
       <div class="search-box mb-3">
         <input
           type="text"
-          placeholder="Buscar conversas..."
+          placeholder="Search conversations..."
           class="form-control"
         />
       </div>
@@ -34,13 +34,12 @@
       </div>
     </div>
 
-    <!-- Área de mensagens -->
+
     <div class="message-area" *ngIf="activeChatId">
       <div class="message-header d-flex justify-content-between align-items-center">
-        <h5>{{ activeConversation?.user?.name || "Usuário desconhecido" }}</h5>
-        <!-- Botão para deletar conversa inteira -->
-        <button class="btn btn-sm btn-outline-danger" (click)="deleteConversation()" title="Apagar conversa">
-          <i class="bi bi-trash"></i> Apagar conversa
+        <h5>{{ activeConversation?.user?.name || "Unknown user" }}</h5>
+        <button class="btn btn-sm btn-outline-danger" (click)="deleteConversation()" title="Delete conversation">
+          <i class="bi bi-trash"></i> Delete conversation
         </button>
       </div>
 
@@ -65,7 +64,7 @@
       <div class="message-input">
         <textarea
           [(ngModel)]="newMessage"
-          placeholder="Digite sua mensagem..."
+          placeholder="Type your message..."
         ></textarea>
         <button class="btn btn-primary" (click)="sendMessage()">
           <i class="bi bi-send-fill"></i>
@@ -73,10 +72,10 @@
       </div>
     </div>
 
-    <!-- Placeholder quando nenhum chat está selecionado -->
+
     <div class="no-chat-selected" *ngIf="!activeChatId">
       <i class="bi bi-chat-square-text fs-1"></i>
-      <p>Selecione uma conversa ou inicie uma nova</p>
+      <p>Select a conversation or start a new one</p>
     </div>
   </div>
 </div>
@@ -86,6 +85,6 @@
   *ngIf="contextMenuVisible"
   [ngStyle]="{ top: contextMenuPosition.y + 'px', left: contextMenuPosition.x + 'px' }"
 >
-<li (click)="deleteForMe(contextMessage!)">Excluir para mim</li>
-<li *ngIf="contextMessage?.senderUsername === currentUserId" (click)="deleteForAll(contextMessage!)">Excluir para todos</li>
+<li (click)="deleteForMe(contextMessage!)">Delete for me</li>
+<li *ngIf="contextMessage?.senderUsername === currentUserId" (click)="deleteForAll(contextMessage!)">Delete for everyone</li>
 </ul>
