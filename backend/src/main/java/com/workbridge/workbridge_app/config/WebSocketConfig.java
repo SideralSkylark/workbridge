@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
 
-        registry.addEndpoint("/ws-chat")
+        registry.addEndpoint("/api/v1/ws-chat")
                 .addInterceptors(jwtHandshakeInterceptor)
                 .setAllowedOriginPatterns("http://localhost:4200")
                 .withSockJS();

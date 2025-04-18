@@ -4,6 +4,7 @@ import SockJS from 'sockjs-client';
 import * as Stomp from 'stompjs'; 
 import { AuthService } from '../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -28,23 +29,19 @@ export class ChatService {
       return;
     }
 
-    console.log('Tentando conectar ao WebSocket como:', currentUser);
 
-    const socket = new SockJS(`http://localhost:8080/ws-chat?token=${token}`);
+    const socket = new SockJS(`${environment.apiBaseUrl}/v1/ws-chat?token=${token}`);
 
     
     this.stompClient = Stomp.over(socket);
 
-    console.log('Conectando ao servidor WebSocket via STOMP...');
 
    
     this.stompClient.connect({}, (frame: string) => {
-      console.log('Conectado ao STOMP:', frame);
 
     
       this.stompClient.subscribe(`/topic/users/${currentUser}`, (message: any) => {
         const msg = JSON.parse(message.body);
-        console.log(`[ws] Mensagem recebida via WebSocket:`, msg);
         this.messageSubject.next(msg);
       });
 
@@ -68,7 +65,6 @@ export class ChatService {
 
  
     this.stompClient.send('/app/chat', {}, JSON.stringify(messagePayload));
-    console.log(`[ws] Enviando mensagem para ${payload.recipientUsername}:`, payload.content);
   }
 
 
@@ -88,19 +84,19 @@ export class ChatService {
     }
   }
   loadMessagesForUser(username: string): Observable<any[]> {
-    return this.http.get<any[]>(`http://localhost:8080/api/v1/chat/${username}`);
+    return this.http.get<any[]>(`${environment.apiBaseUrl}/v1/chat/${username}`);
   }
 
   deleteMessage(messageId: number, currentUsername: string, deleteForAll: boolean) {
     return this.http.post(
-      `http://localhost:8080/api/v1/chat/message/${messageId}/delete?currentUsername=${currentUsername}&deleteForAll=${deleteForAll}`,
+      `${environment.apiBaseUrl}/v1/chat/message/${messageId}/delete?currentUsername=${currentUsername}&deleteForAll=${deleteForAll}`,
       {}
     );
   }
   
   deleteConversation(currentUsername: string, otherUsername: string) {
     return this.http.delete(
-      `http://localhost:8080/api/v1/chat/conversation/${otherUsername}?currentUsername=${currentUsername}`
+      `${environment.apiBaseUrl}/v1/chat/conversation/${otherUsername}?currentUsername=${currentUsername}`
     );
   }
 
