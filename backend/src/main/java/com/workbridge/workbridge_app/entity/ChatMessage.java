@@ -14,8 +14,15 @@ public class ChatMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String senderUsername;
-    private String recipientUsername;
+    // Relacionamento Muitos para Um com a entidade Usuario
+    @ManyToOne
+    @JoinColumn(name = "sender_id", referencedColumnName = "id", nullable = false)
+    private ApplicationUser sender; // Relaciona-se com a tabela 'application_user'
+
+    @ManyToOne
+    @JoinColumn(name = "recipient_id", referencedColumnName = "id", nullable = false)
+    private ApplicationUser recipient; // Relaciona-se com a tabela 'application_user'
+
     private String content;
     private String timestamp;
 

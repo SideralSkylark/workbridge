@@ -1,12 +1,20 @@
 package com.workbridge.workbridge_app.service;
 
+import com.workbridge.workbridge_app.dto.ChatMessageRequestDTO;
+import com.workbridge.workbridge_app.dto.ChatMessageResponseDTO;
+import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.ChatMessage;
+import com.workbridge.workbridge_app.exception.MessageNotFoundException;
+import com.workbridge.workbridge_app.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.mapper.ChatMessageMapper;
 import com.workbridge.workbridge_app.repository.ChatMessageRepository;
+import com.workbridge.workbridge_app.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -17,31 +25,48 @@ public class ChatService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageRepository chatMessageRepository;
+    private final UserRepository userRepository;
 
-    public void sendPrivateMessage(ChatMessage message) {
-        ChatMessage entity = ChatMessage.builder().senderUsername(message.getSenderUsername())
-                .recipientUsername(message.getRecipientUsername()).content(message.getContent())
+    public void sendPrivateMessage(ChatMessageRequestDTO message) {
+
+        ApplicationUser sender = userRepository.findByUsername(message.getSenderUsername()).orElseThrow(
+                () -> new UserNotFoundException("Sender username not found: " + message.getSenderUsername()));
+
+        ApplicationUser recipient = userRepository.findByUsername(message.getRecipientUsername()).orElseThrow(
+                () -> new UserNotFoundException("Recipient username not found: " + message.getRecipientUsername()));
+
+        ChatMessage entity = ChatMessage.builder().sender(sender).recipient(recipient).content(message.getContent())
                 .timestamp(message.getTimestamp()).build();
 
         chatMessageRepository.save(entity);
-        // envia para o usuário destinatário diretamente
+
         messagingTemplate.convertAndSend("/topic/users/" + message.getRecipientUsername(), message);
     }
 
-    public List<ChatMessage> getMessages(String username) {
-        return chatMessageRepository.findBySenderUsernameOrRecipientUsernameOrderByTimestampAsc(username, username);
+    public List<ChatMessageResponseDTO> getMessages(String username) {
+        ApplicationUser sender = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Sender username not found: " + username));
+        List<ChatMessage> messages = chatMessageRepository.findBySenderOrRecipientOrderByTimestampAsc(sender, sender);
+
+        return messages.stream().map(ChatMessageMapper::toDTO).collect(Collectors.toList());
     }
 
     @Transactional
     public void deleteConversationForUser(String currentUsername, String otherUsername) {
-        List<ChatMessage> messages = chatMessageRepository
-                .findBySenderUsernameOrRecipientUsernameOrderByTimestampAsc(currentUsername, otherUsername);
+
+        ApplicationUser currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado: " + currentUsername));
+
+        ApplicationUser otherUser = userRepository.findByUsername(otherUsername)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado: " + otherUsername));
+
+        List<ChatMessage> messages = chatMessageRepository.findVisibleMessagesBetween(currentUser, otherUser);
 
         for (ChatMessage msg : messages) {
-            if (msg.getSenderUsername().equals(currentUsername)) {
+            if (msg.getSender().equals(currentUser)) {
                 msg.setDeletedBySender(true);
             }
-            if (msg.getRecipientUsername().equals(currentUsername)) {
+            if (msg.getRecipient().equals(currentUser)) {
                 msg.setDeletedByRecipient(true);
             }
         }
@@ -50,17 +75,22 @@ public class ChatService {
     }
 
     @Transactional
-    public void deleteMessage(Long messageId, String currentUser, boolean deleteForAll) {
+    public void deleteMessage(Long messageId, String currentUsername, boolean deleteForAll) {
+
+        ApplicationUser currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado: " + currentUsername));
+
         ChatMessage message = chatMessageRepository.findById(messageId)
-                .orElseThrow(() -> new RuntimeException("Mensagem não encontrada"));
+                .orElseThrow(() -> new MessageNotFoundException("Mensagem não encontrada"));
 
         if (deleteForAll) {
             message.setDeletedBySender(true);
             message.setDeletedByRecipient(true);
         } else {
-            if (message.getSenderUsername().equals(currentUser)) {
+
+            if (message.getSender().equals(currentUser)) {
                 message.setDeletedBySender(true);
-            } else if (message.getRecipientUsername().equals(currentUser)) {
+            } else if (message.getRecipient().equals(currentUser)) {
                 message.setDeletedByRecipient(true);
             } else {
                 throw new RuntimeException("Usuário não autorizado");

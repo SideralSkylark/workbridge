@@ -1,6 +1,9 @@
 package com.workbridge.workbridge_app.controller;
 
-import com.workbridge.workbridge_app.entity.ChatMessage;
+
+import com.workbridge.workbridge_app.dto.ChatMessageRequestDTO;
+import com.workbridge.workbridge_app.dto.ChatMessageResponseDTO;
+import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -8,10 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,15 +31,20 @@ public class ChatController {
     private final ChatService chatService;
 
     @MessageMapping("/chat")
-    public void sendMessage(ChatMessage message) {
+    public void sendMessage(ChatMessageRequestDTO message) {
         log.info("Mensagem recebida de {} para {}: {}", message.getSenderUsername(), message.getRecipientUsername(),
                 message.getContent());
         chatService.sendPrivateMessage(message);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
     @GetMapping("/api/v1/chat/{username}")
     @ResponseBody
-    public List<ChatMessage> getMessagesForUser(@PathVariable String username) {
+    public List<ChatMessageResponseDTO> getMessagesForUser(@PathVariable String username) {
         return chatService.getMessages(username);
     }
 

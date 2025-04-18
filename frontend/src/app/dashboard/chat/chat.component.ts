@@ -120,6 +120,7 @@ export class ChatComponent implements OnInit {
   
     // 3️⃣ WebSocket
     this.chatService.onMessage().subscribe((msg: ChatMessage) => {
+      console.log('[FRONT] Mensagem recebida por WebSocket:', msg);
       this.handleIncomingMessage(msg);
     });
   }
