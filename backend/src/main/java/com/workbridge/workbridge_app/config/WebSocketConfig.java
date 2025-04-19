@@ -13,21 +13,20 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-
     private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
 
-        registry.addEndpoint("/ws-chat")
+        registry.addEndpoint("/api/v1/ws-chat")
                 .addInterceptors(jwtHandshakeInterceptor)
-                .setAllowedOriginPatterns("http://localhost:3000, http://localhost:38907")
-                .withSockJS(); // para testes com front web
+                .setAllowedOriginPatterns("http://localhost:4200")
+                .withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic"); // prefixo das mensagens que saem
-        config.setApplicationDestinationPrefixes("/app"); // prefixo das mensagens que entram
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
     }
 }

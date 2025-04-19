@@ -58,6 +58,7 @@ export const routes: Routes = [
                     { path: 'bookings', component: BookedServicesComponent },
                     { path: '', redirectTo: 'services', pathMatch: 'full' }
                 ] },
+                
             { path: 'chat', component: ChatComponent, canActivate: [RoleGuard], data: {roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER']}},
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' } 
         ]

@@ -41,9 +41,10 @@
           <h6 class="card-subtitle">Price: ${{ booking.price }}</h6>
         </div>
         <div class="card-footer">
-          <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat()">
+          <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat(booking.providerName)">
             <i class="bi bi-chat-dots"></i> Chat
           </button>
+          
           <button class="btn btn-outline-danger btn-sm" (click)="cancelBooking(booking.id)">
             <i class="bi bi-x-circle"></i> Cancel
           </button>

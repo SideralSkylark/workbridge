@@ -1,120 +1,273 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TruncatePipe } from '../../shared/pipes/truncate.pipe';
-
+import { ChatService } from '../../services/chat.service';
+import { ActivatedRoute } from '@angular/router';
 
 interface ChatUser {
   id: string;
   name: string;
-  avatar: string;
-  online: boolean;
+  avatar?: string;
 }
 
 interface ChatMessage {
-  id: string;
+  id?: number;
   content: string;
-  sender: 'me' | string;
+  senderUsername: string;
+  recipientUsername: string;
   timestamp: Date;
+  deletedBySender?: boolean;
+  deletedByRecipient?: boolean;
 }
 
 interface Conversation {
   id: string;
   user: ChatUser;
+  messages: ChatMessage[];
   lastMessage: string;
   lastMessageTime: Date;
   unreadCount: number;
-  messages: ChatMessage[];
 }
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, TruncatePipe ],
+  imports: [CommonModule, FormsModule, TruncatePipe],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
-  
-
 })
 export class ChatComponent implements OnInit {
-  conversations: Conversation[] = [
-    {
-      id: '1',
-      user: {
-        id: 'provider1',
-        name: 'João Eletricista',
-        avatar: 'https://i.pravatar.cc/150?img=5',
-        online: true
-      },
-      lastMessage: 'Posso ir amanhã às 14h',
-      lastMessageTime: new Date(),
-      unreadCount: 2,
-      messages: [
-        {
-          id: '1',
-          content: 'Olá, preciso de um eletricista',
-          sender: 'me',
-          timestamp: new Date(Date.now() - 3600000)
-        },
-        {
-          id: '2',
-          content: 'Bom dia! Em que posso ajudar?',
-          sender: 'provider1',
-          timestamp: new Date(Date.now() - 1800000)
-        },
-        {
-          id: '3',
-          content: 'Posso ir amanhã às 14h',
-          sender: 'provider1',
-          timestamp: new Date()
-        }
-      ]
-    },
-    // Mais conversas...
-  ];
-
+  conversations: Conversation[] = [];
   activeChatId: string | null = null;
   newMessage = '';
+  currentUserId: string = '';
+
+  constructor(
+    private chatService: ChatService,
+    private route: ActivatedRoute
+  ) {}
 
   get activeConversation(): Conversation | undefined {
-    return this.conversations.find(c => c.id === this.activeChatId);
+    return this.conversations.find((c) => c.id === this.activeChatId);
+  }
+  private sortConversations(): void {
+    this.conversations.sort(
+      (a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
+    );
   }
 
   ngOnInit(): void {
-    // Carregar conversas do serviço
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      this.currentUserId = user.username;
+    }
+
+    this.chatService
+      .loadMessagesForUser(this.currentUserId)
+      .subscribe((messages) => {
+        const grouped = new Map<string, ChatMessage[]>();
+
+        messages.forEach((msg) => {
+          if (
+            (msg.senderUsername === this.currentUserId &&
+              msg.deletedBySender) ||
+            (msg.recipientUsername === this.currentUserId &&
+              msg.deletedByRecipient)
+          ) {
+            return;
+          }
+
+          const partner =
+            msg.senderUsername === this.currentUserId
+              ? msg.recipientUsername
+              : msg.senderUsername;
+
+          if (!grouped.has(partner)) {
+            grouped.set(partner, []);
+          }
+          grouped.get(partner)!.push(msg);
+        });
+
+        grouped.forEach((msgs, partnerId) => {
+          const conversation: Conversation = {
+            id: partnerId,
+            user: { id: partnerId, name: partnerId },
+            messages: msgs,
+            lastMessage: msgs[msgs.length - 1]?.content ?? '',
+            lastMessageTime: new Date(
+              msgs[msgs.length - 1]?.timestamp ?? Date.now()
+            ),
+            unreadCount: 0,
+          };
+          this.conversations.push(conversation);
+        });
+
+        this.sortConversations();
+
+        this.route.queryParams.subscribe((params) => {
+          const recipientUsername = params['recipient'];
+          if (recipientUsername) {
+            const alreadyExists = this.conversations.some(
+              (c) => c.id === recipientUsername
+            );
+
+            if (!alreadyExists) {
+              this.createChatIfNeeded(recipientUsername);
+            }
+
+            this.selectChat(recipientUsername);
+          }
+        });
+      });
+
+    this.chatService.onMessage().subscribe((msg: ChatMessage) => {
+      console.log('[FRONT] Mensagem recebida por WebSocket:', msg);
+      this.handleIncomingMessage(msg);
+    });
+  }
+
+  createChatIfNeeded(recipientUsername: string) {
+    const alreadyExists = this.conversations.some(
+      (c) => c.id === recipientUsername
+    );
+    if (alreadyExists) return;
+
+    this.conversations.push({
+      id: recipientUsername,
+      user: { id: recipientUsername, name: recipientUsername },
+      messages: [],
+      lastMessage: '',
+      lastMessageTime: new Date(),
+      unreadCount: 0,
+    });
+  }
+
+  handleIncomingMessage(msg: ChatMessage): void {
+    const partnerId =
+      msg.senderUsername === this.currentUserId
+        ? msg.recipientUsername
+        : msg.senderUsername;
+    let conversation = this.conversations.find((c) => c.id === partnerId);
+
+    if (!conversation) {
+      conversation = {
+        id: partnerId,
+        user: { id: partnerId, name: partnerId },
+        messages: [],
+        lastMessage: '',
+        lastMessageTime: new Date(),
+        unreadCount: 0,
+      };
+      this.conversations.push(conversation);
+    }
+
+    const alreadyExists = conversation.messages.some(
+      (existing) =>
+        existing.content === msg.content &&
+        existing.timestamp.toString() === new Date(msg.timestamp).toString() &&
+        existing.senderUsername === msg.senderUsername
+    );
+
+    if (alreadyExists) {
+      console.log('[chat] Ignorando mensagem duplicada');
+      return;
+    }
+
+    conversation.messages.push(msg);
+    conversation.lastMessage = msg.content;
+    conversation.lastMessageTime = new Date(msg.timestamp);
+
+    if (conversation.id !== this.activeChatId) {
+      conversation.unreadCount += 1;
+    }
+
+    this.conversations = [
+      conversation,
+      ...this.conversations.filter((c) => c.id !== conversation!.id),
+    ];
+
+    if (conversation.id !== this.activeChatId) {
+      conversation.unreadCount += 1;
+    }
+    this.sortConversations();
   }
 
   selectChat(chatId: string): void {
     this.activeChatId = chatId;
-    // Marcar mensagens como lidas
-    const conv = this.conversations.find(c => c.id === chatId);
+    const conv = this.conversations.find((c) => c.id === chatId);
     if (conv) conv.unreadCount = 0;
   }
 
   sendMessage(): void {
     if (!this.newMessage.trim() || !this.activeChatId) return;
 
-    const activeConv = this.activeConversation;
-    if (activeConv) {
-      const newMsg: ChatMessage = {
-        id: Date.now().toString(),
-        content: this.newMessage,
-        sender: 'me',
-        timestamp: new Date()
-      };
+    const msg: ChatMessage = {
+      content: this.newMessage,
+      senderUsername: this.currentUserId,
+      recipientUsername: this.activeChatId,
+      timestamp: new Date(),
+    };
 
-      activeConv.messages.push(newMsg);
-      activeConv.lastMessage = this.newMessage;
-      activeConv.lastMessageTime = new Date();
-      this.newMessage = '';
+    this.chatService.sendMessage({
+      recipientUsername: msg.recipientUsername,
+      content: msg.content,
+      timestamp: msg.timestamp.toISOString(),
+    });
 
-      // Aqui você enviaria a mensagem para o backend
-      // this.chatService.sendMessage(activeConv.id, this.newMessage);
-    }
+    this.handleIncomingMessage(msg);
+    this.newMessage = '';
   }
 
-  startNewChat(): void {
-    // Lógica para iniciar nova conversa
-    console.log('Nova conversa iniciada');
+  deleteForMe(msg: ChatMessage): void {
+    if (msg.id === undefined) return;
+    this.chatService
+      .deleteMessage(msg.id, this.currentUserId, false)
+      .subscribe(() => {
+        const conv = this.activeConversation;
+        if (conv) {
+          conv.messages = conv.messages.filter((m) => m.id !== msg.id);
+        }
+      });
+  }
+
+  deleteForAll(msg: ChatMessage): void {
+    if (msg.id === undefined) return;
+    this.chatService
+      .deleteMessage(msg.id, this.currentUserId, true)
+      .subscribe(() => {
+        const conv = this.activeConversation;
+        if (conv) {
+          conv.messages = conv.messages.filter((m) => m.id !== msg.id);
+        }
+      });
+  }
+
+  deleteConversation(): void {
+    if (!this.activeChatId) return;
+    this.chatService
+      .deleteConversation(this.currentUserId, this.activeChatId)
+      .subscribe(() => {
+        this.conversations = this.conversations.filter(
+          (c) => c.id !== this.activeChatId
+        );
+        this.activeChatId = null;
+      });
+  }
+  contextMenuVisible = false;
+  contextMenuPosition = { x: 0, y: 0 };
+  contextMessage: ChatMessage | null = null;
+
+  onRightClick(event: MouseEvent, msg: ChatMessage) {
+    event.preventDefault();
+    this.contextMenuVisible = true;
+    this.contextMenuPosition = { x: event.clientX, y: event.clientY };
+    this.contextMessage = msg;
+  }
+
+  @HostListener('document:click')
+  closeContextMenu() {
+    this.contextMenuVisible = false;
   }
 }
