@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import SockJS from 'sockjs-client'; 
-import * as Stomp from 'stompjs'; 
+import SockJS from 'sockjs-client';
+import { Client, IMessage } from '@stomp/stompjs';
 import { AuthService } from '../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -10,12 +10,12 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class ChatService {
-  private stompClient: any;
+  private stompClient!: Client;
   private messageSubject = new Subject<any>();
+  private connected = false;
 
   constructor(private authService: AuthService, private http: HttpClient) {}
 
- 
   connect(): void {
     const token = this.authService.getToken();
     if (!token) {
@@ -29,31 +29,33 @@ export class ChatService {
       return;
     }
 
+    this.stompClient = new Client({
+      webSocketFactory: () => new SockJS(`${environment.apiBaseUrl}/v1/ws-chat?token=${token}`),
+      debug: (str) => console.log(str), // Pode remover em produção
+      reconnectDelay: 5000
+    });
 
-    const socket = new SockJS(`${environment.apiBaseUrl}/v1/ws-chat?token=${token}`);
+    this.stompClient.onConnect = () => {
+      this.connected = true;
 
-    
-    this.stompClient = Stomp.over(socket);
-
-
-   
-    this.stompClient.connect({}, (frame: string) => {
-
-    
-      this.stompClient.subscribe(`/topic/users/${currentUser}`, (message: any) => {
+      this.stompClient.subscribe(`/topic/users/${currentUser}`, (message: IMessage) => {
         const msg = JSON.parse(message.body);
         this.messageSubject.next(msg);
       });
+    };
 
-    }, (error: string) => {
-      console.error('Erro na conexão STOMP:', error);
-    });
+    this.stompClient.onStompError = (frame) => {
+      console.error('Erro STOMP:', frame.headers['message'], frame.body);
+    };
+
+    this.stompClient.activate();
   }
 
-
   sendMessage(payload: { recipientUsername: string; content: string; timestamp: string }): void {
-    const currentUser = this.decodeJwtUsername(this.authService.getToken()!);
-    if (!this.stompClient || !this.stompClient.connected) {
+    const token = this.authService.getToken();
+    const currentUser = this.decodeJwtUsername(token!);
+
+    if (!this.stompClient || !this.connected) {
       console.error('STOMP client não está conectado.');
       return;
     }
@@ -63,26 +65,27 @@ export class ChatService {
       ...payload
     };
 
- 
-    this.stompClient.send('/app/chat', {}, JSON.stringify(messagePayload));
+    this.stompClient.publish({
+      destination: '/app/chat',
+      body: JSON.stringify(messagePayload)
+    });
   }
-
 
   onMessage(): Observable<any> {
     return this.messageSubject.asObservable();
   }
 
-  
   private decodeJwtUsername(token: string): string | null {
     try {
       const payloadBase64 = token.split('.')[1];
       const decodedPayload = atob(payloadBase64);
-      return JSON.parse(decodedPayload).sub; 
+      return JSON.parse(decodedPayload).sub;
     } catch (e) {
       console.error('Erro ao decodificar token JWT:', e);
       return null;
     }
   }
+
   loadMessagesForUser(username: string): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiBaseUrl}/v1/chat/${username}`);
   }
@@ -93,20 +96,16 @@ export class ChatService {
       {}
     );
   }
-  
+
   deleteConversation(currentUsername: string, otherUsername: string) {
     return this.http.delete(
       `${environment.apiBaseUrl}/v1/chat/conversation/${otherUsername}?currentUsername=${currentUsername}`
     );
   }
 
-  private connected = false;
-
-ensureConnection() {
-  if (!this.connected) {
-    this.connect();
+  ensureConnection() {
+    if (!this.connected) {
+      this.connect();
+    }
   }
-}
-
-  
 }

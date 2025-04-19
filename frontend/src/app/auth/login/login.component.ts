@@ -70,9 +70,9 @@
 
     quickLogin(role: 'admin' | 'seeker' | 'provider') {
       const credentials = {
-        admin:    { email: 'paulo@mail.com',    password: 'senha123' },
-        seeker:   { email: 'paulo2@mail.com',   password: 'senha123' },
-        provider: { email: 'paulo@mail.com', password: 'senha123' }
+        admin:    { email: 'sidik@gmail.com',    password: 'sidik123' },
+        seeker:   { email: 'sidik@gmail.com',   password: 'sidik123' },
+        provider: { email: 'provider@gmail.com', password: 'provider123' }
       };
     
       const selected = credentials[role];

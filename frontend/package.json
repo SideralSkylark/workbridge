@@ -23,10 +23,10 @@
     "@angular/platform-server": "^19.0.0",
     "@angular/router": "^19.0.0",
     "@angular/ssr": "^19.0.2",
+    "@stomp/stompjs": "^7.1.1",
     "express": "^4.18.2",
     "rxjs": "~7.8.0",
     "sockjs-client": "^1.6.1",
-    "stompjs": "^2.3.3",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
