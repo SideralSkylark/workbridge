@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.workbridge.workbridge_app.dto.ProviderRequestDTO;
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
-import com.workbridge.workbridge_app.entity.ProviderRequest;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.UserService;
 
