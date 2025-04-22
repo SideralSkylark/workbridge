@@ -32,8 +32,6 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void sendMessage(ChatMessageRequestDTO message) {
-        log.info("Mensagem recebida de {} para {}: {}", message.getSenderUsername(), message.getRecipientUsername(),
-                message.getContent());
         chatService.sendPrivateMessage(message);
     }
 
@@ -61,5 +59,4 @@ public class ChatController {
         chatService.deleteMessage(id, currentUsername, deleteForAll);
         return ResponseEntity.ok().build();
     }
-
 }
