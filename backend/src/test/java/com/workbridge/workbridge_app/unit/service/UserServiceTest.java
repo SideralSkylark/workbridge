@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,14 +16,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.GrantedAuthority;
 
+import com.workbridge.workbridge_app.dto.ProviderRequestDTO;
 import com.workbridge.workbridge_app.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
+import com.workbridge.workbridge_app.entity.ProviderRequest;
 import com.workbridge.workbridge_app.entity.UserRole;
 import com.workbridge.workbridge_app.entity.UserRoleEntity;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.repository.ProviderRequestRepository;
 import com.workbridge.workbridge_app.repository.UserRepository;
+import com.workbridge.workbridge_app.repository.UserRoleRepository;
 import com.workbridge.workbridge_app.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,103 +35,215 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserRoleRepository userRoleRepository;
+
+    @Mock
+    private ProviderRequestRepository providerRequestRepository;
+
     @InjectMocks
-    private UserService userService; 
+    private UserService userService;
 
-    private ApplicationUser mockUser;
-
-    static class TestUser extends ApplicationUser {
-        @Override
-        public List<? extends GrantedAuthority> getAuthorities() {
-            return List.of();
-        }
-    }
+    private ApplicationUser testUser;
+    private ApplicationUser testAdmin;
+    private UserRoleEntity providerRole;
+    private UserRoleEntity seekerRole;
+    private UserRoleEntity adminRole;
+    private ProviderRequest testProviderRequest;
 
     @BeforeEach
     void setUp() {
-        mockUser = new TestUser();
-        mockUser.setId(1L);
-        mockUser.setUsername("testUser");
-        mockUser.setEmail("test@example.com");
-        mockUser.setRoles(Set.of(new UserRoleEntity(UserRole.SERVICE_SEEKER)));
-        mockUser.setEnabled(false);
+        // Create roles
+        providerRole = new UserRoleEntity();
+        providerRole.setRole(UserRole.SERVICE_PROVIDER);
+
+        seekerRole = new UserRoleEntity();
+        seekerRole.setRole(UserRole.SERVICE_SEEKER);
+
+        adminRole = new UserRoleEntity();
+        adminRole.setRole(UserRole.ADMIN);
+
+        // Create test user
+        testUser = new ApplicationUser();
+        testUser.setId(1L);
+        testUser.setUsername("testuser");
+        testUser.setEmail("test@example.com");
+        testUser.setRoles(Set.of(providerRole));
+        testUser.setEnabled(true);
+
+        // Create test admin
+        testAdmin = new ApplicationUser();
+        testAdmin.setId(2L);
+        testAdmin.setUsername("admin");
+        testAdmin.setEmail("admin@example.com");
+        testAdmin.setRoles(Set.of(adminRole));
+        testAdmin.setEnabled(true);
+
+        // Create test provider request
+        testProviderRequest = new ProviderRequest();
+        testProviderRequest.setId(1L);
+        testProviderRequest.setUser(testUser);
+        testProviderRequest.setRequestedOn(LocalDateTime.now());
+        testProviderRequest.setApproved(false);
     }
 
     @Test
-    void testGetAllUsers() {
-        when(userRepository.findAll()).thenReturn(List.of(mockUser));
+    void getAllUsers_ShouldReturnAllUsers() {
+        // Arrange
+        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser, testAdmin));
 
-        List<UserResponseDTO> users = userService.getAllUsers();
+        // Act
+        List<UserResponseDTO> result = userService.getAllUsers();
 
-        assertEquals(1, users.size());
-        assertEquals("testUser", users.get(0).getUsername());
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(testUser.getUsername(), result.get(0).getUsername());
+        assertEquals(testAdmin.getUsername(), result.get(1).getUsername());
+        verify(userRepository).findAll();
     }
 
     @Test
-    void testFindById_UserExists() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+    void getAllNonAdminUsers_ShouldReturnOnlyNonAdminUsers() {
+        // Arrange
+        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser, testAdmin));
 
-        Optional<ApplicationUser> user = userService.findById(1L);
+        // Act
+        List<UserResponseDTO> result = userService.getAllNonAdminUsers();
 
-        assertTrue(user.isPresent());
-        assertEquals("testUser", user.get().getUsername());
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(testUser.getUsername(), result.get(0).getUsername());
+        verify(userRepository).findAll();
     }
 
     @Test
-    void testFindById_UserNotFound() {
-        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+    void getUsersByRole_ShouldReturnUsersWithSpecificRole() {
+        // Arrange
+        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser, testAdmin));
 
-        Optional<ApplicationUser> user = userService.findById(2L);
+        // Act
+        List<UserResponseDTO> result = userService.getUsersByRole(UserRole.SERVICE_PROVIDER);
 
-        assertFalse(user.isPresent());
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(testUser.getUsername(), result.get(0).getUsername());
+        verify(userRepository).findAll();
     }
 
     @Test
-    void testSaveUser() {
-        when(userRepository.save(mockUser)).thenReturn(mockUser);
+    void getAllProviderRequestNotApproved_ShouldReturnPendingRequests() {
+        // Arrange
+        when(providerRequestRepository.findAll()).thenReturn(Arrays.asList(testProviderRequest));
 
-        ApplicationUser savedUser = userService.saveUser(mockUser);
+        // Act
+        List<ProviderRequestDTO> result = userService.getAllProviderRequestNotApproved();
 
-        assertNotNull(savedUser);
-        assertEquals("testUser", savedUser.getUsername());
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(testUser.getUsername(), result.get(0).getUsername());
+        assertEquals(testUser.getEmail(), result.get(0).getEmail());
+        assertFalse(result.get(0).isApproved());
+        verify(providerRequestRepository).findAll();
     }
 
     @Test
-    void testDeleteUserById() {
-        doNothing().when(userRepository).deleteById(1L);
+    void findById_WhenUserExists_ShouldReturnUser() {
+        // Arrange
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        assertDoesNotThrow(() -> userService.deleteUserById(1L));
+        // Act
+        Optional<ApplicationUser> result = userService.findById(1L);
 
-        verify(userRepository, times(1)).deleteById(1L);
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(testUser.getUsername(), result.get().getUsername());
+        verify(userRepository).findById(1L);
     }
 
     @Test
-    void testEnableAccount_Success() {
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(mockUser));
-        when(userRepository.save(any(ApplicationUser.class))).thenReturn(mockUser);
+    void findByUsername_WhenUserExists_ShouldReturnUser() {
+        // Arrange
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
-        boolean result = userService.enableAccount("test@example.com");
+        // Act
+        Optional<ApplicationUser> result = userService.findByUsername("testuser");
 
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(testUser.getUsername(), result.get().getUsername());
+        verify(userRepository).findByUsername("testuser");
+    }
+
+    @Test
+    void findByEmail_WhenUserExists_ShouldReturnUser() {
+        // Arrange
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+
+        // Act
+        Optional<ApplicationUser> result = userService.findByEmail("test@example.com");
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(testUser.getEmail(), result.get().getEmail());
+        verify(userRepository).findByEmail("test@example.com");
+    }
+
+    @Test
+    void saveUser_ShouldReturnSavedUser() {
+        // Arrange
+        when(userRepository.save(any(ApplicationUser.class))).thenReturn(testUser);
+
+        // Act
+        ApplicationUser result = userService.saveUser(testUser);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(testUser.getUsername(), result.getUsername());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void isServiceProvider_WhenUserIsProvider_ShouldReturnTrue() {
+        // Arrange
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+        // Act
+        boolean result = userService.isServiceProvider("testuser");
+
+        // Assert
         assertTrue(result);
-        assertTrue(mockUser.isEnabled());
+        verify(userRepository).findByUsername("testuser");
     }
 
     @Test
-    void testEnableAccount_UserNotFound() {
-        when(userRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+    void isServiceProvider_WhenUserIsNotProvider_ShouldReturnFalse() {
+        // Arrange
+        ApplicationUser nonProvider = new ApplicationUser();
+        nonProvider.setUsername("nonprovider");
+        nonProvider.setRoles(Set.of(seekerRole));
+        when(userRepository.findByUsername("nonprovider")).thenReturn(Optional.of(nonProvider));
 
-        assertThrows(UserNotFoundException.class, () -> userService.enableAccount("notfound@example.com"));
+        // Act
+        boolean result = userService.isServiceProvider("nonprovider");
+
+        // Assert
+        assertFalse(result);
+        verify(userRepository).findByUsername("nonprovider");
     }
 
     @Test
-    void testDisableAccount_Success() {
-        mockUser.setEnabled(true);
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(mockUser));
-        when(userRepository.save(any(ApplicationUser.class))).thenReturn(mockUser);
+    void isServiceProvider_WhenUserNotFound_ShouldThrowException() {
+        // Arrange
+        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        boolean result = userService.disableAccount("test@example.com");
-
-        assertTrue(result);
-        assertFalse(mockUser.isEnabled());
+        // Act & Assert
+        assertThrows(UserNotFoundException.class, () -> 
+            userService.isServiceProvider("nonexistent")
+        );
+        verify(userRepository).findByUsername("nonexistent");
     }
-}
+} 

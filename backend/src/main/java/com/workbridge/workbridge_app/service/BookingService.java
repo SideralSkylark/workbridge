@@ -67,8 +67,8 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING);
         booking.setDate(request.getDate());  
         
-        bookingRepository.save(booking);
-        return convertToDTO(booking);
+        Booking response = bookingRepository.save(booking);
+        return convertToDTO(response);
     }
 
     @Transactional

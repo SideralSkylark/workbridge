@@ -42,9 +42,9 @@ public class ServiceService {
         service.setDescription(serviceDTO.getDescription());
         service.setPrice(serviceDTO.getPrice());
         service.setProvider(provider);
-
-        serviceRepository.save(service);
-        serviceDTO.setId(service.getId());
+        Service savedService = serviceRepository.save(service);
+        
+        serviceDTO.setId(savedService.getId());
         return serviceDTO;
     }
 
