@@ -15,6 +15,9 @@ import com.workbridge.workbridge_app.dto.EmailVerificationDTO;
 import com.workbridge.workbridge_app.dto.LoginRequestDTO;
 import com.workbridge.workbridge_app.dto.RegisterRequestDTO;
 import com.workbridge.workbridge_app.dto.RegisterResponseDTO;
+import com.workbridge.workbridge_app.exception.InvalidCredentialsException;
+import com.workbridge.workbridge_app.exception.TokenExpiredException;
+import com.workbridge.workbridge_app.exception.TokenVerificationException;
 import com.workbridge.workbridge_app.exception.UserAlreadyExistsException;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.service.AuthenticationService;
@@ -52,26 +55,37 @@ public class AuthController {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
-        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException ex) {
-        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<String> handleInvalidCredentialsException(InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(TokenVerificationException.class)
+    public ResponseEntity<String> handleTokenVerificationException(TokenVerificationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<String> handleTokenExpiredException(TokenExpiredException ex) {
+        return ResponseEntity.status(HttpStatus.GONE).body(ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception ex) {
-        ex.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("An unexpected error occurred. Please try again later.");
     }
 }

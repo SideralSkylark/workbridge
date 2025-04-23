@@ -2,6 +2,7 @@ package com.workbridge.workbridge_app.unit.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
@@ -25,15 +26,14 @@ import com.workbridge.workbridge_app.dto.RegisterResponseDTO;
 import com.workbridge.workbridge_app.entity.ApplicationUser;
 import com.workbridge.workbridge_app.entity.UserRole;
 import com.workbridge.workbridge_app.entity.UserRoleEntity;
-import com.workbridge.workbridge_app.entity.VerificationToken;
+import com.workbridge.workbridge_app.exception.InvalidCredentialsException;
 import com.workbridge.workbridge_app.exception.UserAlreadyExistsException;
 import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.repository.UserRepository;
 import com.workbridge.workbridge_app.repository.UserRoleRepository;
-import com.workbridge.workbridge_app.repository.VerificationTokenRepository;
 import com.workbridge.workbridge_app.security.JwtService;
 import com.workbridge.workbridge_app.service.AuthenticationService;
-import com.workbridge.workbridge_app.service.EmailService;
+import com.workbridge.workbridge_app.service.VerificationService;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
@@ -45,16 +45,13 @@ class AuthenticationServiceTest {
     private UserRoleRepository roleRepository;
 
     @Mock
-    private VerificationTokenRepository verificationTokenRepository;
-
-    @Mock
     private BCryptPasswordEncoder passwordEncoder;
 
     @Mock
     private JwtService jwtService;
 
     @Mock
-    private EmailService emailService;
+    private VerificationService verificationService;
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -112,7 +109,7 @@ class AuthenticationServiceTest {
         assertNotNull(response);
         assertEquals(testUser.getEmail(), response.getEmail());
         verify(userRepository).save(any(ApplicationUser.class));
-        verify(emailService).sendVerificationCode(anyString(), anyString());
+        verify(verificationService).createAndSendVerificationToken(any(ApplicationUser.class));
     }
 
     @Test
@@ -125,17 +122,12 @@ class AuthenticationServiceTest {
             authenticationService.register(registerRequest)
         );
         verify(userRepository, never()).save(any(ApplicationUser.class));
+        verify(verificationService, never()).createAndSendVerificationToken(any(ApplicationUser.class));
     }
 
     @Test
     void verify_WhenValidCode_ShouldEnableUserAndReturnToken() {
         // Arrange
-        VerificationToken token = new VerificationToken(
-            testUser.getEmail(),
-            "123456",
-            LocalDateTime.now().plusMinutes(10)
-        );
-        when(verificationTokenRepository.findByEmail(anyString())).thenReturn(Optional.of(token));
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
         when(jwtService.generateToken(any(ApplicationUser.class))).thenReturn("jwt.token.here");
 
@@ -147,21 +139,16 @@ class AuthenticationServiceTest {
         assertTrue(testUser.isEnabled());
         assertEquals("jwt.token.here", response.getToken());
         verify(userRepository).save(testUser);
-        verify(verificationTokenRepository).save(token);
+        verify(verificationService).verifyToken(verificationRequest.getEmail(), verificationRequest.getCode());
     }
 
     @Test
-    void verify_WhenInvalidCode_ShouldThrowException() {
+    void verify_WhenUserNotFound_ShouldThrowException() {
         // Arrange
-        VerificationToken token = new VerificationToken(
-            testUser.getEmail(),
-            "654321", // Different code
-            LocalDateTime.now().plusMinutes(10)
-        );
-        when(verificationTokenRepository.findByEmail(anyString())).thenReturn(Optional.of(token));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> 
+        assertThrows(UserNotFoundException.class, () -> 
             authenticationService.verify(verificationRequest)
         );
         verify(userRepository, never()).save(any(ApplicationUser.class));
@@ -170,6 +157,7 @@ class AuthenticationServiceTest {
     @Test
     void login_WhenValidCredentials_ShouldReturnToken() {
         // Arrange
+        testUser.setEnabled(true);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(jwtService.generateToken(any(ApplicationUser.class))).thenReturn("jwt.token.here");
@@ -191,6 +179,19 @@ class AuthenticationServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // Act & Assert
+        assertThrows(InvalidCredentialsException.class, () -> 
+            authenticationService.login(loginRequest)
+        );
+        verify(jwtService, never()).generateToken(any(ApplicationUser.class));
+    }
+
+    @Test
+    void login_WhenUserNotEnabled_ShouldThrowException() {
+        // Arrange
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+
+        // Act & Assert
         assertThrows(UserNotFoundException.class, () -> 
             authenticationService.login(loginRequest)
         );
@@ -201,7 +202,6 @@ class AuthenticationServiceTest {
     void resendVerificationCode_WhenUserNotEnabled_ShouldSendNewCode() {
         // Arrange
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
-        when(verificationTokenRepository.save(any(VerificationToken.class))).thenReturn(new VerificationToken());
 
         // Act
         RegisterResponseDTO response = authenticationService.resendVerificationCode(testUser.getEmail());
@@ -209,8 +209,8 @@ class AuthenticationServiceTest {
         // Assert
         assertNotNull(response);
         assertEquals(testUser.getEmail(), response.getEmail());
-        verify(verificationTokenRepository).deleteByEmail(testUser.getEmail());
-        verify(emailService).sendVerificationCode(anyString(), anyString());
+        verify(verificationService).deleteExistingToken(testUser.getEmail());
+        verify(verificationService).createAndSendVerificationToken(testUser);
     }
 
     @Test
@@ -225,7 +225,7 @@ class AuthenticationServiceTest {
         // Assert
         assertNotNull(response);
         assertEquals(testUser.getEmail(), response.getEmail());
-        verify(verificationTokenRepository, never()).deleteByEmail(anyString());
-        verify(emailService, never()).sendVerificationCode(anyString(), anyString());
+        verify(verificationService, never()).deleteExistingToken(anyString());
+        verify(verificationService, never()).createAndSendVerificationToken(any(ApplicationUser.class));
     }
 } 
