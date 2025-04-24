@@ -5,6 +5,7 @@ export interface BookingResponseDTO {
     serviceDescription: string;
     price: number;
     providerName: string;
+    providerId: number;
     date: string;
     status: string;
   }

@@ -4,12 +4,15 @@ import { BookingResponseDTO } from '../../../models/booking-responseDTO.model';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ChatService } from '../../../services/chat.service';
-
+import { ReviewComponent } from '../../../components/review/review.component';
+import { ReviewService } from '../../../services/review.service';
+import { AuthService } from '../../../auth/auth.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-my-bookings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReviewComponent, FormsModule],
   templateUrl: './my-bookings.component.html',
   styleUrls: ['./my-bookings.component.scss']
 })
@@ -17,8 +20,18 @@ export class MyBookingsComponent implements OnInit {
   bookings: BookingResponseDTO[] = [];
   loading = true;
   errorMessage = '';
+  selectedBooking: BookingResponseDTO | null = null;
+  showReviewModal = false;
+  hasReviewed: { [key: number]: boolean } = {};
+  providerIds: { [key: number]: number } = {};
 
-  constructor(private bookingService: BookingService,   private router: Router, private chatService: ChatService) {}
+  constructor(
+    private bookingService: BookingService,
+    private router: Router,
+    private chatService: ChatService,
+    private reviewService: ReviewService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadMyBookings();
@@ -30,6 +43,13 @@ export class MyBookingsComponent implements OnInit {
       next: (bookings) => {
         this.bookings = bookings;
         this.loading = false;
+        
+        // Check if each booking has been reviewed
+        bookings.forEach(booking => {
+          this.checkIfReviewed(booking.id);
+          // Store provider ID for each booking
+          this.providerIds[booking.id] = booking.providerId;
+        });
       },
       error: (err) => {
         this.errorMessage = 'Failed to load bookings.';
@@ -37,6 +57,43 @@ export class MyBookingsComponent implements OnInit {
         console.error('Error loading bookings:', err);
       }
     });
+  }
+
+  checkIfReviewed(bookingId: number): void {
+    this.reviewService.hasUserReviewedBooking(bookingId).subscribe({
+      next: (hasReviewed) => {
+        this.hasReviewed[bookingId] = hasReviewed;
+      },
+      error: (error) => {
+        console.error('Error checking if booking was reviewed:', error);
+        this.hasReviewed[bookingId] = false;
+      }
+    });
+  }
+
+  openReviewModal(booking: BookingResponseDTO): void {
+    console.log('Opening review modal for booking:', booking);
+    this.selectedBooking = booking;
+    this.showReviewModal = true;
+    
+    // Make sure providerId is set
+    if (!this.providerIds[booking.id]) {
+      this.providerIds[booking.id] = booking.providerId;
+    }
+    
+    console.log('Provider ID for booking:', this.providerIds[booking.id]);
+  }
+
+  closeReviewModal(): void {
+    this.showReviewModal = false;
+    this.selectedBooking = null;
+  }
+
+  onReviewSubmitted(): void {
+    if (this.selectedBooking) {
+      this.hasReviewed[this.selectedBooking.id] = true;
+    }
+    this.closeReviewModal();
   }
 
   cancelBooking(bookingId: number): void {
@@ -47,18 +104,17 @@ export class MyBookingsComponent implements OnInit {
           this.loadMyBookings();
         },
         error: (error) => {
-          console.error('Cancellation error:', error);
-          const errorMessage = error?.error?.message || 'An error occurred while canceling the booking.';
-          alert(errorMessage);
+          console.error('Error canceling booking:', error);
+          alert('Failed to cancel booking. Please try again.');
         }
       });
     }
   }
 
-  openChat(providerId: string): void {
-    this.chatService.ensureConnection(); // A gente vai criar isso também (pra resolver o problema 2)
+  openChat(providerName: string): void {
+    this.chatService.ensureConnection();
     this.router.navigate(['/dashboard/chat'], {
-      queryParams: { recipient: providerId }
+      queryParams: { recipient: providerName }
     });
   }
 }

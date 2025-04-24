@@ -60,6 +60,18 @@ public class ReviewService {
         return convertToDTO(review);
     }
 
+    /**
+     * Checks if a review exists for a specific booking
+     * @param bookingId The ID of the booking to check
+     * @return true if a review exists for the booking, false otherwise
+     */
+    public boolean hasUserReviewedBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                            .orElseThrow(() -> new BookingNotFoundException("Booking not found."));
+        
+        return reviewRepository.existsByBooking_Id(bookingId);
+    }
+
     private ReviewResponseDTO convertToDTO(Review review) {
         return new ReviewResponseDTO(
             review.getId(),

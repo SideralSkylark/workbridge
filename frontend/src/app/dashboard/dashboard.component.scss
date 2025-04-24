@@ -1,23 +1,30 @@
 .sidebar {
-  background: #ffffff;
+  background: var(--white);
   padding: 1.5rem 1rem;
   min-height: 100vh;
   width: 250px;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
   position: fixed;
   top: 0;
   left: 0;
   z-index: 1000;
-  transition: transform 0.3s ease-in-out;
+  transition: transform var(--transition-normal);
+  border-right: 1px solid var(--border-color);
 
   .sidebar-brand {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #6c63ff;
+    color: var(--primary-color);
     display: flex;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    
+    i {
+      margin-right: 0.75rem;
+      font-size: 1.5rem;
+    }
   }
 
   ul {
@@ -26,7 +33,7 @@
     margin: 0;
 
     li {
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
       position: relative;
 
       a {
@@ -34,32 +41,33 @@
         align-items: center;
         padding: 0.75rem 1rem;
         text-decoration: none;
-        border-radius: 0.75rem;
-        color: #333;
+        border-radius: var(--border-radius-md);
+        color: var(--text-dark);
         font-weight: 500;
-        transition: background-color 0.2s, color 0.2s;
+        transition: all var(--transition-fast);
 
         i {
           margin-right: 0.75rem;
           font-size: 1.2rem;
-          color: #6c63ff;
+          color: var(--primary-color);
+          transition: color var(--transition-fast);
         }
 
         &:hover {
-          background-color: #e0e7ff;
-          color: #6c63ff;
+          background-color: var(--primary-bg);
+          color: var(--primary-color);
 
           i {
-            color: #5849f9;
+            color: var(--primary-color);
           }
         }
 
         &.active {
-          background-color: #6c63ff;
-          color: white;
+          background-color: var(--primary-color);
+          color: var(--white);
 
           i {
-            color: white;
+            color: var(--white);
           }
         }
       }
@@ -83,7 +91,7 @@
 
         // Add a subtle background change to child items
         ul.child-menu li {
-          background-color: #f8f9fa;  /* Lighter background for children */
+          background-color: var(--gray-100);  /* Lighter background for children */
         }
 
         ul.child-menu li a {
@@ -92,8 +100,8 @@
 
         // Style for hover on child items
         ul.child-menu li a:hover {
-          background-color: #e0e7ff;
-          color: #6c63ff;
+          background-color: var(--primary-bg);
+          color: var(--primary-color);
         }
       }
     }
@@ -113,10 +121,13 @@
 .dashboard-content {
   margin-left: 250px;
   padding: 2rem;
-  transition: margin-left 0.3s ease-in-out;
+  transition: margin-left var(--transition-normal);
+  min-height: 100vh;
+  background-color: var(--gray-100);
 
   @media (max-width: 768px) {
     margin-left: 0;
+    padding: 1.5rem 1rem;
   }
 }
 
@@ -128,4 +139,33 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.3);
   z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+// Mobile toggle button
+.sidebar-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1001;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    background-color: var(--primary-dark);
+    transform: scale(1.05);
+  }
+  
+  @media (min-width: 769px) {
+    display: none;
+  }
 }

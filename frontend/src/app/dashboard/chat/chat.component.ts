@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TruncatePipe } from '../../shared/pipes/truncate.pipe';
@@ -37,11 +37,15 @@ interface Conversation {
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, AfterViewChecked {
   conversations: Conversation[] = [];
   activeChatId: string | null = null;
   newMessage = '';
   currentUserId: string = '';
+  showConversationList = true;
+  showMessageArea = false;
+  
+  @ViewChild('messageContainer') private messageContainer!: ElementRef;
 
   constructor(
     private chatService: ChatService,
@@ -51,6 +55,7 @@ export class ChatComponent implements OnInit {
   get activeConversation(): Conversation | undefined {
     return this.conversations.find((c) => c.id === this.activeChatId);
   }
+  
   private sortConversations(): void {
     this.conversations.sort(
       (a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
@@ -127,6 +132,20 @@ export class ChatComponent implements OnInit {
       this.handleIncomingMessage(msg);
     });
   }
+  
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
+  }
+  
+  private scrollToBottom(): void {
+    try {
+      if (this.messageContainer) {
+        this.messageContainer.nativeElement.scrollTop = this.messageContainer.nativeElement.scrollHeight;
+      }
+    } catch (err) {
+      console.error('Error scrolling to bottom:', err);
+    }
+  }
 
   createChatIfNeeded(recipientUsername: string) {
     const alreadyExists = this.conversations.some(
@@ -198,6 +217,20 @@ export class ChatComponent implements OnInit {
     this.activeChatId = chatId;
     const conv = this.conversations.find((c) => c.id === chatId);
     if (conv) conv.unreadCount = 0;
+    
+    // For mobile view
+    this.showConversationList = false;
+    this.showMessageArea = true;
+  }
+  
+  toggleView(): void {
+    if (this.showMessageArea) {
+      this.showMessageArea = false;
+      this.showConversationList = true;
+    } else {
+      this.showConversationList = false;
+      this.showMessageArea = true;
+    }
   }
 
   sendMessage(): void {
@@ -253,8 +286,11 @@ export class ChatComponent implements OnInit {
           (c) => c.id !== this.activeChatId
         );
         this.activeChatId = null;
+        this.showMessageArea = false;
+        this.showConversationList = true;
       });
   }
+  
   contextMenuVisible = false;
   contextMenuPosition = { x: 0, y: 0 };
   contextMessage: ChatMessage | null = null;

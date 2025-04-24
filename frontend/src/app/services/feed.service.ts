@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 import { ServiceFeedDTO } from '../models/service-feed.model';
+import { Service } from '../models/service.model';
 
 @Injectable({
   providedIn: 'root'
@@ -15,5 +16,9 @@ export class FeedService {
 
   getServiceFeed(): Observable<ServiceFeedDTO[]> {
     return this.http.get<ServiceFeedDTO[]>(this.apiUrl);
+  }
+
+  getServiceDetails(serviceId: number): Observable<Service> {
+    return this.http.get<Service>(`${environment.apiBaseUrl}/v1/services/${serviceId}`);
   }
 }
