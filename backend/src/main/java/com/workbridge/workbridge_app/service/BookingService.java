@@ -105,6 +105,7 @@ public class BookingService {
         return new BookingResponseDTO(
             booking.getId(),
             booking.getSeeker().getUsername(),
+            booking.getService().getId(),
             booking.getService().getTitle(),
             booking.getService().getDescription(),
             booking.getService().getPrice(),

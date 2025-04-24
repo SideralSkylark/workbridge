@@ -11,7 +11,7 @@ import { ServiceFormStateService } from '../../../services/service-form-state.se
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './services.component.html',
   styleUrls: ['./services.component.scss']
 })

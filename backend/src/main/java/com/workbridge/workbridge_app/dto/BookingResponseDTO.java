@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class BookingResponseDTO {
     private Long id;             
     private String seekerName;   
+    private Long serviceId;
     private String serviceTitle; 
     private String serviceDescription;
     private Double price;        
