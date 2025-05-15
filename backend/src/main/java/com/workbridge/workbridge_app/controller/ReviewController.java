@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +49,23 @@ public class ReviewController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("booking not found.");
         } catch (Exception exception) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error ocured when atributing your review to the service provider.");
+        }
+    }
+    
+    /**
+     * Checks if a user has already reviewed a booking
+     * @param bookingId The ID of the booking to check
+     * @return true if a review exists for the booking, false otherwise
+     */
+    @GetMapping("/check/{bookingId}")
+    public ResponseEntity<Boolean> hasUserReviewedBooking(@PathVariable Long bookingId) {
+        try {
+            boolean hasReviewed = reviewService.hasUserReviewedBooking(bookingId);
+            return ResponseEntity.ok(hasReviewed);
+        } catch (BookingNotFoundException bookingNotFoundException) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
         }
     }
 }

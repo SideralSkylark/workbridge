@@ -247,3 +247,297 @@
     }
   }
 }
+
+.my-bookings-container {
+  padding: 1.5rem;
+  
+  .section-title {
+    margin-bottom: 2rem;
+  }
+  
+  .booking-card {
+    margin-bottom: 1.5rem;
+    background-color: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem;
+      background-color: var(--white);
+      border-bottom: 1px solid var(--border-color);
+      
+      .service-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 1.2rem;
+      }
+      
+      .booking-status {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--border-radius-md);
+        
+        &.status-pending {
+          background-color: var(--warning-color);
+          color: var(--gray-900);
+        }
+        
+        &.status-confirmed {
+          background-color: var(--success-color);
+          color: var(--white);
+        }
+        
+        &.status-cancelled {
+          background-color: var(--danger-color);
+          color: var(--white);
+        }
+        
+        &.status-completed {
+          background-color: var(--info-color);
+          color: var(--white);
+        }
+      }
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+      
+      .booking-details {
+        margin-bottom: 1.5rem;
+        
+        .detail-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 0.75rem;
+          
+          i {
+            color: var(--primary-color);
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+          }
+          
+          span {
+            color: var(--text-dark);
+            font-size: 1rem;
+          }
+        }
+      }
+      
+      .booking-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          
+          i {
+            margin: 0;
+          }
+        }
+      }
+    }
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background-color: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    
+    i {
+      font-size: 3rem;
+      color: var(--gray-400);
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .empty-state-action {
+      margin-top: 1.5rem;
+    }
+  }
+  
+  .loading-state {
+    .skeleton-card {
+      margin-bottom: 1.5rem;
+      padding: 1.25rem;
+      background-color: var(--white);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-sm);
+      
+      .skeleton-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        
+        .skeleton-title {
+          width: 60%;
+          height: 1.5rem;
+          border-radius: var(--border-radius-md);
+        }
+        
+        .skeleton-badge {
+          width: 20%;
+          height: 1.5rem;
+          border-radius: var(--border-radius-md);
+        }
+      }
+      
+      .skeleton-details {
+        .skeleton-text {
+          height: 1rem;
+          margin-bottom: 0.75rem;
+          border-radius: var(--border-radius-md);
+        }
+        
+        .skeleton-actions {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 1.5rem;
+          
+          .skeleton-btn {
+            width: 100px;
+            height: 2.5rem;
+            border-radius: var(--border-radius-md);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Review Modal */
+.review-modal {
+  .modal-card {
+    max-width: 600px;
+    
+    .card-header {
+      h5 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-dark);
+      }
+    }
+    
+    .card-body {
+      .service-info {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        
+        .service-title {
+          font-weight: 600;
+          color: var(--text-dark);
+          margin-bottom: 0.5rem;
+        }
+        
+        .provider-info {
+          display: flex;
+          align-items: center;
+          color: var(--text-light);
+          font-size: 0.875rem;
+          
+          i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .my-bookings-container {
+    padding: 1rem;
+    
+    .booking-card {
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+      
+      .booking-actions {
+        flex-direction: column;
+        
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+/* Review Badge Styling */
+.badge.bg-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  background-color: var(--success-color) !important;
+  color: white;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+  transition: all var(--transition-fast);
+  animation: badgeAppear 0.5s ease-out;
+  
+  i {
+    font-size: 1rem;
+    margin: 0;
+    animation: checkmarkPulse 1.5s infinite;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  }
+}
+
+@keyframes badgeAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes checkmarkPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

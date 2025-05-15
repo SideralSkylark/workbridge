@@ -1,8 +1,6 @@
 <div class="chat-container">
-
   <div class="chat-body">
-
-    <div class="conversation-list">
+    <div class="conversation-list" [class.show]="showConversationList">
       <div class="search-box mb-3">
         <input
           type="text"
@@ -17,9 +15,9 @@
         [class.active]="chat.id === activeChatId"
         (click)="selectChat(chat.id)"
       >
-      <div class="avatar d-flex align-items-center justify-content-center rounded-circle bg-light" style="width: 40px; height: 40px;">
-        <i class="bi bi-person-fill" style="font-size: 1.5rem; color: #6c757d;"></i>
-      </div>
+        <div class="avatar d-flex align-items-center justify-content-center rounded-circle bg-light">
+          <i class="bi bi-person-fill"></i>
+        </div>
       
         <div class="conversation-info">
           <h6>{{ chat.user.name }}</h6>
@@ -34,25 +32,27 @@
       </div>
     </div>
 
-
-    <div class="message-area" *ngIf="activeChatId">
+    <div class="message-area" [class.show]="showMessageArea" *ngIf="activeChatId">
       <div class="message-header d-flex justify-content-between align-items-center">
-        <h5>{{ activeConversation?.user?.name || "Unknown user" }}</h5>
+        <div class="d-flex align-items-center">
+          <div class="back-button d-md-none" (click)="toggleView()">
+            <i class="bi bi-arrow-left"></i>
+          </div>
+          <h5>{{ activeConversation?.user?.name || "Unknown user" }}</h5>
+        </div>
         <button class="btn btn-sm btn-outline-danger" (click)="deleteConversation()" title="Delete conversation">
           <i class="bi bi-trash"></i> Delete conversation
         </button>
       </div>
 
       <div class="messages" #messageContainer>
-        
         <div
           *ngFor="let msg of activeConversation?.messages"
           [class.message-sent]="msg.senderUsername === currentUserId"
           [class.message-received]="msg.senderUsername !== currentUserId"
           (contextmenu)="onRightClick($event, msg)"
         >
-        
-          <div  class="message-content d-flex justify-content-between align-items-center">
+          <div class="message-content">
             <span>{{ msg.content }}</span>
           </div>
           <div class="message-time">
@@ -65,6 +65,7 @@
         <textarea
           [(ngModel)]="newMessage"
           placeholder="Type your message..."
+          (keydown.enter)="$event.preventDefault(); sendMessage()"
         ></textarea>
         <button class="btn btn-primary" (click)="sendMessage()">
           <i class="bi bi-send-fill"></i>
@@ -72,9 +73,8 @@
       </div>
     </div>
 
-
     <div class="no-chat-selected" *ngIf="!activeChatId">
-      <i class="bi bi-chat-square-text fs-1"></i>
+      <i class="bi bi-chat-square-text"></i>
       <p>Select a conversation or start a new one</p>
     </div>
   </div>
@@ -85,6 +85,6 @@
   *ngIf="contextMenuVisible"
   [ngStyle]="{ top: contextMenuPosition.y + 'px', left: contextMenuPosition.x + 'px' }"
 >
-<li (click)="deleteForMe(contextMessage!)">Delete for me</li>
-<li *ngIf="contextMessage?.senderUsername === currentUserId" (click)="deleteForAll(contextMessage!)">Delete for everyone</li>
+  <li (click)="deleteForMe(contextMessage!)">Delete for me</li>
+  <li *ngIf="contextMessage?.senderUsername === currentUserId" (click)="deleteForAll(contextMessage!)">Delete for everyone</li>
 </ul>
