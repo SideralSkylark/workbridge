@@ -15,4 +15,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long>{
     Double findAverageRatingByProviderId(@Param("providerId") Long providerId);
     
     boolean existsByBooking_Id(Long bookingId);
+    void deleteByBooking_Id(Long bookingId);
 }

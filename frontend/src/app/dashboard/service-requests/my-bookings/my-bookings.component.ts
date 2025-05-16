@@ -35,6 +35,8 @@ export class MyBookingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMyBookings();
+    console.log("provider ids:")
+    console.log( this.providerIds);
   }
 
   loadMyBookings(): void {
@@ -43,10 +45,10 @@ export class MyBookingsComponent implements OnInit {
       next: (bookings) => {
         this.bookings = bookings;
         this.loading = false;
-        
+        console.log("Bookings from API:", bookings);
         // Check if each booking has been reviewed
         bookings.forEach(booking => {
-          this.checkIfReviewed(booking.id);
+          this.checkIfReviwed(booking.id);
           // Store provider ID for each booking
           this.providerIds[booking.id] = booking.providerId;
         });
@@ -59,7 +61,7 @@ export class MyBookingsComponent implements OnInit {
     });
   }
 
-  checkIfReviewed(bookingId: number): void {
+  checkIfReviwed(bookingId: number): void {
     this.reviewService.hasUserReviewedBooking(bookingId).subscribe({
       next: (hasReviewed) => {
         this.hasReviewed[bookingId] = hasReviewed;

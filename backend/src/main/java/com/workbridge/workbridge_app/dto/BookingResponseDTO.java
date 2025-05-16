@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class BookingResponseDTO {
-    private Long id;             
+    private Long id;   
+    private Long providerId;          
     private String seekerName;   
     private Long serviceId;
     private String serviceTitle; 

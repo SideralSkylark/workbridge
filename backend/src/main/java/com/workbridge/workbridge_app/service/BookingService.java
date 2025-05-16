@@ -19,6 +19,7 @@ import com.workbridge.workbridge_app.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.repository.BookingRepository;
 import com.workbridge.workbridge_app.repository.ServiceRepository;
 import com.workbridge.workbridge_app.repository.UserRepository;
+import com.workbridge.workbridge_app.repository.ReviewRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ServiceRepository serviceRepository;
+    private final ReviewRepository reviewRepository;
 
     public List<BookingResponseDTO> getUsersBookings(String username) {
         ApplicationUser user = userRepository.findByUsername(username)
@@ -98,12 +100,14 @@ public class BookingService {
             throw new UserNotAuthorizedException("You can only cancel your bookings.");
         }
 
+        reviewRepository.deleteByBooking_Id(bookingId);
         bookingRepository.delete(booking);
     }
 
     private BookingResponseDTO convertToDTO(Booking booking) {
         return new BookingResponseDTO(
             booking.getId(),
+            booking.getService().getProvider().getId(),
             booking.getSeeker().getUsername(),
             booking.getService().getId(),
             booking.getService().getTitle(),
