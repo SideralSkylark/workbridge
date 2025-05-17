@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  postgres-db:
+  workbridge-db:
     image: postgres:15
     container_name: workbridge-db
     environment:
@@ -10,12 +10,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - workbridge_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - shared-bridge
     restart: unless-stopped
 
-  backend:
+  workbridge-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -23,14 +23,14 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres-db
+      - workbridge-db
     ports:
       - "8080:8080"
     networks:
-      - app-network
+      - shared-bridge
     restart: unless-stopped
   
-  frontend:
+  workbridge-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -38,13 +38,13 @@ services:
     ports:
       - "4200:80"  # SSR Angular default port is 4000
     depends_on:
-      - backend
+      - workbridge-backend
     networks:
-      - app-network
+      - shared-bridge
 
 volumes:
-  postgres_data:
+  workbridge_data:
 
 networks:
-  app-network:
-    driver: bridge
+  shared-bridge:
+    external: true

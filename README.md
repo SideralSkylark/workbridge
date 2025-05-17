@@ -78,6 +78,13 @@ DB_PASSWORD=your_password
 In the future, we may integrate test execution into the Docker Compose setup.
 
 ---
+### **1.5. Create a shared network**
+
+```bash
+docker network create shared-bridge
+```
+
+---
 
 ### **2. Build Docker Containers**
 
