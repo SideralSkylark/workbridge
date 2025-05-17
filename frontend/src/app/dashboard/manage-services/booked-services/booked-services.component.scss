@@ -131,3 +131,29 @@
     margin-top: 10px;
   }
 
+  .modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  
+  .modal-buttons {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+  

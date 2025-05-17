@@ -71,7 +71,7 @@
     quickLogin(role: 'admin' | 'seeker' | 'provider') {
       const credentials = {
         admin:    { email: 'sidik@gmail.com',    password: 'sidik123' },
-        seeker:   { email: 'sidik@gmail.com',   password: 'sidik123' },
+        seeker:   { email: 'seeker@gmail.com',   password: 'seeker123' },
         provider: { email: 'provider@gmail.com', password: 'provider123' }
       };
     

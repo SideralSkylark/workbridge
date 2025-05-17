@@ -26,11 +26,33 @@
         <p class="card-text text-muted mb-3">Booked for: {{ booking.date | date }}</p>
         <p class="card-subtitle text-muted">Customer: {{ booking.seekerName }}</p>
       </div>
-      <div class="card-footer">
+      <div class="card-footer modal-buttons">
         <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat(booking.seekerName  )">
           <i class="bi bi-chat-dots"></i> Chat
         </button>
+        <button style="color: #28a745" class="btn btn-outline-secondary btn-sm" (click)="emitirFatura(booking)">
+          <i class="bi bi-file-earmark-text"></i> Emitir Fatura
+        </button>        
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal PDF Preview -->
+<div class="modal-backdrop" *ngIf="showPdfPreview">
+  <div class="modal-content">
+    <h5 class="mb-3">Preview da Fatura</h5>
+    <iframe
+      *ngIf="pdfPreviewUrl"
+      [src]="pdfPreviewUrl | safeUrl"
+      width="100%"
+      height="500px"
+      frameborder="0"
+    ></iframe>
+    <div class="modal-buttons">
+      <button class="btn btn-primary" (click)="abrirPdfEmNovaAba()">Abrir em nova aba</button>
+      <button class="btn btn-success" (click)="enviarFaturaParaCliente()">Enviar para cliente</button>
+      <button class="btn btn-secondary" (click)="fecharPreview()">Fechar</button>
     </div>
   </div>
 </div>
