@@ -45,30 +45,31 @@ export class ManageServicesComponent {
 
   openBillBridge(): void {
     const token = localStorage.getItem('jwt');
-    if (!token) {
-      console.error('Token JWT não encontrado.');
+    const userJson = localStorage.getItem('user');
+  
+    if (!token || !userJson) {
+      console.error('Token JWT ou usuário não encontrado.');
       return;
     }
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get('http://localhost:8180/auth', { headers, responseType: 'text' })
-      .subscribe({
-        next: (html) => {
-          const newWindow = window.open('', '_blank');
-          if (newWindow) {
-            newWindow.document.open();
-            newWindow.document.write(html);
-            newWindow.document.close();
-          } else {
-            console.error('Falha ao abrir nova aba.');
-          }
-        },
-        error: (err) => {
-          console.error('Erro ao acessar BillBridge:', err);
-        }
-      });
+  
+    try {
+      const userObj = JSON.parse(userJson);
+ 
+      const minimalUser = {
+        username: userObj.username,
+        email: userObj.email
+      };
+  
+      const userParam = encodeURIComponent(JSON.stringify(minimalUser));
+      const url = `http://localhost:8081/dashboard?token=${encodeURIComponent(token)}&user=${userParam}`;
+  
+      window.open(url, '_blank');
+    } catch (e) {
+      console.error('Erro ao parsear usuário:', e);
+    }
   }
+  
+  
 
   isOnServicesPage(): boolean {
     return this.currentRoute.endsWith('/services');
