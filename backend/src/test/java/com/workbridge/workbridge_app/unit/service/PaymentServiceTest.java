@@ -11,8 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.workbridge.workbridge_app.repository.PaymentRepository;
-import com.workbridge.workbridge_app.service.PaymentService;
+import com.workbridge.workbridge_app.payment.repository.PaymentRepository;
+import com.workbridge.workbridge_app.payment.service.PaymentService;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {

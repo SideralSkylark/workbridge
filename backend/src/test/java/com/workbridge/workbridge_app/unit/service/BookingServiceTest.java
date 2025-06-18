@@ -16,21 +16,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.workbridge.workbridge_app.dto.BookingRequestDTO;
-import com.workbridge.workbridge_app.dto.BookingResponseDTO;
-import com.workbridge.workbridge_app.dto.UpdateBookingRequestDTO;
-import com.workbridge.workbridge_app.entity.ApplicationUser;
-import com.workbridge.workbridge_app.entity.Booking;
-import com.workbridge.workbridge_app.entity.BookingStatus;
-import com.workbridge.workbridge_app.entity.Service;
-import com.workbridge.workbridge_app.exception.BookingNotFoundException;
-import com.workbridge.workbridge_app.exception.ServiceListingNotFoundException;
-import com.workbridge.workbridge_app.exception.UserNotAuthorizedException;
-import com.workbridge.workbridge_app.exception.UserNotFoundException;
-import com.workbridge.workbridge_app.repository.BookingRepository;
-import com.workbridge.workbridge_app.repository.ServiceRepository;
-import com.workbridge.workbridge_app.repository.UserRepository;
-import com.workbridge.workbridge_app.service.BookingService;
+import com.workbridge.workbridge_app.auth.exception.UserNotAuthorizedException;
+import com.workbridge.workbridge_app.booking.dto.BookingRequestDTO;
+import com.workbridge.workbridge_app.booking.dto.BookingResponseDTO;
+import com.workbridge.workbridge_app.booking.dto.UpdateBookingRequestDTO;
+import com.workbridge.workbridge_app.booking.entity.Booking;
+import com.workbridge.workbridge_app.booking.entity.BookingStatus;
+import com.workbridge.workbridge_app.booking.exception.BookingNotFoundException;
+import com.workbridge.workbridge_app.booking.repository.BookingRepository;
+import com.workbridge.workbridge_app.booking.service.BookingService;
+import com.workbridge.workbridge_app.service.entity.Service;
+import com.workbridge.workbridge_app.service.exception.ServiceListingNotFoundException;
+import com.workbridge.workbridge_app.service.repository.ServiceRepository;
+import com.workbridge.workbridge_app.user.entity.ApplicationUser;
+import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {

@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.workbridge.workbridge_app.repository.UserRepository;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

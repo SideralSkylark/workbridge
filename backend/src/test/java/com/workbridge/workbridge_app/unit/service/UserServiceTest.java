@@ -17,17 +17,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.workbridge.workbridge_app.dto.ProviderRequestDTO;
-import com.workbridge.workbridge_app.dto.UserResponseDTO;
-import com.workbridge.workbridge_app.entity.ApplicationUser;
-import com.workbridge.workbridge_app.entity.ProviderRequest;
-import com.workbridge.workbridge_app.entity.UserRole;
-import com.workbridge.workbridge_app.entity.UserRoleEntity;
-import com.workbridge.workbridge_app.exception.UserNotFoundException;
-import com.workbridge.workbridge_app.repository.ProviderRequestRepository;
-import com.workbridge.workbridge_app.repository.UserRepository;
-import com.workbridge.workbridge_app.repository.UserRoleRepository;
-import com.workbridge.workbridge_app.service.UserService;
+import com.workbridge.workbridge_app.user.ProviderRequest;
+import com.workbridge.workbridge_app.user.ProviderRequestDTO;
+import com.workbridge.workbridge_app.user.ProviderRequestRepository;
+import com.workbridge.workbridge_app.user.dto.UserResponseDTO;
+import com.workbridge.workbridge_app.user.entity.ApplicationUser;
+import com.workbridge.workbridge_app.user.entity.UserRole;
+import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
+import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
+import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
+import com.workbridge.workbridge_app.user.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {

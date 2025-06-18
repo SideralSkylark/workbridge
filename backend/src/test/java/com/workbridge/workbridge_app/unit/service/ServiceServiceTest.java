@@ -16,17 +16,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.workbridge.workbridge_app.dto.ServiceDTO;
-import com.workbridge.workbridge_app.dto.ServiceFeedDTO;
-import com.workbridge.workbridge_app.entity.ApplicationUser;
-import com.workbridge.workbridge_app.entity.Service;
-import com.workbridge.workbridge_app.entity.UserRole;
-import com.workbridge.workbridge_app.entity.UserRoleEntity;
-import com.workbridge.workbridge_app.mapper.ServiceMapper;
-import com.workbridge.workbridge_app.repository.ReviewRepository;
-import com.workbridge.workbridge_app.repository.ServiceRepository;
-import com.workbridge.workbridge_app.repository.UserRepository;
-import com.workbridge.workbridge_app.service.ServiceService;
+import com.workbridge.workbridge_app.review.repository.ReviewRepository;
+import com.workbridge.workbridge_app.service.dto.ServiceDTO;
+import com.workbridge.workbridge_app.service.dto.ServiceFeedDTO;
+import com.workbridge.workbridge_app.service.entity.Service;
+import com.workbridge.workbridge_app.service.mapper.ServiceMapper;
+import com.workbridge.workbridge_app.service.repository.ServiceRepository;
+import com.workbridge.workbridge_app.service.service.ServiceService;
+import com.workbridge.workbridge_app.user.entity.ApplicationUser;
+import com.workbridge.workbridge_app.user.entity.UserRole;
+import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceServiceTest {

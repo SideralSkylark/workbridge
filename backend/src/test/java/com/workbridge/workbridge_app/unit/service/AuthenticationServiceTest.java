@@ -18,22 +18,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.workbridge.workbridge_app.dto.AuthenticationResponseDTO;
-import com.workbridge.workbridge_app.dto.EmailVerificationDTO;
-import com.workbridge.workbridge_app.dto.LoginRequestDTO;
-import com.workbridge.workbridge_app.dto.RegisterRequestDTO;
-import com.workbridge.workbridge_app.dto.RegisterResponseDTO;
-import com.workbridge.workbridge_app.entity.ApplicationUser;
-import com.workbridge.workbridge_app.entity.UserRole;
-import com.workbridge.workbridge_app.entity.UserRoleEntity;
-import com.workbridge.workbridge_app.exception.InvalidCredentialsException;
-import com.workbridge.workbridge_app.exception.UserAlreadyExistsException;
-import com.workbridge.workbridge_app.exception.UserNotFoundException;
-import com.workbridge.workbridge_app.repository.UserRepository;
-import com.workbridge.workbridge_app.repository.UserRoleRepository;
+import com.workbridge.workbridge_app.auth.dto.AuthenticationResponseDTO;
+import com.workbridge.workbridge_app.auth.dto.EmailVerificationDTO;
+import com.workbridge.workbridge_app.auth.dto.LoginRequestDTO;
+import com.workbridge.workbridge_app.auth.dto.RegisterRequestDTO;
+import com.workbridge.workbridge_app.auth.dto.RegisterResponseDTO;
+import com.workbridge.workbridge_app.auth.exception.InvalidCredentialsException;
+import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
+import com.workbridge.workbridge_app.auth.service.AuthenticationService;
+import com.workbridge.workbridge_app.auth.service.VerificationService;
 import com.workbridge.workbridge_app.security.JwtService;
-import com.workbridge.workbridge_app.service.AuthenticationService;
-import com.workbridge.workbridge_app.service.VerificationService;
+import com.workbridge.workbridge_app.user.entity.ApplicationUser;
+import com.workbridge.workbridge_app.user.entity.UserRole;
+import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
+import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
+import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {

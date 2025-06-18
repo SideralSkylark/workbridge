@@ -19,15 +19,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import com.workbridge.workbridge_app.dto.ChatMessageRequestDTO;
-import com.workbridge.workbridge_app.dto.ChatMessageResponseDTO;
-import com.workbridge.workbridge_app.entity.ApplicationUser;
-import com.workbridge.workbridge_app.entity.ChatMessage;
-import com.workbridge.workbridge_app.exception.MessageNotFoundException;
-import com.workbridge.workbridge_app.exception.UserNotFoundException;
-import com.workbridge.workbridge_app.repository.ChatMessageRepository;
-import com.workbridge.workbridge_app.repository.UserRepository;
-import com.workbridge.workbridge_app.service.ChatService;
+import com.workbridge.workbridge_app.chat.dto.ChatMessageRequestDTO;
+import com.workbridge.workbridge_app.chat.dto.ChatMessageResponseDTO;
+import com.workbridge.workbridge_app.chat.entity.ChatMessage;
+import com.workbridge.workbridge_app.chat.exception.MessageNotFoundException;
+import com.workbridge.workbridge_app.chat.repository.ChatMessageRepository;
+import com.workbridge.workbridge_app.chat.service.ChatService;
+import com.workbridge.workbridge_app.user.entity.ApplicationUser;
+import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {

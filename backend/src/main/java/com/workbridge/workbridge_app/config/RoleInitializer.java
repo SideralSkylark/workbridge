@@ -4,9 +4,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.workbridge.workbridge_app.entity.UserRole;
-import com.workbridge.workbridge_app.entity.UserRoleEntity;
-import com.workbridge.workbridge_app.repository.UserRoleRepository;
+import com.workbridge.workbridge_app.user.entity.UserRole;
+import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
+import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 
 import lombok.RequiredArgsConstructor;
 
