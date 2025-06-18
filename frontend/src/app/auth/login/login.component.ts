@@ -3,6 +3,7 @@
   import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
   import { Router, RouterModule } from '@angular/router';
   import { AuthService } from '../auth.service';
+  import { console } from 'inspector';
 
   @Component({
     selector: 'app-login',
@@ -16,6 +17,7 @@
     loading = false;
     submitted = false;
     error = '';
+    showPassword = false
 
     constructor(
       private formBuilder: FormBuilder,
@@ -83,5 +85,15 @@
       });
     
       this.onSubmit(); 
-    }    
+    }
+    
+    togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+
+    const passwordField = document.querySelector('#password') as HTMLInputElement;
+    if (passwordField) {
+      passwordField.type = this.showPassword ? 'text' : 'password';
+    }
   }
+
+}

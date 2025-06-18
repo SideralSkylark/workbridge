@@ -41,7 +41,7 @@
           <h5>{{ activeConversation?.user?.name || "Unknown user" }}</h5>
         </div>
         <button class="btn btn-sm btn-outline-danger" (click)="deleteConversation()" title="Delete conversation">
-          <i class="bi bi-trash"></i> Delete conversation
+          <i class="bi bi-trash"></i> Deletar Conversa
         </button>
       </div>
 
@@ -75,7 +75,7 @@
 
     <div class="no-chat-selected" *ngIf="!activeChatId">
       <i class="bi bi-chat-square-text"></i>
-      <p>Select a conversation or start a new one</p>
+      <p>Selecione uma conversa ou comece uma</p>
     </div>
   </div>
 </div>
@@ -85,6 +85,6 @@
   *ngIf="contextMenuVisible"
   [ngStyle]="{ top: contextMenuPosition.y + 'px', left: contextMenuPosition.x + 'px' }"
 >
-  <li (click)="deleteForMe(contextMessage!)">Delete for me</li>
-  <li *ngIf="contextMessage?.senderUsername === currentUserId" (click)="deleteForAll(contextMessage!)">Delete for everyone</li>
+  <li (click)="deleteForMe(contextMessage!)">Deletar para mim</li>
+  <li *ngIf="contextMessage?.senderUsername === currentUserId" (click)="deleteForAll(contextMessage!)">Deletar para todos</li>
 </ul>

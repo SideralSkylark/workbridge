@@ -1,5 +1,5 @@
 <!-- My Services Section -->
-<h5 class="section-title">My Services</h5>
+<h5 class="section-title">Meus Servicos</h5>
 
 <!-- Skeleton Loader -->
 <div *ngIf="isLoading" class="row g-4">
@@ -21,8 +21,8 @@
 <!-- Empty State -->
 <div *ngIf="!isLoading && services.length === 0" class="empty-state text-center">
   <i class="bi bi-briefcase"></i>
-  <p class="lead">You haven’t added any services yet.</p>
-  <button class="btn btn-primary" (click)="openForm()">Add Your First Service</button>
+  <p class="lead">Ainda nao tens servicos registados.</p>
+  <button class="btn btn-primary" (click)="openForm()">Adicione o seu primeiro servico</button>
 </div>
 
 <!-- Service Cards -->
@@ -52,28 +52,28 @@
     <div class="card add-service-card">
       <div class="card-body">
         <h5 class="card-title mb-4">
-          {{ editingServiceId ? 'Edit Service' : 'Add New Service' }}
+          {{ editingServiceId ? 'Editar Servico' : 'Adicionar Servico' }}
         </h5>
         <form (ngSubmit)="submitForm()" #serviceForm="ngForm" novalidate>
           <div class="mb-3">
-            <label for="title" class="form-label">Service Title</label>
-            <input type="text" id="title" class="form-control" required [(ngModel)]="newService.title" name="title" placeholder="Enter service title">
+            <label for="title" class="form-label">Titulo</label>
+            <input type="text" id="title" class="form-control" required [(ngModel)]="newService.title" name="title" placeholder="Inssira o titulo">
           </div>
         
           <div class="mb-3">
-            <label for="description" class="form-label">Service Description</label>
-            <textarea id="description" class="form-control" rows="4" required [(ngModel)]="newService.description" name="description" placeholder="Describe your service..."></textarea>
+            <label for="description" class="form-label">Descricao</label>
+            <textarea id="description" class="form-control" rows="4" required [(ngModel)]="newService.description" name="description" placeholder="Descreva o seu servico..."></textarea>
           </div>
         
           <div class="mb-4">
-            <label for="price" class="form-label">Price MNZ</label>
+            <label for="price" class="form-label">Preco MNZ</label>
             <input type="number" id="price" class="form-control" required [(ngModel)]="newService.price" name="price" step="0.01" placeholder="e.g. 49.99">
           </div>
         
           <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-outline-secondary" (click)="cancelForm()">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary" (click)="cancelForm()">Cancelar</button>
             <button type="submit" class="btn btn-primary" [disabled]="!serviceForm.form.valid">
-              {{ editingServiceId ? 'Update Service' : 'Create Service' }}
+              {{ editingServiceId ? 'Atualizar Servico' : 'Criar Servico' }}
             </button>
           </div>
         </form>
