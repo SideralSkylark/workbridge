@@ -1,6 +1,6 @@
 <div class="dashboard-content">
   <div class="search-bar d-flex align-items-center gap-3 mb-4">
-    <h2 class="section-title mb-0">Service Feed</h2>
+    <h2 class="section-title mb-0">Feed</h2>
 
     <div class="input-group flex-grow-1">
       <span class="input-group-text bg-white border-end-0">
@@ -16,7 +16,7 @@
 
     <button class="btn accent-background d-flex align-items-center gap-2">
       <i class="bi bi-filter"></i>
-      <span>Filters</span>
+      <span>Filtros</span>
     </button>
   </div>
 
@@ -39,7 +39,7 @@
   <!-- Empty State -->
   <div *ngIf="!loading && filteredServices.length === 0" class="empty-state text-center">
     <i class="bi bi-search"></i>
-    <p class="lead">No services match your search.</p>
+    <p class="lead">Nenhum servico condiz com a sua busca.</p>
   </div>
 
   <!-- Service Feed -->
@@ -59,13 +59,13 @@
                  class="accent-star"></i>
             </ng-container>
           </div>
-          <h6 class="card-subtitle">Price: {{ service.service.price }} MNZ</h6>
+          <h6 class="card-subtitle">Preco: {{ service.service.price }} MNZ</h6>
         </div>
         <div class="card-footer">
           <button
             class="btn btn-outline-secondary btn-sm"
             (click)="openModal(service)">
-            <i class="bi bi-info-circle"></i> Details
+            <i class="bi bi-info-circle"></i> Detalhes
           </button>
         </div>
       </div>
@@ -84,12 +84,12 @@
       <button class="btn-close" (click)="closeModal()"></button>
     </div>
     <div class="card-body">
-      <p><strong>Description:</strong> {{ selectedService?.service?.description }}</p>
-      <p><strong>Price:</strong> €{{ selectedService?.service?.price }}</p>
-      <p><strong>Provider:</strong> {{ selectedService?.providerUsername }}</p>
+      <p><strong>Descricao:</strong> {{ selectedService?.service?.description }}</p>
+      <p><strong>Preco:</strong> {{ selectedService?.service?.price }} MNZ</p>
+      <p><strong>Provedor:</strong> {{ selectedService?.providerUsername }}</p>
       <p><strong>Email:</strong> {{ selectedService?.providerEmail }}</p>
       <p>
-        <strong>Rating: </strong>
+        <strong>Classificacao: </strong>
         <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
           <i class="bi"
              [ngClass]="{
@@ -102,7 +102,7 @@
     </div>
     <div class="card-footer text-end">
       <button class="btn btn-primary" (click)="bookService()">
-        Book Service
+        Agendar Servico
       </button>
     </div>
   </div>

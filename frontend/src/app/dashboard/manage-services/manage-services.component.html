@@ -1,7 +1,7 @@
 <div class="dashboard-content">
   <!-- Title and Quick Actions -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-semibold text-dark">Manage Services</h2>
+    <h2 class="fw-semibold text-dark">Gerir Servicos</h2>
     <!-- Quick Access Dropdown Button -->
     <div class="dropdown">
       <button
@@ -9,22 +9,22 @@
         type="button"
         data-bs-toggle="dropdown"
         aria-expanded="false">
-        <i class="bi bi-gear-fill"></i> Quick Actions
+        <i class="bi bi-gear-fill"></i> Acoes Rapidas
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow-sm">
         <li *ngIf="isOnServicesPage()">
           <button class="dropdown-item d-flex align-items-center gap-2" (click)="openForm()">
-            <i class="bi bi-plus-circle text-primary"></i> Add New Service
+            <i class="bi bi-plus-circle text-primary"></i> Adicionar novo servico
           </button>
         </li>
         <li>
           <button class="dropdown-item d-flex align-items-center gap-2" (click)="viewServices()">
-            <i class="bi bi-briefcase text-info"></i> View My Services
+            <i class="bi bi-briefcase text-info"></i> Ver meus servicos
           </button>
         </li>
         <li>
           <button class="dropdown-item d-flex align-items-center gap-2" (click)="viewBookings()">
-            <i class="bi bi-journal-check text-success"></i> View Booked Services
+            <i class="bi bi-journal-check text-success"></i> Ver servicos agendados
           </button>
         </li>
         <li>

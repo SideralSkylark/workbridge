@@ -1,6 +1,6 @@
 <div class="dashboard-content">
   <div class="search-bar d-flex align-items-center gap-3 mb-4">
-    <h2 class="section-title mb-0">My Bookings</h2>
+    <h2 class="section-title mb-0">Meus agendamentos</h2>
   </div>
 
   <!-- Skeleton Loading with Shimmer -->
@@ -27,7 +27,7 @@
 
   <div *ngIf="!loading && bookings.length === 0" class="empty-state text-center">
     <i class="bi bi-calendar-x"></i>
-    <p class="lead">You have no bookings.</p>
+    <p class="lead">Nao tens nenhum agendamento.</p>
   </div>
 
   <div *ngIf="!loading && bookings.length > 0" class="row g-4">
@@ -46,15 +46,15 @@
           </button>
           
           <button class="btn btn-outline-danger btn-sm" (click)="cancelBooking(booking.id)">
-            <i class="bi bi-x-circle"></i> Cancel
+            <i class="bi bi-x-circle"></i> Cancelar
           </button>
           
           <!-- Review Button - Only show if not already reviewed -->
           <button *ngIf="!hasReviewed[booking.id]" class="btn btn-outline-primary btn-sm" (click)="openReviewModal(booking)">
-            <i class="bi bi-star"></i> Review
+            <i class="bi bi-star"></i> Avaliar
           </button>
           <span *ngIf="hasReviewed[booking.id]" class="badge bg-success ms-2">
-            <i class="bi bi-check-circle"></i> Reviewed
+            <i class="bi bi-check-circle"></i> Avaliado
           </span>
         </div>
       </div>
@@ -68,12 +68,12 @@
 <div class="modal-card-wrapper" *ngIf="showReviewModal">
   <div class="modal-card card">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Review Service</h5>
+      <h5 class="mb-0">Avaliar Servico</h5>
       <button class="btn-close" (click)="closeReviewModal()"></button>
     </div>
     <div class="card-body">
-      <p><strong>Service:</strong> {{ selectedBooking?.serviceTitle }}</p>
-      <p><strong>Provider:</strong> {{ selectedBooking?.providerName }}</p>
+      <p><strong>Servico:</strong> {{ selectedBooking?.serviceTitle }}</p>
+      <p><strong>Provedor:</strong> {{ selectedBooking?.providerName }}</p>
       
       <!-- Review Component -->
       <div *ngIf="selectedBooking">

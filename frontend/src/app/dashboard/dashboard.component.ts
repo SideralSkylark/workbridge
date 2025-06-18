@@ -17,9 +17,9 @@ export class DashboardComponent implements OnInit {
   isSidebarOpen = false;
 
   menuItems: MenuItem[] = [
-    { label: 'Admin Panel', icon: 'bi bi-shield-lock', route: '/dashboard/admin', roles: ['ADMIN'] },
-    { label: 'Service Requests', icon: 'bi bi-box', route: '/dashboard/requests', roles: ['SERVICE_SEEKER'] },
-    { label: 'Manage Services', icon: 'bi bi-gear', route: '/dashboard/manage', roles: ['SERVICE_PROVIDER'], },
+    { label: 'Painel Admin', icon: 'bi bi-shield-lock', route: '/dashboard/admin', roles: ['ADMIN'] },
+    { label: 'Requisicoes de Servicos', icon: 'bi bi-box', route: '/dashboard/requests', roles: ['SERVICE_SEEKER'] },
+    { label: 'Gerir Servicos', icon: 'bi bi-gear', route: '/dashboard/manage', roles: ['SERVICE_PROVIDER'], },
     { label: 'Chat', icon: 'bi bi-chat-dots', route: '/dashboard/chat', roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER'] },
     { 
       label: 'Logout', 

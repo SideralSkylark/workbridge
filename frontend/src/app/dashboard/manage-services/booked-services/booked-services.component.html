@@ -14,7 +14,7 @@
 <!-- Empty State for Booked Services -->
 <div *ngIf="!isLoading && bookings.length === 0" class="empty-state text-center py-5">
   <i class="bi bi-calendar-event" style="font-size: 3rem;"></i>
-  <p class="lead mt-3">No services have been booked yet.</p>
+  <p class="lead mt-3">Nenhum servico agendado.</p>
 </div>
 
 <!-- Booked Services Cards -->
@@ -23,8 +23,8 @@
     <div class="card h-100 shadow-sm border-0">
       <div class="card-body">
         <h5 class="card-title">{{ booking.serviceTitle }}</h5>
-        <p class="card-text text-muted mb-3">Booked for: {{ booking.date | date }}</p>
-        <p class="card-subtitle text-muted">Customer: {{ booking.seekerName }}</p>
+        <p class="card-text text-muted mb-3">Agendado para: {{ booking.date | date }}</p>
+        <p class="card-subtitle text-muted">Cliente: {{ booking.seekerName }}</p>
       </div>
       <div class="card-footer modal-buttons">
         <button style="color: #6c63ff" class="btn btn-outline-secondary btn-sm" (click)="openChat(booking.seekerName  )">

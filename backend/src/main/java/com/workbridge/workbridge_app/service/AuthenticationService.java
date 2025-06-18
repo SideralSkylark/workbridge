@@ -27,8 +27,11 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Service responsible for handling user authentication and registration operations.
- * This service manages user registration, email verification, login, and token generation.
- * It works in conjunction with the VerificationService for email verification and JwtService for token management.
+ * This service manages user registration,
+ * email verification, 
+ * login, and token generation.
+ * It works in conjunction with the VerificationService for email 
+ * verification and JwtService for token management.
  */
 @Service
 @RequiredArgsConstructor

@@ -1,10 +1,10 @@
-<h5 class="section-title">Provider Requests</h5>
+<h5 class="section-title">Requisicoes</h5>
 
 <div *ngIf="showSuccessCard" class="backdrop">
   <div class="confirmation-card">
     <i class="bi bi-check-circle-fill text-success display-5"></i>
-    <h5 class="mt-3">Provider Approved</h5>
-    <p class="mb-0">The provider has been successfully approved.</p>
+    <h5 class="mt-3">Provedor Aprovado</h5>
+    <p class="mb-0">O provedor foi aprovado com sucesso.</p>
   </div>
 </div>
 
@@ -27,7 +27,7 @@
 <!-- Empty State -->
 <div *ngIf="!isLoading && requests.length === 0" class="empty-state text-center">
   <i class="bi bi-person-plus"></i>
-  <p class="lead">No pending provider requests.</p>
+  <p class="lead">Nenhuma requisicao pendente.</p>
 </div>
 
 <!-- Request Cards -->
@@ -45,7 +45,7 @@
         <button
           class="btn btn-outline-success btn-sm"
           (click)="approveRequest(request.id)">
-          Approve Request
+          Aprovar Requisicao
         </button>
       </div>
     </div>
