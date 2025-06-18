@@ -2,7 +2,6 @@ package com.workbridge.workbridge_app.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,16 +21,39 @@ import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
 import com.workbridge.workbridge_app.auth.service.AuthenticationService;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 
+import jakarta.validation.Valid;
+
 /**
- * Controller responsible for handling authentication-related endpoints.
- * This controller manages user registration, email verification, login, and token-related operations.
- * It provides endpoints for:
- * - User registration
- * - Email verification
- * - Verification code resending
- * - User login
- * 
- * The controller also includes global exception handlers for authentication-related exceptions.
+ * REST controller responsible for handling user authentication and registration endpoints.
+ *
+ * <p>This controller provides endpoints for:
+ * <ul>
+ *   <li>User registration</li>
+ *   <li>Email verification</li>
+ *   <li>Resending verification codes</li>
+ *   <li>User login and JWT token generation</li>
+ * </ul>
+ *
+ * <p>Each endpoint delegates to the {@link AuthenticationService} for business logic
+ * and uses DTOs to exchange data between the frontend and backend.
+ *
+ * <p>All endpoints return appropriate HTTP status codes:
+ * <ul>
+ *   <li><b>201 Created</b> for successful registration</li>
+ *   <li><b>200 OK</b> for successful login and verification operations</li>
+ *   <li><b>4xx</b> codes for validation, authentication, and business errors</li>
+ * </ul>
+ *
+ * <p>Validation is enforced using {@code @Valid} and specific exceptions such as:
+ * <ul>
+ *   <li>{@link UserAlreadyExistsException}</li>
+ *   <li>{@link UserNotFoundException}</li>
+ *   <li>{@link InvalidCredentialsException}</li>
+ *   <li>{@link TokenVerificationException}</li>
+ *   <li>{@link TokenExpiredException}</li>
+ * </ul>
+ *
+ * @see AuthenticationService
  */
 @RestController
 @RequestMapping("api/v1/auth")
@@ -41,143 +63,90 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     
     /**
-     * Registers a new user in the system.
-     * This endpoint:
-     * 1. Validates the registration request
-     * 2. Creates a new user account
-     * 3. Sends a verification email
-     * 4. Returns a registration response
+     * Registers a new user account.
      *
-     * @param registerRequest The registration request containing user details
-     * @return RegisterResponseDTO containing the registered user's email
-     * @throws UserAlreadyExistsException if username or email is already in use
+     * <p>This endpoint performs:
+     * <ol>
+     *   <li>Validation of the request payload</li>
+     *   <li>Uniqueness check on username and email</li>
+     *   <li>User creation and persistence</li>
+     *   <li>Email verification token generation and dispatch</li>
+     * </ol>
+     *
+     * @param registerRequest DTO with username, email, password and roles
+     * @return Response with user's email indicating successful registration
+     * @throws UserAlreadyExistsException if the email or username is already in use
      */
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDTO> register(@RequestBody RegisterRequestDTO registerRequest) {
+    public ResponseEntity<RegisterResponseDTO>
+     register(@Valid @RequestBody RegisterRequestDTO registerRequest) {
         RegisterResponseDTO response = authenticationService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
-     * Verifies a user's email using the provided verification code.
-     * Upon successful verification:
-     * 1. Enables the user account
-     * 2. Generates a JWT token
-     * 3. Returns authentication response with token
+     * Verifies a user's email using a verification code.
      *
-     * @param emailVerificationDTO Contains email and verification code
-     * @return AuthenticationResponseDTO with JWT token and user details
-     * @throws UserNotFoundException if user not found
-     * @throws TokenVerificationException if verification code is invalid
-     * @throws TokenExpiredException if verification code has expired
+     * <p>This endpoint:
+     * <ul>
+     *   <li>Validates the verification code</li>
+     *   <li>Activates the user account</li>
+     *   <li>Generates a JWT token</li>
+     * </ul>
+     *
+     * @param emailVerificationDTO DTO containing email and verification code
+     * @return JWT token and basic user information
+     * @throws UserNotFoundException if no user is found with the given email
+     * @throws TokenVerificationException if the token is invalid
+     * @throws TokenExpiredException if the token has expired
      */
     @PostMapping("/verify")
-    public ResponseEntity<AuthenticationResponseDTO> verify(@RequestBody EmailVerificationDTO emailVerificationDTO) {
+    public ResponseEntity<AuthenticationResponseDTO>
+     verify(@Valid @RequestBody EmailVerificationDTO emailVerificationDTO) {
         AuthenticationResponseDTO response = authenticationService.verify(emailVerificationDTO);
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Resends a verification code to a user's email.
-     * If the user is already verified, returns the email without sending a new code.
-     * Otherwise, deletes any existing token and sends a new verification code.
+     * Resends a new verification code to the specified email address.
      *
-     * @param request Contains the email address to resend the verification code to
-     * @return RegisterResponseDTO containing the user's email
-     * @throws UserNotFoundException if user not found
+     * <p>If the user is already verified, no new code is sent, and the response returns immediately.
+     * Otherwise:
+     * <ul>
+     *   <li>Any existing tokens are deleted</li>
+     *   <li>A new token is generated and sent</li>
+     * </ul>
+     *
+     * @param request DTO containing the user's email
+     * @return DTO with the user's email confirming dispatch
+     * @throws UserNotFoundException if the email is not registered
      */
     @PostMapping("/resend-verification")
-    public ResponseEntity<RegisterResponseDTO> resendVerification(@RequestBody EmailVerificationDTO request) {
+    public ResponseEntity<RegisterResponseDTO>
+     resendVerification(@Valid @RequestBody EmailVerificationDTO request) {
         RegisterResponseDTO response = authenticationService.resendVerificationCode(request.getEmail());
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Authenticates a user and generates a JWT token.
-     * This endpoint:
-     * 1. Validates user credentials
-     * 2. Checks if the account is verified
-     * 3. Generates and returns a JWT token
+     * Authenticates a user and returns a JWT token upon successful login.
      *
-     * @param loginRequest Contains email and password
-     * @return AuthenticationResponseDTO with JWT token and user details
+     * <p>This endpoint:
+     * <ol>
+     *   <li>Validates the provided email and password</li>
+     *   <li>Checks if the user has verified their email</li>
+     *   <li>Returns a signed JWT token along with user metadata</li>
+     * </ol>
+     *
+     * @param loginRequest DTO with user's email and password
+     * @return Authentication response with token and user info
      * @throws InvalidCredentialsException if email or password is incorrect
-     * @throws UserNotFoundException if account is not verified
+     * @throws UserNotFoundException if the user is not verified
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<AuthenticationResponseDTO>
+     login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         AuthenticationResponseDTO response = authenticationService.login(loginRequest);
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Global exception handler for UserAlreadyExistsException.
-     * Returns a 409 Conflict status with the exception message.
-     *
-     * @param ex The UserAlreadyExistsException that was thrown
-     * @return ResponseEntity containing the error message
-     */
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
-    }
-
-    /**
-     * Global exception handler for UserNotFoundException.
-     * Returns a 404 Not Found status with the exception message.
-     *
-     * @param ex The UserNotFoundException that was thrown
-     * @return ResponseEntity containing the error message
-     */
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    /**
-     * Global exception handler for InvalidCredentialsException.
-     * Returns a 401 Unauthorized status with the exception message.
-     *
-     * @param ex The InvalidCredentialsException that was thrown
-     * @return ResponseEntity containing the error message
-     */
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<String> handleInvalidCredentialsException(InvalidCredentialsException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
-    }
-
-    /**
-     * Global exception handler for TokenVerificationException.
-     * Returns a 400 Bad Request status with the exception message.
-     *
-     * @param ex The TokenVerificationException that was thrown
-     * @return ResponseEntity containing the error message
-     */
-    @ExceptionHandler(TokenVerificationException.class)
-    public ResponseEntity<String> handleTokenVerificationException(TokenVerificationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-
-    /**
-     * Global exception handler for TokenExpiredException.
-     * Returns a 400 Bad Request status with the exception message.
-     *
-     * @param ex The TokenExpiredException that was thrown
-     * @return ResponseEntity containing the error message
-     */
-    @ExceptionHandler(TokenExpiredException.class)
-    public ResponseEntity<String> handleTokenExpiredException(TokenExpiredException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGenericException(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("An unexpected error occurred. Please try again later.");
     }
 }

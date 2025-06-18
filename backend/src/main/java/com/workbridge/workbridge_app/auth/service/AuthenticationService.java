@@ -26,15 +26,34 @@ import com.workbridge.workbridge_app.user.repository.UserRepository;
 import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service responsible for handling user authentication and registration operations.
  * This service manages user registration,
  * email verification, 
  * login, and token generation.
  * It works in conjunction with the VerificationService for email 
  * verification and JwtService for token management.
  */
+
+/**
+ * Service responsible for handling user authentication and registration operations.
+ *
+ * <p>This service provides methods for:
+ * <ul>
+ *   <li>User registration</li>
+ *   <li>Email verification</li>
+ *   <li>Resending verification codes</li>
+ *   <li>User login and JWT token generation</li>
+ * </ul>
+ *
+ * <p>It works in conjunction with the {@link VerificationService} for email 
+ * verification and {@link JwtService} for token management.
+ *
+ * @see VerificationService
+ * @see JwtService
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -59,12 +78,16 @@ public class AuthenticationService {
      */
     @Transactional
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
+        log.info("Attempting to register user with email: {}", registerRequestDTO.getEmail());
+
         validateRegistrationRequest(registerRequestDTO);
 
         ApplicationUser user = createUser(registerRequestDTO);
         userRepository.save(user);
         
         verificationService.createAndSendVerificationToken(user);
+
+        log.info("User registered successfully: {}", user.getEmail());
         
         return new RegisterResponseDTO(user.getEmail());
     }
@@ -84,13 +107,20 @@ public class AuthenticationService {
      */
     @Transactional
     public AuthenticationResponseDTO verify(EmailVerificationDTO emailVerificationDTO) {
+        log.info("Verifying email: {}", emailVerificationDTO.getEmail());
+
         verificationService.verifyToken(emailVerificationDTO.getEmail(), emailVerificationDTO.getCode());
 
         ApplicationUser user = userRepository.findByEmail(emailVerificationDTO.getEmail())
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+            .orElseThrow(() -> {
+                log.warn("Verification failed: user not found - {}", emailVerificationDTO.getEmail());
+                return new UserNotFoundException("User not found");
+            });
 
         user.setEnabled(true);
         userRepository.save(user);
+
+        log.info("Email verified successfully for user: {}", user.getEmail());
 
         String tokenJwt = jwtService.generateToken(user);
         return buildAuthenticationResponse(user, tokenJwt);
@@ -107,15 +137,23 @@ public class AuthenticationService {
      */
     @Transactional
     public RegisterResponseDTO resendVerificationCode(String email) {
+        log.info("Resending verification code to: {}", email);
+
         ApplicationUser user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+            .orElseThrow(() -> {
+                log.warn("Resend failed: user not found - {}", email);
+                return new UserNotFoundException("User not found");
+            });
 
         if (user.isEnabled()) {
+            log.info("User already verified: {}", email);
             return new RegisterResponseDTO(user.getEmail());
         }
 
         verificationService.deleteExistingToken(email);
         verificationService.createAndSendVerificationToken(user);
+
+        log.info("Verification code resent to: {}", email);
 
         return new RegisterResponseDTO(user.getEmail());
     }
@@ -134,18 +172,28 @@ public class AuthenticationService {
      */
     @Transactional
     public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO) {
+        log.info("User attempting login with email: {}", loginRequestDTO.getEmail());
+
         ApplicationUser user = userRepository.findByEmail(loginRequestDTO.getEmail())
-            .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+            .orElseThrow(() -> {
+                log.warn("Login failed: user not found - {}", loginRequestDTO.getEmail());
+                return new InvalidCredentialsException("Invalid credentials");
+            });
 
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
+            log.warn("Login failed: invalid password for email - {}", loginRequestDTO.getEmail());
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
         if (!user.isEnabled()) {
+            log.warn("Login failed: account not verified for email - {}", loginRequestDTO.getEmail());
             throw new UserNotFoundException("Account not verified. Please verify your email first.");
         }
 
         String token = jwtService.generateToken(user);
+
+        log.info("Login successful for user: {}", user.getEmail());
+
         return buildAuthenticationResponse(user, token);
     }
 
