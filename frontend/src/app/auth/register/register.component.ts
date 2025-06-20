@@ -45,7 +45,7 @@ export class RegisterComponent {
         password: this.fb.control('', [Validators.required, Validators.minLength(6)]),
         confirmPassword: this.fb.control('', Validators.required),
         roles: this.fb.control(['SERVICE_SEEKER']),
-        status: this.fb.control('PENDING')
+        status: this.fb.control('INACTIVE')
       },
       { validators: this.passwordMatchValidator }
     );

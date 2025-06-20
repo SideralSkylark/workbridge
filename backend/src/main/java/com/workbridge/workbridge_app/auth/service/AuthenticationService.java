@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.auth.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,29 +30,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This service manages user registration,
- * email verification, 
- * login, and token generation.
- * It works in conjunction with the VerificationService for email 
- * verification and JwtService for token management.
- */
-
-/**
- * Service responsible for handling user authentication and registration operations.
+ * AuthenticationService
  *
- * <p>This service provides methods for:
+ * <p>This service handles core authentication and registration functionality
+ * for the WorkBridge application. It is responsible for:
+ *
  * <ul>
- *   <li>User registration</li>
- *   <li>Email verification</li>
- *   <li>Resending verification codes</li>
- *   <li>User login and JWT token generation</li>
+ *   <li>Registering new users and assigning roles</li>
+ *   <li>Sending and verifying email verification codes</li>
+ *   <li>Resending verification codes upon user request</li>
+ *   <li>Authenticating users and issuing JWT access tokens</li>
  * </ul>
  *
- * <p>It works in conjunction with the {@link VerificationService} for email 
- * verification and {@link JwtService} for token management.
- *
- * @see VerificationService
- * @see JwtService
+ * <p>It works in collaboration with:
+ * <ul>
+ *   <li>{@link VerificationService} – for managing email verification tokens</li>
+ *   <li>{@link JwtService} – for generating and managing JWT tokens</li>
+ * </ul>
  */
 @Slf4j
 @Service
@@ -64,17 +59,20 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final VerificationService verificationService;
 
-    /**
-     * Registers a new user in the system.
-     * This method:
-     * 1. Validates the registration request (username and email uniqueness)
-     * 2. Creates a new user with encoded password
-     * 3. Sends a verification email
-     * 4. Returns a registration response
+   /**
+     * Registers a new user account.
      *
-     * @param registerRequestDTO The registration request containing user details
-     * @return RegisterResponseDTO containing the registered user's email
-     * @throws UserAlreadyExistsException if username or email is already in use
+     * <p>This method performs the following steps:
+     * <ol>
+     *   <li>Validates that the username and email are not already taken</li>
+     *   <li>Creates a new {@link ApplicationUser} with encoded password and default disabled status</li>
+     *   <li>Assigns user roles</li>
+     *   <li>Sends a verification email to the user</li>
+     * </ol>
+     *
+     * @param registerRequestDTO DTO containing the user's registration data
+     * @return a response containing the user's email
+     * @throws UserAlreadyExistsException if the username or email is already in use
      */
     @Transactional
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
@@ -93,29 +91,24 @@ public class AuthenticationService {
     }
 
     /**
-     * Verifies a user's email using the provided verification code.
-     * Upon successful verification:
-     * 1. Enables the user account
-     * 2. Generates a JWT token
-     * 3. Returns authentication response with token
+     * Verifies a user's email using a verification code.
      *
-     * @param emailVerificationDTO Contains email and verification code
-     * @return AuthenticationResponseDTO with JWT token and user details
-     * @throws UserNotFoundException if user not found
-     * @throws TokenVerificationException if verification code is invalid
-     * @throws TokenExpiredException if verification code has expired
+     * <p>If verification is successful, the user's account is enabled
+     * and a JWT token is issued.
+     *
+     * @param emailVerificationDTO DTO containing the email and code to verify
+     * @return an {@link AuthenticationResponseDTO} with JWT and user details
+     * @throws UserNotFoundException if the user is not found
+     * @throws TokenVerificationException if the code is invalid
+     * @throws TokenExpiredException if the code has expired
      */
     @Transactional
     public AuthenticationResponseDTO verify(EmailVerificationDTO emailVerificationDTO) {
-        log.info("Verifying email: {}", emailVerificationDTO.getEmail());
+        log.debug("Verifying email: {}", emailVerificationDTO.getEmail());
 
         verificationService.verifyToken(emailVerificationDTO.getEmail(), emailVerificationDTO.getCode());
 
-        ApplicationUser user = userRepository.findByEmail(emailVerificationDTO.getEmail())
-            .orElseThrow(() -> {
-                log.warn("Verification failed: user not found - {}", emailVerificationDTO.getEmail());
-                return new UserNotFoundException("User not found");
-            });
+        ApplicationUser user = findUserByEmailOrThrow(emailVerificationDTO.getEmail());
 
         user.setEnabled(true);
         userRepository.save(user);
@@ -127,23 +120,20 @@ public class AuthenticationService {
     }
 
     /**
-     * Resends a verification code to a user's email.
-     * If the user is already verified, returns the email without sending a new code.
-     * Otherwise, deletes any existing token and sends a new verification code.
+     * Resends the email verification code to a user.
      *
-     * @param email The email address to resend the verification code to
-     * @return RegisterResponseDTO containing the user's email
-     * @throws UserNotFoundException if user not found
+     * <p>If the user is already verified, no new code is sent.
+     * Otherwise, a new verification token is generated and emailed.
+     *
+     * @param email the email address of the user
+     * @return a {@link RegisterResponseDTO} containing the user's email
+     * @throws UserNotFoundException if the user does not exist
      */
     @Transactional
     public RegisterResponseDTO resendVerificationCode(String email) {
-        log.info("Resending verification code to: {}", email);
+        log.debug("Resending verification code to: {}", email);
 
-        ApplicationUser user = userRepository.findByEmail(email)
-            .orElseThrow(() -> {
-                log.warn("Resend failed: user not found - {}", email);
-                return new UserNotFoundException("User not found");
-            });
+        ApplicationUser user = findUserByEmailOrThrow(email);
 
         if (user.isEnabled()) {
             log.info("User already verified: {}", email);
@@ -159,16 +149,19 @@ public class AuthenticationService {
     }
 
     /**
-     * Authenticates a user and generates a JWT token.
-     * This method:
-     * 1. Validates user credentials
-     * 2. Checks if the account is verified
-     * 3. Generates and returns a JWT token
+     * Authenticates a user and returns a JWT token upon successful login.
      *
-     * @param loginRequestDTO Contains email and password
-     * @return AuthenticationResponseDTO with JWT token and user details
-     * @throws InvalidCredentialsException if email or password is incorrect
-     * @throws UserNotFoundException if account is not verified
+     * <p>The method checks:
+     * <ul>
+     *   <li>That the email exists in the system</li>
+     *   <li>That the password is correct</li>
+     *   <li>That the user account is enabled</li>
+     * </ul>
+     *
+     * @param loginRequestDTO DTO containing the user's email and password
+     * @return an {@link AuthenticationResponseDTO} with the JWT token and user details
+     * @throws InvalidCredentialsException if credentials are invalid
+     * @throws UserNotFoundException if the account is not verified
      */
     @Transactional
     public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO) {
@@ -198,35 +191,41 @@ public class AuthenticationService {
     }
 
     /**
-     * Validates a registration request by checking for existing username and email.
+     * Validates whether the given username and email are unique.
      *
-     * @param request The registration request to validate
-     * @throws UserAlreadyExistsException if username or email is already in use
+     * @param request the registration request
+     * @throws UserAlreadyExistsException if the username or email is already taken
      */
     private void validateRegistrationRequest(RegisterRequestDTO request) {
         if (userRepository.existsByUsername(request.getUsername())) {
+            log.info("Registration failed: username already taken - {}", request.getUsername());
             throw new UserAlreadyExistsException("Username is already taken");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.info("Registration failed: email already in use - {}", request.getEmail());
             throw new UserAlreadyExistsException("Email is already in use");
         }
     }
 
     /**
-     * Creates a new ApplicationUser entity from a registration request.
-     * Sets up user details including:
-     * - Username and email
-     * - Encoded password
-     * - Account status (disabled by default)
-     * - Creation and update timestamps
-     * - User roles
+     * Creates a new {@link ApplicationUser} entity from the registration request.
      *
-     * @param request The registration request containing user details
-     * @return A new ApplicationUser entity
-     * @throws IllegalArgumentException if an invalid role is specified
+     * <p>This method sets up all user fields including:
+     * <ul>
+     *   <li>Username, email, and encoded password</li>
+     *   <li>Account status as disabled</li>
+     *   <li>Timestamp metadata</li>
+     *   <li>User roles</li>
+     * </ul>
+     *
+     * @param request the registration request
+     * @return the created {@link ApplicationUser} instance
+     * @throws IllegalArgumentException if a provided role is invalid
      */
     private ApplicationUser createUser(RegisterRequestDTO request) {
+        log.debug("Creating user with username: {}, roles: {}", request.getUsername(), request.getRoles());
+        
         ApplicationUser user = new ApplicationUser();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
@@ -235,23 +234,64 @@ public class AuthenticationService {
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
-        Set<UserRoleEntity> roles = request.getRoles().stream()
-                .map(role -> roleRepository.findByRole(UserRole.valueOf(role.toUpperCase()))
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + role)))
-                .collect(Collectors.toSet());
+        Set<UserRoleEntity> roles = resolveRoles(request.getRoles());
 
         user.setRoles(roles);
         return user;
     }
 
     /**
-     * Builds an authentication response DTO from a user entity and JWT token.
+     * Resolves a list of role names (as strings) into corresponding {@link UserRoleEntity} objects.
      *
-     * @param user The authenticated user
-     * @param token The JWT token
-     * @return AuthenticationResponseDTO containing user details and token
+     * <p>This method:
+     * <ul>
+     *   <li>Converts each role name to uppercase and maps it to the corresponding {@link UserRole} enum</li>
+     *   <li>Fetches the matching {@link UserRoleEntity} from the repository</li>
+     *   <li>Throws an {@link IllegalArgumentException} if any role is invalid or not found</li>
+     * </ul>
+     *
+     * @param roleNames A set of role names provided by the user (e.g., "user", "service_provider")
+     * @return A set of resolved {@link UserRoleEntity} objects
+     * @throws IllegalArgumentException if any role name is not valid or not present in the database
+     */
+    private Set<UserRoleEntity> resolveRoles(List<String> roleNames) {
+        return roleNames.stream()
+            .map(role -> roleRepository.findByRole(UserRole.valueOf(role.toUpperCase()))
+                .orElseThrow(() -> {
+                    log.warn("Invalid role provided: {}", role);
+                    return new IllegalArgumentException("Invalid role: " + role);
+                }))
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * Retrieves a user by their email or throws a {@link UserNotFoundException} if not found.
+     *
+     * <p>The email is expected to be already normalized (lowercased and trimmed) by the caller.
+     * If the user does not exist, a warning is logged and a {@code UserNotFoundException} is thrown.
+     *
+     * @param email The normalized email address of the user to retrieve
+     * @return The {@link ApplicationUser} corresponding to the given email
+     * @throws UserNotFoundException if no user is found with the specified email
+     */
+    private ApplicationUser findUserByEmailOrThrow(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> {
+                log.warn("User not found for email: {}", email);
+                return new UserNotFoundException("User not found");
+            });
+    }
+
+    /**
+     * Builds an {@link AuthenticationResponseDTO} from the given user and JWT token.
+     *
+     * @param user the authenticated user
+     * @param token the generated JWT token
+     * @return a response DTO containing user information and token
      */
     private AuthenticationResponseDTO buildAuthenticationResponse(ApplicationUser user, String token) {
+        log.debug("Building authentication response for user: {}", user.getEmail());
+
         return AuthenticationResponseDTO.builder()
             .token(token)
             .id(user.getId())

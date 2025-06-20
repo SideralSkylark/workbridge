@@ -1,7 +1,7 @@
 package com.workbridge.workbridge_app.auth.service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,96 +14,127 @@ import com.workbridge.workbridge_app.common.service.EmailService;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service responsible for managing email verification tokens and codes.
- * This service handles the creation, verification, and management of email verification tokens
- * used in the user registration process. It works in conjunction with the EmailService
- * to send verification codes to users.
+ * Service responsible for managing email verification tokens during user registration.
+ * <p>
+ * This includes:
+ * <ul>
+ *   <li>Generating and sending one-time codes</li>
+ *   <li>Persisting and verifying token validity</li>
+ *   <li>Deleting old or redundant tokens</li>
+ * </ul>
+ *
+ * Works in conjunction with {@link EmailService} to deliver codes.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VerificationService {
-    
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final int VERIFICATION_CODE_LENGTH = 6;
+    private static final int VERIFICATION_CODE_EXPIRY_MINUTES = 10;
+
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService;
     
-    private static final int VERIFICATION_CODE_LENGTH = 6;
-    private static final int VERIFICATION_CODE_EXPIRY_MINUTES = 10;
-    
     /**
-     * Creates a new verification token and sends it to the user's email.
-     * This method:
-     * 1. Generates a random verification code
-     * 2. Creates a new verification token with expiration time
-     * 3. Saves the token to the database
-     * 4. Sends the verification code via email
+     * Creates a new verification token for a user and sends the code by email.
+     * <p>
+     * If a token already exists for the user's email, it is deleted before generating a new one.
      *
-     * @param user The user to create and send the verification token for
+     * @param user the {@link ApplicationUser} for whom the token should be created
      */
     @Transactional
     public void createAndSendVerificationToken(ApplicationUser user) {
+        final String email = user.getEmail();
+
+        log.debug("Creating new verification token for {}", email);
+
+        // Ensure only one token per user
+        verificationTokenRepository.deleteByEmail(email);
+        log.debug("Deleted any existing verification token for {}", email);
+
         String code = generateVerificationCode();
-        VerificationToken verificationToken = new VerificationToken(
-            user.getEmail(),
+
+        VerificationToken token = new VerificationToken(
+            email,
             code,
             LocalDateTime.now().plusMinutes(VERIFICATION_CODE_EXPIRY_MINUTES)
         );
-        
-        verificationTokenRepository.save(verificationToken);
-        emailService.sendVerificationCode(user.getEmail(), code);
+
+        verificationTokenRepository.save(token);
+        emailService.sendVerificationCode(email, code);
+
+        log.info("Verification code sent to {}", email);
     }
     
     /**
-     * Verifies a user's email using the provided verification code.
-     * This method:
-     * 1. Retrieves the verification token for the email
-     * 2. Validates the verification code
-     * 3. Checks if the token has expired
-     * 4. Marks the token as verified if all checks pass
+     * Verifies the email ownership by validating the given code.
+     * <p>
+     * If the code is correct and not expired, the token is marked as verified.
      *
-     * @param email The email address to verify
-     * @param code The verification code to validate
-     * @throws TokenVerificationException if verification code is invalid or not found
-     * @throws TokenExpiredException if verification code has expired
+     * @param email the user's email address
+     * @param code the verification code provided by the user
+     * @throws TokenVerificationException if the code is missing or incorrect
+     * @throws TokenExpiredException if the token has expired
      */
     @Transactional
     public void verifyToken(String email, String code) {
+        log.debug("Attempting to verify token for {}", email);
+
         VerificationToken token = verificationTokenRepository.findByEmail(email)
-                .orElseThrow(() -> new TokenVerificationException("Verification code not found"));
-                
+            .orElseThrow(() -> {
+                log.warn("Verification token not found for {}", email);
+                return new TokenVerificationException("Verification code not found");
+            });
+
+        if (token.isVerified()) {
+            log.info("Token already verified for {}", email);
+            return; 
+        }
+
         if (!token.getCode().equals(code)) {
+            log.warn("Invalid verification code provided for {}", email);
             throw new TokenVerificationException("Invalid verification code");
         }
-        
+
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Verification code for {} has expired", email);
             throw new TokenExpiredException("Verification code has expired");
         }
-        
+
         token.setVerified(true);
         verificationTokenRepository.save(token);
+
+        log.info("Email successfully verified: {}", email);
     }
     
     /**
-     * Deletes any existing verification token for the given email.
-     * This is typically used when resending verification codes to ensure
-     * only one active token exists per email.
+     * Deletes any existing verification token for the specified email address.
+     * <p>
+     * Useful when resending verification codes or cleaning up.
      *
-     * @param email The email address whose verification token should be deleted
+     * @param email the email address whose token should be deleted
      */
     @Transactional
     public void deleteExistingToken(String email) {
+        log.debug("Deleting verification token for {}", email);
         verificationTokenRepository.deleteByEmail(email);
+        log.info("Deleted verification token for {}", email);
     }
     
     /**
-     * Generates a random verification code of specified length.
-     * The code is a numeric string padded with leading zeros if necessary.
+     * Generates a numeric verification code of fixed length.
+     * <p>
+     * The code is left-padded with zeroes if necessary.
      *
-     * @return A string containing the generated verification code
+     * @return a 6-digit (default) string code
      */
     private String generateVerificationCode() {
-        return String.format("%0" + VERIFICATION_CODE_LENGTH + "d", 
-            new Random().nextInt((int) Math.pow(10, VERIFICATION_CODE_LENGTH)));
+        int max = (int) Math.pow(10, VERIFICATION_CODE_LENGTH);
+        return String.format("%0" + VERIFICATION_CODE_LENGTH + "d", SECURE_RANDOM.nextInt(max));
     }
 } 
