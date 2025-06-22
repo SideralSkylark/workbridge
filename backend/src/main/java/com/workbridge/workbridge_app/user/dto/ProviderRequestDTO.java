@@ -1,4 +1,4 @@
-package com.workbridge.workbridge_app.user;
+package com.workbridge.workbridge_app.user.dto;
 
 import java.time.LocalDateTime;
 

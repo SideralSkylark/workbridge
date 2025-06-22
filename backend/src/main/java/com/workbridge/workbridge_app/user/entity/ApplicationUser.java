@@ -32,7 +32,10 @@ public class ApplicationUser implements UserDetails {
 
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @JoinTable(
+        name = "user_roles", 
+        joinColumns = @JoinColumn(name = "user_id"),
+         inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<UserRoleEntity> roles = new HashSet<>();
 
     @Override
@@ -48,6 +51,22 @@ public class ApplicationUser implements UserDetails {
 
     public boolean hasRole(UserRole role) {
         return roles.stream().anyMatch(r -> r.getRole() == role);
+    }
+
+    public boolean lacksRole(UserRole role) {
+        return roles.stream().noneMatch(r -> r.getRole() == role);
+    }
+
+    public boolean isAdmin() {
+        return hasRole(UserRole.ADMIN);
+    }
+
+    public boolean isServiceSeeker() {
+        return hasRole(UserRole.SERVICE_SEEKER);
+    }
+
+    public boolean isServiceProvider() {
+        return hasRole(UserRole.SERVICE_PROVIDER);
     }
 
     @Override

@@ -54,6 +54,10 @@ import jakarta.validation.Valid;
  * </ul>
  *
  * @see AuthenticationService
+ * 
+ * @author Workbridge Team
+ * 
+ * @since 2025-06-22
  */
 @RestController
 @RequestMapping("api/v1/auth")

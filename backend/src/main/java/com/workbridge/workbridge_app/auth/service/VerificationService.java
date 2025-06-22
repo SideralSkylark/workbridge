@@ -27,6 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * Works in conjunction with {@link EmailService} to deliver codes.
+ * 
+ * @author Workbridge Team
+ * 
+ * @since 2025-06-22
  */
 @Slf4j
 @Service

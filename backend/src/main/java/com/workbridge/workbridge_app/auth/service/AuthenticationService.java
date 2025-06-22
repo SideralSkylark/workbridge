@@ -47,6 +47,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link VerificationService} – for managing email verification tokens</li>
  *   <li>{@link JwtService} – for generating and managing JWT tokens</li>
  * </ul>
+ * 
+ * @author Workbridge Team
+ * 
+ * @since 2025-06-22
  */
 @Slf4j
 @Service

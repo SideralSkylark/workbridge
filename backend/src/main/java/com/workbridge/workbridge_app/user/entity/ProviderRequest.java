@@ -1,12 +1,10 @@
-package com.workbridge.workbridge_app.user;
+package com.workbridge.workbridge_app.user.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
-import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 
 @Data
 @NoArgsConstructor
@@ -30,5 +28,10 @@ public class ProviderRequest {
         this.user = user;
         this.requestedOn = LocalDateTime.now();
         this.approved = false;
+    }
+
+    public void markApproved(LocalDateTime approvedOn) {
+        this.approved = true;
+        this.approvedOn = approvedOn;
     }
 }

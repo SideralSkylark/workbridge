@@ -17,14 +17,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.workbridge.workbridge_app.user.ProviderRequest;
-import com.workbridge.workbridge_app.user.ProviderRequestDTO;
-import com.workbridge.workbridge_app.user.ProviderRequestRepository;
+import com.workbridge.workbridge_app.user.dto.ProviderRequestDTO;
 import com.workbridge.workbridge_app.user.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
+import com.workbridge.workbridge_app.user.entity.ProviderRequest;
 import com.workbridge.workbridge_app.user.entity.UserRole;
 import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.user.repository.ProviderRequestRepository;
 import com.workbridge.workbridge_app.user.repository.UserRepository;
 import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 import com.workbridge.workbridge_app.user.service.UserService;

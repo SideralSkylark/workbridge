@@ -15,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Centralised exception mapping for all auth endpoints.
+ * 
+ * @author Workbridge Team
+ * 
+ * @since 2025-06-22
  */
 @RestControllerAdvice(assignableTypes = AuthController.class)
 @Slf4j
