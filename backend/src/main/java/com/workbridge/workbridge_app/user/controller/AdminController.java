@@ -1,7 +1,11 @@
 package com.workbridge.workbridge_app.user.controller;
 
-import java.util.List;
+import java.time.Instant;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  *   GET    /api/v1/admins/provider-requests/pending // List pending provider requests
  *   PATCH  /api/v1/admins/provider-requests/{id}/approve // Approve provider request
  *   PATCH  /api/v1/admins/users/{email}/enable // Enable user account
- *   PUT    /api/v1/admins/disable?email=...    // Disable user account
+ *   PUT    /api/v1/admins/users/{email}/disable    // Disable user account
  * </pre>
  *
  * <p>All responses are wrapped in {@link ResponseEntity} and use DTOs for data transfer.</p>
@@ -51,42 +55,76 @@ public class AdminController {
     private final UserService userService;
 
     /**
-     * Retrieves a list of all users in the system.
+     * Retrieves a paginated list of all users in the system.
      * <p>
-     * This endpoint fetches all users from the database, converts them to DTOs, and returns the list.
+     * This endpoint fetches users from the database, converts them to DTOs, and returns a paginated list.
      *
-     * @return ResponseEntity containing a list of UserResponseDTO objects
+     * @param page the page number (0-based, default 0)
+     * @param size the page size (default 20)
+     * @return ResponseEntity containing a page of UserResponseDTO objects
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/users")
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<ApiResponse<Page<UserResponseDTO>>> getAllUsers(
+            @PageableDefault(
+                page = 0,
+                size = 20, 
+                sort = "id", 
+                direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                userService.getAllUsers(pageable), 
+                "Fetched users successfully")
+        );
     }
 
     /**
-     * Retrieves a list of all non-admin users in the system.
+     * Retrieves a paginated list of all non-admin users in the system.
      * <p>
-     * This endpoint fetches all non-admin users from the database, converts them to DTOs, and returns the list.
+     * This endpoint fetches non-admin users from the database, converts them to DTOs, and returns a paginated list.
      *
-     * @return ResponseEntity containing a list of UserResponseDTO objects
+     * @param page the page number (0-based, default 0)
+     * @param size the page size (default 20)
+     * @return ResponseEntity containing a page of UserResponseDTO objects
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/non-admin-users")
-    public ResponseEntity<List<UserResponseDTO>> getAllNonAdminUsers() {
-        return ResponseEntity.ok(userService.getAllNonAdminUsers());
+    public ResponseEntity<ApiResponse<Page<UserResponseDTO>>> getAllNonAdminUsers(
+            @PageableDefault(
+                page = 0,
+                size = 20,
+                sort = "id",
+                direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                userService.getAllNonAdminUsers(pageable),
+                "Fetched non-admin users successfully")
+        );
     }
 
     /**
-     * Retrieves a list of all pending provider requests.
+     * Retrieves a paginated list of all pending provider requests.
      * <p>
-     * This endpoint fetches all provider requests that have not yet been approved, converts them to DTOs, and returns the list.
+     * This endpoint fetches provider requests that have not yet been approved, converts them to DTOs, and returns a paginated list.
      *
-     * @return ResponseEntity containing a list of ProviderRequestDTO objects
+     * @param page the page number (0-based, default 0)
+     * @param size the page size (default 20)
+     * @return ResponseEntity containing a page of ProviderRequestDTO objects
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/provider-requests/pending")
-    public ResponseEntity<List<ProviderRequestDTO>> getPendingProviderRequests() {
-        return ResponseEntity.ok(userService.getAllProviderRequestNotApproved());
+    public ResponseEntity<ApiResponse<Page<ProviderRequestDTO>>> getPendingProviderRequests(
+            @PageableDefault(
+                page = 0,
+                size = 20,
+                sort = "id",
+                direction = Sort.Direction.ASC) Pageable pageable
+            ) {
+        return ResponseEntity.ok(
+            new ApiResponse<>(
+                userService.getAllProviderRequestNotApproved(pageable), 
+                "Fetched pending provider requests successfully")
+        );
     }
 
     /**
@@ -148,4 +186,14 @@ public class AdminController {
      * @param message The message to return
      */
     record MessageResponse(String message) {}
+
+    public record ApiResponse<T>(
+        T data,
+        String message,
+        Instant timestamp
+    ) {
+        public ApiResponse(T data, String message) {
+            this(data, message, Instant.now());
+        }
+    }
 }

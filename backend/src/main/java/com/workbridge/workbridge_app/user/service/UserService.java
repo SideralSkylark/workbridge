@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.workbridge.workbridge_app.user.dto.ProviderRequestDTO;
@@ -56,10 +58,20 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserMapper userMapper;
-
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final ProviderRequestRepository providerRequestRepository;
+
+    /**
+     * Retrieves a paginated list of all users from the database.
+     *
+     * @param pageable the pagination and sorting information
+     * @return a page of UserResponseDTO objects
+     */
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable).
+                                map(userMapper::toDTO);
+    }
 
     /**
      * Retrieves all users from the database.
@@ -67,7 +79,17 @@ public class UserService {
      * @return List of UserResponseDTO objects representing all users.
      */
     public List<UserResponseDTO> getAllUsers() {
-        return mapToUserResponseDTO(userRepository.findAll());
+        return getAllUsers(Pageable.unpaged()).getContent();
+    }
+
+    /**
+     * Retrieves a paginated list of all non-admin users from the database.
+     *
+     * @param pageable the pagination and sorting information
+     * @return a page of UserResponseDTO objects
+     */
+    public Page<UserResponseDTO> getAllNonAdminUsers(Pageable pageable) {
+        return userRepository.findAllNonAdminUsers(pageable).map(userMapper::toDTO);
     }
 
     /**
@@ -76,10 +98,7 @@ public class UserService {
      * @return List of UserResponseDTO objects for users without the ADMIN role.
      */
     public List<UserResponseDTO> getAllNonAdminUsers() {
-        return mapToUserResponseDTO(
-            userRepository.findAll().stream()
-                .filter(user -> user.lacksRole(UserRole.ADMIN))
-                .toList());
+        return userRepository.findAllNonAdminUsers().stream().map(userMapper::toDTO).toList();
     }
 
     /**
@@ -89,10 +108,28 @@ public class UserService {
      * @return List of UserResponseDTO objects for users with the specified role.
      */
     public List<UserResponseDTO> getUsersByRole(UserRole role) {
-        return mapToUserResponseDTO(
-            userRepository.findAll().stream()
-                .filter(user ->user.hasRole(role))
-                .toList());
+        return userRepository.findAllByRole(role).stream().map(userMapper::toDTO).toList();
+    }
+
+    /**
+     * Retrieves a paginated list of users by a specific role.
+     *
+     * @param role The role to filter users by.
+     * @param pageable the pagination and sorting information
+     * @return a page of UserResponseDTO objects
+     */
+    public Page<UserResponseDTO> getUsersByRole(UserRole role, Pageable pageable) {
+        return userRepository.findAllByRole(role, pageable).map(userMapper::toDTO);
+    }
+
+    /**
+     * Retrieves a paginated list of all pending provider requests.
+     *
+     * @param pageable the pagination and sorting information
+     * @return a page of ProviderRequestDTO objects
+     */
+    public Page<ProviderRequestDTO> getAllProviderRequestNotApproved(Pageable pageable) {
+        return providerRequestRepository.findByApprovedFalse(pageable).map(userMapper::toDTO);
     }
 
     /**
@@ -102,10 +139,7 @@ public class UserService {
      */
     @Transactional
     public List<ProviderRequestDTO> getAllProviderRequestNotApproved() {
-        return mapToProviderRequestDTO(
-            providerRequestRepository.findAll().stream()
-                .filter(pr -> !pr.isApproved())
-                .toList());
+        return providerRequestRepository.findByApprovedFalse().stream().map(userMapper::toDTO).toList();
     }
 
     /**
@@ -209,24 +243,6 @@ public class UserService {
     @Transactional
     public boolean disableAccount(String email) {
         return updateAccountStatus(email, false);
-    }
-
-    /**
-     * Updates a user's account status (enable/disable) by email.
-     *
-     * @param email The user's email address.
-     * @param enable Whether to enable (true) or disable (false) the account.
-     * @return true if the status was changed, false if it was already in the desired state.
-     * @throws UserNotFoundException if the user is not found.
-     */
-    private boolean updateAccountStatus(String email, boolean enable) {
-        ApplicationUser user = getUserByEmailOrThrow(email);
-        if (user.isEnabled() == enable) return false;
-
-        user.setEnabled(enable);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-        return true;
     }
 
     /**
@@ -373,6 +389,24 @@ public class UserService {
      */
     private void validateNotApproved(ProviderRequest request) {
         if (request.isApproved()) throw new IllegalStateException("Request already approved.");
+    }
+
+    /**
+     * Updates a user's account status (enable/disable) by email.
+     *
+     * @param email The user's email address.
+     * @param enable Whether to enable (true) or disable (false) the account.
+     * @return true if the status was changed, false if it was already in the desired state.
+     * @throws UserNotFoundException if the user is not found.
+     */
+    private boolean updateAccountStatus(String email, boolean enable) {
+        ApplicationUser user = getUserByEmailOrThrow(email);
+        if (user.isEnabled() == enable) return false;
+
+        user.setEnabled(enable);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        return true;
     }
 
     /**
