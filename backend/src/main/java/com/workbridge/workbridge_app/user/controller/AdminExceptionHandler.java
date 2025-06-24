@@ -5,9 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.workbridge.workbridge_app.user.controller.AdminController.MessageResponse;
+import com.workbridge.workbridge_app.common.response.ErrorResponse;
+import com.workbridge.workbridge_app.common.response.ResponseFactory;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,10 +40,15 @@ public class AdminExceptionHandler {
      * @return 404 NOT FOUND with a descriptive error message
      */
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<MessageResponse> UserNotFound(UserNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> userNotFound(
+        UserNotFoundException ex,
+        HttpServletRequest request) {
         log.warn("User not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                             .body(new MessageResponse(ex.getMessage()));
+        return ResponseFactory.error(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage(),
+            request
+        );
     }
 
     /**
@@ -51,23 +58,14 @@ public class AdminExceptionHandler {
      * @return 400 BAD REQUEST with a descriptive error message
      */
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<MessageResponse> IllegalState(IllegalStateException ex) {
+    public ResponseEntity<ErrorResponse> illegalState(
+        IllegalStateException ex,
+        HttpServletRequest request) {
         log.warn("Illegal operation: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                             .body(new MessageResponse(ex.getMessage()));
-    }
-
-    /**
-     * Handles all other unexpected exceptions.
-     *
-     * @param ex the thrown Exception
-     * @return 500 INTERNAL SERVER ERROR with a generic error message
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<MessageResponse> Generic(Exception ex) {
-        log.error("Unexpected admin error", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                             .body(new MessageResponse(
-                                 "An unexpected error occurred. Please try again later."));
+        return ResponseFactory.error(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage(),
+            request
+        );
     }
 }

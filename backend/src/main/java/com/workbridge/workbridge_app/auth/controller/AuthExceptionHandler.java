@@ -10,7 +10,10 @@ import com.workbridge.workbridge_app.auth.exception.TokenExpiredException;
 import com.workbridge.workbridge_app.auth.exception.TokenVerificationException;
 import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
+import com.workbridge.workbridge_app.common.response.ErrorResponse;
+import com.workbridge.workbridge_app.common.response.ResponseFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,34 +27,57 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<String> userAlreadyExists(UserAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> userAlreadyExists(
+        UserAlreadyExistsException ex,
+        HttpServletRequest request) {
+        return ResponseFactory.error(
+            HttpStatus.CONFLICT, 
+            ex.getMessage(), 
+            request
+        );
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> userNotFound(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> userNotFound(
+        UserNotFoundException ex,
+        HttpServletRequest request) {
+        return ResponseFactory.error(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage(),
+            request
+        );
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<String> invalidCredentials(InvalidCredentialsException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> invalidCredentials(
+        InvalidCredentialsException ex,
+        HttpServletRequest request) {
+        return ResponseFactory.error(
+            HttpStatus.UNAUTHORIZED,
+            ex.getMessage(),
+            request
+        );
     }
 
     @ExceptionHandler({TokenVerificationException.class, TokenExpiredException.class})
-    public ResponseEntity<String> tokenError(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> tokenError(
+        RuntimeException ex,
+        HttpServletRequest request) {
+        return ResponseFactory.error(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage(),
+            request
+        );
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> illegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> generic(Exception ex) {
-        log.error("Unexpected error in auth flow", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected error occurred. Please try again later.");
+    public ResponseEntity<ErrorResponse> illegalArgument(
+        IllegalArgumentException ex,
+        HttpServletRequest request) {
+        return ResponseFactory.error(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage(),
+            request
+        );
     }
 }

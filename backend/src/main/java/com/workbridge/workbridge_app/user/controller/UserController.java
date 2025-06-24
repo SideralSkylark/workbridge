@@ -1,5 +1,8 @@
 package com.workbridge.workbridge_app.user.controller;
 
+import com.workbridge.workbridge_app.common.response.ResponseFactory;
+import com.workbridge.workbridge_app.common.response.ApiResponse;
+import com.workbridge.workbridge_app.common.response.MessageResponse;
 import com.workbridge.workbridge_app.user.dto.UpdateUserProfileDTO;
 import com.workbridge.workbridge_app.user.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
@@ -58,10 +61,13 @@ public class UserController {
      * @throws IllegalStateException if the authentication context is invalid
      */
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> getUserDetails() {
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getUserDetails() {
         ApplicationUser user = userService.findByUsername(getAuthenticatedUsername())
-                                          .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return ResponseEntity.ok(userMapper.toDTO(user));
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return ResponseFactory.ok(
+            userMapper.toDTO(user),
+            "User profile retrieved successfully"
+        );
     }
 
     /**
@@ -76,11 +82,15 @@ public class UserController {
      * @throws IllegalStateException if the authentication context is invalid
      */
     @PutMapping("/me")
-    public ResponseEntity<UserResponseDTO> updateUserDetails(@Valid @RequestBody UpdateUserProfileDTO payload) {
+    public ResponseEntity<ApiResponse<UserResponseDTO>> updateUserDetails(
+        @Valid @RequestBody UpdateUserProfileDTO payload) {
         ApplicationUser updated = userService.updateUser(
             getAuthenticatedUsername(), 
             payload);
-        return ResponseEntity.ok(userMapper.toDTO(updated));
+        return ResponseFactory.ok(
+            userMapper.toDTO(updated),
+            "User profile updated successfully"
+        );
     }
 
     /**
@@ -110,12 +120,10 @@ public class UserController {
      */
     @PreAuthorize("hasRole('ROLE_SERVICE_SEEKER')")
     @PostMapping("/me/request-to-become-provider")
-    public ResponseEntity<Map<String, String>> requestToBecomeProvider() {
+    public ResponseEntity<MessageResponse> requestToBecomeProvider() {
         String username = getAuthenticatedUsername();
         userService.requestToBecomeProvider(username);
-        return ResponseEntity.ok(Map.of(
-            "message", 
-            "Request to become a service provider sent successfully."));
+        return ResponseFactory.okMessage("Request to become a service provider sent successfully.");
     }
 
     /**
@@ -130,15 +138,19 @@ public class UserController {
      *         </ul>
      * @throws UserNotFoundException if the user cannot be found
      */
-    @GetMapping("/me/provider-request-status")
-    public ResponseEntity<Map<String, Boolean>> getProviderRequestStatus() {
+    @GetMapping("/me/provider-request/status")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> getProviderRequestStatus() {
         String username = getAuthenticatedUsername();
         boolean requested = userService.hasPendingProviderRequest(username);
         boolean approved  = userService.isServiceProvider(username);
-        return ResponseEntity.ok(Map.of(
+        Map<String, Boolean> status = Map.of(
             "requested", requested, 
-            "approved", approved));
-    } //TODO: consider changing to /me/provider-request/status 
+            "approved", approved);
+        return ResponseFactory.ok(
+            status, 
+            "Fetched provider request status"
+        );
+    } 
 
     /**
      * Helper method to extract the username of the currently authenticated user.

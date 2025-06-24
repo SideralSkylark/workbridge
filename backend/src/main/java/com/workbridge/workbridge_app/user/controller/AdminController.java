@@ -1,7 +1,5 @@
 package com.workbridge.workbridge_app.user.controller;
 
-import java.time.Instant;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -10,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.workbridge.workbridge_app.common.response.ApiResponse;
+import com.workbridge.workbridge_app.common.response.MessageResponse;
+import com.workbridge.workbridge_app.common.response.ResponseFactory;
 import com.workbridge.workbridge_app.user.dto.ProviderRequestDTO;
 import com.workbridge.workbridge_app.user.dto.UserResponseDTO;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>All responses are wrapped in {@link ResponseEntity} and use DTOs for data transfer.</p>
  *
  * @author Workbridge Team
+ * 
  * @since 2025-06-22
  */
 @RestController
@@ -71,10 +73,9 @@ public class AdminController {
                 size = 20, 
                 sort = "id", 
                 direction = Sort.Direction.ASC) Pageable pageable) {
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                userService.getAllUsers(pageable), 
-                "Fetched users successfully")
+        return ResponseFactory.ok(
+            userService.getAllUsers(pageable),
+            "Fetched users successfully"
         );
     }
 
@@ -95,10 +96,9 @@ public class AdminController {
                 size = 20,
                 sort = "id",
                 direction = Sort.Direction.ASC) Pageable pageable) {
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                userService.getAllNonAdminUsers(pageable),
-                "Fetched non-admin users successfully")
+        return ResponseFactory.ok(
+            userService.getAllNonAdminUsers(pageable),
+            "Fetched non-admin users successfully"
         );
     }
 
@@ -120,10 +120,9 @@ public class AdminController {
                 sort = "id",
                 direction = Sort.Direction.ASC) Pageable pageable
             ) {
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                userService.getAllProviderRequestNotApproved(pageable), 
-                "Fetched pending provider requests successfully")
+        return ResponseFactory.ok(
+            userService.getAllProviderRequestNotApproved(pageable),
+            "Fetched pending provider requests successfully"
         );
     }
 
@@ -141,8 +140,7 @@ public class AdminController {
     @PatchMapping("/provider-requests/{id}/approve")
     public ResponseEntity<MessageResponse> approveProviderRole(@PathVariable Long id) {
         userService.approveProviderRequest(id);
-        return ResponseEntity.ok(
-            new MessageResponse("Provider request approved successfully."));
+        return ResponseFactory.okMessage("Provider request approved successfully.");
     }
 
     /**
@@ -158,8 +156,7 @@ public class AdminController {
     @PatchMapping("/users/{email}/enable")
     public ResponseEntity<MessageResponse> enableUserAccount(@PathVariable String email) {
         userService.enableAccount(email);
-        return ResponseEntity.ok(
-            new MessageResponse("User account enabled successfully."));
+        return ResponseFactory.okMessage("User account enabled successfully.");
     }
 
     /**
@@ -175,25 +172,6 @@ public class AdminController {
     @PatchMapping("/users/{email}/disable")
     public ResponseEntity<MessageResponse> disableUserAccount(@PathVariable String email) {
         userService.disableAccount(email);
-        return ResponseEntity.ok(
-            new MessageResponse("User account disabled successfully."));
-    }
-
-    /**
-     * Simple record for wrapping message responses in API replies.
-     * Used for success and error messages.
-     *
-     * @param message The message to return
-     */
-    record MessageResponse(String message) {}
-
-    public record ApiResponse<T>(
-        T data,
-        String message,
-        Instant timestamp
-    ) {
-        public ApiResponse(T data, String message) {
-            this(data, message, Instant.now());
-        }
+        return ResponseFactory.okMessage("User account disabled successfully.");
     }
 }

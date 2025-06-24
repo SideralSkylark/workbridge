@@ -7,6 +7,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.workbridge.workbridge_app.common.response.ResponseFactory;
+import com.workbridge.workbridge_app.common.response.ErrorResponse;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,8 +38,14 @@ public class UserExceptionHandler {
      * @return 404 NOT FOUND with the exception message as response body
      */
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<String> UserNotFound(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ErrorResponse> UserNotFound(
+        UserNotFoundException ex,
+        HttpServletRequest request) {
+        return ResponseFactory.error(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage(),
+            request
+        );
     }
 
     /**
@@ -52,28 +63,18 @@ public class UserExceptionHandler {
      *         400 BAD REQUEST otherwise
      */
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<String> IllegalState(IllegalStateException ex) {
+    public ResponseEntity<ErrorResponse> IllegalState(
+        IllegalStateException ex,
+        HttpServletRequest request) {
         // Distinguish between auth errors and bad requests via message inspection
         HttpStatus status = ex.getMessage().toLowerCase().contains("authenticated") 
                             ? HttpStatus.UNAUTHORIZED 
                             : HttpStatus.BAD_REQUEST;
 
-        return ResponseEntity.status(status).body(ex.getMessage());
-    }
-
-    /**
-     * Handles unexpected, unhandled exceptions.
-     * <p>
-     * Logs the full stack trace and returns a generic 500 Internal Server Error
-     * message to the client, without exposing internal details.
-     *
-     * @param ex the thrown {@link Exception}
-     * @return 500 INTERNAL SERVER ERROR with a generic message
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> Generic(Exception ex) {
-        log.error("Unexpected error", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected error occurred. Please try again later.");
+        return ResponseFactory.error(
+            status,
+            ex.getMessage(),
+            request
+        );
     }
 }
