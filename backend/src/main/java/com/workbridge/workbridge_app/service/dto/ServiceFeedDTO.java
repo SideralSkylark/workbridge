@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ServiceFeedDTO {
-    private ServiceDTO service;
+    private ServiceResponseDTO service;
     private Double providerRating;
     private String providerUsername;
     private String providerEmail;

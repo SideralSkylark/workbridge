@@ -1,11 +1,13 @@
 package com.workbridge.workbridge_app.common.exception;
 
+import com.workbridge.workbridge_app.auth.exception.UserNotAuthorizedException;
 import com.workbridge.workbridge_app.common.response.ErrorResponse;
 import com.workbridge.workbridge_app.common.response.ResponseFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -60,6 +62,28 @@ public class GlobalExceptionHandler {
 
         return ResponseFactory.error(HttpStatus.BAD_REQUEST, errors, request);
     }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> authorizationDenied(
+        AuthorizationDeniedException ex,
+        HttpServletRequest request) {
+            return ResponseFactory.error(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                request
+            );
+    }
+
+    @ExceptionHandler(UserNotAuthorizedException.class)
+    public ResponseEntity<ErrorResponse> userNotAuthorized(
+        UserNotAuthorizedException ex,
+        HttpServletRequest request) {
+            return ResponseFactory.error(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage(),
+                request
+            );
+        }
 
     /**
      * Handles unexpected uncaught exceptions that fall through other handlers.

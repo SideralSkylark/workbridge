@@ -1,8 +1,9 @@
 package com.workbridge.workbridge_app.review.controller;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,14 +13,39 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.workbridge.workbridge_app.booking.exception.BookingNotFoundException;
+import com.workbridge.workbridge_app.common.response.ApiResponse;
+import com.workbridge.workbridge_app.common.response.ResponseFactory;
 import com.workbridge.workbridge_app.review.dto.ReviewRequestDTO;
 import com.workbridge.workbridge_app.review.dto.ReviewResponseDTO;
 import com.workbridge.workbridge_app.review.service.ReviewService;
-import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * REST controller for managing service provider reviews.
+ * <p>
+ * This controller provides endpoints for:
+ * <ul>
+ *   <li>Retrieving paginated reviews for a specific provider</li>
+ *   <li>Submitting a review for a provider (by a service seeker)</li>
+ *   <li>Checking if a user has already reviewed a booking</li>
+ * </ul>
+ *
+ * <p>All endpoints return standardized API responses using {@link ApiResponse} and {@link ResponseFactory}.</p>
+ *
+ * <p>Typical usage:</p>
+ * <pre>
+ *   GET    /api/v1/reviews/provider/{id}         // Paginated reviews for a provider
+ *   POST   /api/v1/reviews                       // Submit a review for a provider
+ *   GET    /api/v1/reviews/check/{bookingId}     // Check if a review exists for a booking
+ * </pre>
+ *
+ * <p>Role-based access control is enforced for review submission.</p>
+ *
+ * @author Workbridge Team
+ * @since 2025-06-25
+ */
 @RestController
 @RequestMapping("/api/v1/reviews")
 @RequiredArgsConstructor
@@ -27,45 +53,57 @@ public class ReviewController {
     
     private final ReviewService reviewService;
     
-    @GetMapping()
-    public ResponseEntity<?> getReviewsByProvider(@RequestBody ReviewRequestDTO reviewRequestDTO) {
-        try {
-            List<ReviewResponseDTO> reviews = reviewService.getReviewsByProvider(reviewRequestDTO.getReviewedId());
-            return ResponseEntity.ok(reviews);
-        } catch (UserNotFoundException userNotFoundException) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Provider not found.");
-        } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong.");
-        }
+    /**
+     * Retrieves a paginated list of reviews for a specific provider.
+     *
+     * @param providerId The ID of the provider whose reviews are being fetched
+     * @param pageable   Pagination and sorting information (default: page=0, size=20, sort by id ASC)
+     * @return 200 OK with a page of {@link ReviewResponseDTO} objects and a success message
+     */
+    @GetMapping("/provider/{id}")
+    public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByProvider(
+        @PathVariable Long providerId,
+        @PageableDefault(
+            page = 0,
+            size = 20,
+            sort = "id",
+            direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByProvider(providerId, pageable);
+        return ResponseFactory.ok(
+            reviews,
+            "Reviews retrieved successfully"
+        );
     }
 
+    /**
+     * Submits a review for a service provider.
+     * <p>
+     * Only users with the SERVICE_SEEKER role can submit reviews.
+     *
+     * @param reviewRequestDTO The review data (rating, comment, bookingId, reviewedId, reviewerId)
+     * @return 200 OK with the created {@link ReviewResponseDTO} and a success message
+     */
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
-    @PostMapping("/review")
-    public ResponseEntity<?> reviewServiceProvider(@RequestBody ReviewRequestDTO reviewRequestDTO) {
-        try {
-            ReviewResponseDTO result = reviewService.reviewProvider(reviewRequestDTO);
-            return ResponseEntity.ok(result);
-        } catch (BookingNotFoundException bookingNotFoundException) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("booking not found.");
-        } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error ocured when atributing your review to the service provider.");
-        }
+    @PostMapping()
+    public ResponseEntity<ApiResponse<ReviewResponseDTO>> reviewServiceProvider(
+        @Valid @RequestBody ReviewRequestDTO reviewRequestDTO) {
+        return ResponseFactory.ok(
+            reviewService.reviewProvider(reviewRequestDTO),
+            "Review submitted successfully"
+        );
     }
     
     /**
-     * Checks if a user has already reviewed a booking
+     * Checks if a user has already reviewed a booking.
+     *
      * @param bookingId The ID of the booking to check
-     * @return true if a review exists for the booking, false otherwise
+     * @return 200 OK with true if a review exists, false otherwise, and a status message
      */
     @GetMapping("/check/{bookingId}")
-    public ResponseEntity<Boolean> hasUserReviewedBooking(@PathVariable Long bookingId) {
-        try {
-            boolean hasReviewed = reviewService.hasUserReviewedBooking(bookingId);
-            return ResponseEntity.ok(hasReviewed);
-        } catch (BookingNotFoundException bookingNotFoundException) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
-        } catch (Exception exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
-        }
+    public ResponseEntity<ApiResponse<Boolean>> hasUserReviewedBooking(@PathVariable Long bookingId) {
+        return ResponseFactory.ok(
+            reviewService.hasUserReviewedBooking(bookingId),
+            "Review status checked successfully"
+        );
     }
 }

@@ -1,8 +1,7 @@
 package com.workbridge.workbridge_app.review.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.workbridge.workbridge_app.booking.entity.Booking;
@@ -11,6 +10,7 @@ import com.workbridge.workbridge_app.booking.repository.BookingRepository;
 import com.workbridge.workbridge_app.review.dto.ReviewRequestDTO;
 import com.workbridge.workbridge_app.review.dto.ReviewResponseDTO;
 import com.workbridge.workbridge_app.review.entity.Review;
+import com.workbridge.workbridge_app.review.mapper.ReviewMapper;
 import com.workbridge.workbridge_app.review.repository.ReviewRepository;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
@@ -19,67 +19,92 @@ import com.workbridge.workbridge_app.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service class for managing review operations for service providers.
+ * <p>
+ * This service provides business logic for:
+ * <ul>
+ *   <li>Retrieving paginated reviews for a provider</li>
+ *   <li>Submitting a review for a provider</li>
+ *   <li>Checking if a booking has already been reviewed</li>
+ * </ul>
+ *
+ * <p>All methods throw domain-specific exceptions for missing users or bookings.</p>
+ *
+ * <p>Typical usage:</p>
+ * <pre>
+ *   reviewService.getReviewsByProvider(providerId, pageable);
+ *   reviewService.reviewProvider(reviewRequestDTO);
+ *   reviewService.hasUserReviewedBooking(bookingId);
+ * </pre>
+ *
+ * @author Workbridge Team
+ * @since 2025-06-25
+ */
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
-    
+
     private final ReviewRepository reviewRepository;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
-    
-    
-    public List<ReviewResponseDTO> getReviewsByProvider(Long providerId) {
-        ApplicationUser provider = userRepository.findById(providerId)
-                                    .orElseThrow(() -> new UserNotFoundException("Provider not found."));
 
-        List<Review> reviews = reviewRepository.findByReviewed_Id(provider.getId());
-        return reviews.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-    
-    @Transactional
-    public ReviewResponseDTO reviewProvider(ReviewRequestDTO reviewRequestDTO) {
-        ApplicationUser reviewer = userRepository.findById(reviewRequestDTO.getReviewerId())
-                                    .orElseThrow(() -> new UserNotFoundException("Reviewer not found."));
-
-        ApplicationUser reviewed = userRepository.findById(reviewRequestDTO.getReviewedId())
-                                    .orElseThrow(() -> new UserNotFoundException("Reviewed not found."));
-        
-        Booking booking = bookingRepository.findById(reviewRequestDTO.getBookingId())
-                            .orElseThrow(() -> new BookingNotFoundException("Booking not found."));
-
-        Review review = new Review();
-        review.setBooking(booking);
-        review.setReviewed(reviewed);
-        review.setReviewer(reviewer);
-        review.setComment(reviewRequestDTO.getComment());
-        review.setRating(reviewRequestDTO.getRating());
-
-        reviewRepository.save(review);
-        return convertToDTO(review);
+    /**
+     * Retrieves paginated reviews for a given provider.
+     *
+     * @param providerId the ID of the reviewed provider
+     * @param pageable   pagination options (page, size, sort)
+     * @return a page of {@link ReviewResponseDTO} objects
+     * @throws UserNotFoundException if the provider is not found
+     */
+    public Page<ReviewResponseDTO> getReviewsByProvider(Long providerId, Pageable pageable) {
+        ApplicationUser provider = findUserOrThrow(providerId, "Provider not found");
+        Page<Review> reviewsPage = reviewRepository.findByReviewed_Id(provider.getId(), pageable);
+        return reviewsPage.map(ReviewMapper::toDTO);
     }
 
     /**
-     * Checks if a review exists for a specific booking
-     * @param bookingId The ID of the booking to check
+     * Allows a user to submit a review for a service provider.
+     *
+     * @param reviewRequestDTO review data (rating, comment, bookingId, reviewedId, reviewerId)
+     * @return the saved review as a {@link ReviewResponseDTO}
+     * @throws UserNotFoundException if the reviewer or reviewed user is not found
+     * @throws BookingNotFoundException if the booking is not found
+     */
+    @Transactional
+    public ReviewResponseDTO reviewProvider(ReviewRequestDTO reviewRequestDTO) {
+        ApplicationUser reviewer = findUserOrThrow(reviewRequestDTO.getReviewerId(), "Reviewer not found");
+        ApplicationUser reviewed = findUserOrThrow(reviewRequestDTO.getReviewedId(), "Reviewed not found");
+        Booking booking = bookingRepository.findById(reviewRequestDTO.getBookingId())
+                                           .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
+        Review review = ReviewMapper.toEntity(reviewer, reviewed, booking, reviewRequestDTO);
+        Review savedReview = reviewRepository.save(review);
+        return ReviewMapper.toDTO(savedReview);
+    }
+
+    /**
+     * Checks if a booking already has a review.
+     *
+     * @param bookingId the ID of the booking to check
      * @return true if a review exists for the booking, false otherwise
+     * @throws BookingNotFoundException if the booking is not found
      */
     public boolean hasUserReviewedBooking(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                            .orElseThrow(() -> new BookingNotFoundException("Booking not found."));
-        
+        bookingRepository.findById(bookingId)
+                         .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
         return reviewRepository.existsByBooking_Id(bookingId);
     }
 
-    private ReviewResponseDTO convertToDTO(Review review) {
-        return new ReviewResponseDTO(
-            review.getId(),
-            review.getRating(),
-            review.getComment(),
-            review.getReviewer(),
-            review.getReviewed(),
-            review.getCreatedAt()
-        );
+    /**
+     * Utility to get user or throw exception.
+     *
+     * @param userId the user ID to look up
+     * @param notFoundMessage the error message if not found
+     * @return the found {@link ApplicationUser}
+     * @throws UserNotFoundException if the user is not found
+     */
+    private ApplicationUser findUserOrThrow(Long userId, String notFoundMessage) {
+        return userRepository.findById(userId)
+                             .orElseThrow(() -> new UserNotFoundException(notFoundMessage));
     }
 }

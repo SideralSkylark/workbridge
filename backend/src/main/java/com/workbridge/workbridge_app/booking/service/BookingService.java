@@ -15,7 +15,7 @@ import com.workbridge.workbridge_app.booking.exception.BookingNotFoundException;
 import com.workbridge.workbridge_app.booking.repository.BookingRepository;
 import com.workbridge.workbridge_app.review.repository.ReviewRepository;
 import com.workbridge.workbridge_app.service.entity.Service;
-import com.workbridge.workbridge_app.service.exception.ServiceListingNotFoundException;
+import com.workbridge.workbridge_app.service.exception.ServiceNotFoundException;
 import com.workbridge.workbridge_app.service.repository.ServiceRepository;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
@@ -61,7 +61,7 @@ public class BookingService {
                                 .orElseThrow(() -> new UserNotFoundException("User not found."));
         
         Service service = serviceRepository.findById(request.getServiceId())
-                            .orElseThrow(() -> new ServiceListingNotFoundException("Service not found."));
+                            .orElseThrow(() -> new ServiceNotFoundException("Service not found."));
 
         Booking booking = new Booking();
         booking.setSeeker(user);

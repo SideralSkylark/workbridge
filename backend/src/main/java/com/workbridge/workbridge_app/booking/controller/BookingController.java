@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.workbridge.workbridge_app.security.SecurityUtil;
-import com.workbridge.workbridge_app.service.exception.ServiceListingNotFoundException;
+import com.workbridge.workbridge_app.service.exception.ServiceNotFoundException;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.booking.dto.BookingRequestDTO;
 import com.workbridge.workbridge_app.booking.dto.BookingResponseDTO;
@@ -67,7 +67,7 @@ import lombok.RequiredArgsConstructor;
             String username = getAuthenticatedUsername();
             BookingResponseDTO booking = bookingService.createBooking(username, bookingRequestDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(booking);
-        } catch (ServiceListingNotFoundException exception) {
+        } catch (ServiceNotFoundException exception) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found.");
         } catch (Exception exception) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error ocured.", "message", exception.getMessage()));
@@ -81,7 +81,7 @@ import lombok.RequiredArgsConstructor;
             String username = getAuthenticatedUsername();
             BookingResponseDTO updatedBooking = bookingService.updateBooking(username, updateBookingRequestDTO);
             return ResponseEntity.ok(updatedBooking);
-        } catch (ServiceListingNotFoundException exception) {
+        } catch (ServiceNotFoundException exception) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found.");
         } catch(BookingNotFoundException exception) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
