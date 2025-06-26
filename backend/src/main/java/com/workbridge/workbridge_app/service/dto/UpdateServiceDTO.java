@@ -7,12 +7,12 @@ import lombok.Data;
 @Data
 public class UpdateServiceDTO {
     
-    @NotBlank
+    @NotBlank(message = "title is required")
     private String title;
 
-    @NotBlank
+    @NotBlank(message = "description is required")
     private String description;
 
-    @NotNull
+    @NotNull(message = "price is required")
     private Double price;
 }

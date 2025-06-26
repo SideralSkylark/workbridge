@@ -1,12 +1,20 @@
 package com.workbridge.workbridge_app.booking.dto;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 public class BookingRequestDTO {
-    private Long serviceId;   
-    private LocalDateTime date; 
+
+    @NotNull(message = "Service ID is required.")
+    private Long serviceId;
+
+    @NotNull(message = "Date is required.")
+    @Future(message = "Booking date must be in the future.")
+    private LocalDateTime date;
 }

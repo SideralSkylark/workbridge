@@ -4,9 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
+
 @Data
 @AllArgsConstructor
 public class UpdateBookingRequestDTO {
-    private Long bookingId;      
+    @NotNull(message = "Date is required.")
+    @Future(message = "Booking date must be in the future.") 
     private LocalDateTime date;  
 }

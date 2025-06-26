@@ -23,9 +23,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * REST controller for managing service provider reviews.
+ * REST controller for managing reviews of service providers.
  * <p>
- * This controller provides endpoints for:
+ * This controller exposes endpoints for:
  * <ul>
  *   <li>Retrieving paginated reviews for a specific provider</li>
  *   <li>Submitting a review for a provider (by a service seeker)</li>
@@ -36,15 +36,15 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>Typical usage:</p>
  * <pre>
- *   GET    /api/v1/reviews/provider/{id}         // Paginated reviews for a provider
- *   POST   /api/v1/reviews                       // Submit a review for a provider
- *   GET    /api/v1/reviews/check/{bookingId}     // Check if a review exists for a booking
+ *   GET    /api/v1/reviews/provider/{providerId}         // Paginated reviews for a provider
+ *   POST   /api/v1/reviews                               // Submit a review for a provider
+ *   GET    /api/v1/reviews/booking/{bookingId}/reviewed  // Check if a review exists for a booking
  * </pre>
  *
  * <p>Role-based access control is enforced for review submission.</p>
  *
  * @author Workbridge Team
- * @since 2025-06-25
+ * @since 2025-06-26
  */
 @RestController
 @RequestMapping("/api/v1/reviews")
@@ -60,7 +60,7 @@ public class ReviewController {
      * @param pageable   Pagination and sorting information (default: page=0, size=20, sort by id ASC)
      * @return 200 OK with a page of {@link ReviewResponseDTO} objects and a success message
      */
-    @GetMapping("/provider/{id}")
+    @GetMapping("/provider/{providerId}")
     public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByProvider(
         @PathVariable Long providerId,
         @PageableDefault(
@@ -84,7 +84,7 @@ public class ReviewController {
      * @return 200 OK with the created {@link ReviewResponseDTO} and a success message
      */
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<ApiResponse<ReviewResponseDTO>> reviewServiceProvider(
         @Valid @RequestBody ReviewRequestDTO reviewRequestDTO) {
         return ResponseFactory.ok(
@@ -99,7 +99,7 @@ public class ReviewController {
      * @param bookingId The ID of the booking to check
      * @return 200 OK with true if a review exists, false otherwise, and a status message
      */
-    @GetMapping("/check/{bookingId}")
+    @GetMapping("/booking/{bookingId}/reviewed")
     public ResponseEntity<ApiResponse<Boolean>> hasUserReviewedBooking(@PathVariable Long bookingId) {
         return ResponseFactory.ok(
             reviewService.hasUserReviewedBooking(bookingId),

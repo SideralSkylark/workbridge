@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailVerificationDTO {
-    @NotBlank
+    @NotBlank(message = "Email is required")
     @Email
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Verification code is required")
     @Size(min = 6, max = 6, message = "Verification code must be exactly 6 characters")
     private String code;
 }
