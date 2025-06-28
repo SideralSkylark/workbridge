@@ -1,7 +1,7 @@
 # *****Deployment env *****
 # FROM debian:bullseye-slim
 
-# # Install essential tools and certificates
+# # Install essential tools and certificates,
 # RUN apt-get update && apt-get install -y \
 #     curl \
 #     maven \
@@ -63,7 +63,7 @@ ENV JAVA_HOME=/usr/lib/jvm/jdk-23
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Copy pom.xml first to cache dependencies
-COPY pom.xml . 
+COPY pom.xml .
 
 # Download dependencies **while online** so we can build offline later
 RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -B
