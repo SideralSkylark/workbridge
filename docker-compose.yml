@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   workbridge-db:
     image: postgres:15
@@ -29,7 +28,7 @@ services:
     networks:
       - shared-bridge
     restart: unless-stopped
-  
+
   workbridge-frontend:
     build:
       context: ./frontend
@@ -47,4 +46,3 @@ volumes:
 
 networks:
   shared-bridge:
-    external: true

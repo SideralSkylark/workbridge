@@ -71,7 +71,7 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
-    
+
     /**
      * Registers a new user account.
      *
