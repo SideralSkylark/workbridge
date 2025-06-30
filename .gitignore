@@ -37,3 +37,6 @@ build/
 
 ### jdk ###
 backend/.jdk/
+
+### node ###
+node_modules/
