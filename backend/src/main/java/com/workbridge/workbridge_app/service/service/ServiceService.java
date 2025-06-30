@@ -16,6 +16,7 @@ import com.workbridge.workbridge_app.user.exception.UserNotServiceProviderExcept
 import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ServiceService {
 
     private final ServiceRepository serviceRepository;
@@ -64,6 +66,7 @@ public class ServiceService {
      * @throws UserNotServiceProviderException if the user is not a service provider
      */
     public ServiceResponseDTO createService(ServiceRequestDTO serviceDTO, String username) {
+        log.debug("createService: iniciando criação para usuário '{}', dados={}", username, serviceDTO);
         ApplicationUser provider = getVerifiedProvider(username);
         Service service = serviceMapper.toEntity(serviceDTO, provider);
         Service saved = serviceRepository.save(service);
@@ -107,6 +110,7 @@ public class ServiceService {
      * @return a page of service feed DTOs
      */
     public Page<ServiceFeedDTO> getServiceFeed(Pageable pageable) {
+        log.info("Fetching service feed.");
         return serviceRepository.findServiceFeed(pageable)
                 .map(projection -> new ServiceFeedDTO(
                     new ServiceResponseDTO(
@@ -114,14 +118,14 @@ public class ServiceService {
                         projection.getTitle(),
                         projection.getDescription(),
                         projection.getPrice(),
-                        projection.getProviderId()  
+                        projection.getProviderId()
                     ),
                     projection.getProviderRating(),
                     projection.getProviderUsername(),
                     projection.getProviderEmail()
                 ));
     }
-    
+
     /**
      * Updates an existing service if the requesting user is the owner.
      *
@@ -133,15 +137,15 @@ public class ServiceService {
      * @throws UserNotServiceProviderException if the user is not the owner
      */
     public ServiceResponseDTO updateService(
-        Long serviceId, 
-        UpdateServiceDTO serviceDTO, 
+        Long serviceId,
+        UpdateServiceDTO serviceDTO,
         String username) {
         Service service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ServiceNotFoundException("Service not found"));
 
         if (!service.getProvider().getUsername().equals(username)) {
             throw new UserNotServiceProviderException("You are not the owner of this service");
-        }   
+        }
 
         serviceMapper.updateEntityFromDTO(serviceDTO, service);
 
@@ -207,7 +211,7 @@ public class ServiceService {
     private ApplicationUser getVerifiedProviderById(Long id) {
         ApplicationUser user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        
+
         if (!user.hasRole(UserRole.SERVICE_PROVIDER)) {
             throw new UserNotServiceProviderException("User is not a service provider");
         }

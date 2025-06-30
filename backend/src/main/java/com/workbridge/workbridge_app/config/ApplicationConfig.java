@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.workbridge.workbridge_app.security.UserPrincipal;
 import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,20 @@ import lombok.RequiredArgsConstructor;
 public class ApplicationConfig {
 
     private final UserRepository userRepository;
-    
+
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        .map(user -> new UserPrincipal(
+            user.getId(),
+            user.getUsername(),
+            user.getPassword(),
+            user.getAuthorities(), 
+            user.isEnabled()))
+        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    @Bean 
+    @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());

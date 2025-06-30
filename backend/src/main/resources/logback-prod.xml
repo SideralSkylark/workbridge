@@ -1,0 +1,31 @@
+<included>
+
+    <appender name="STRUCTURED" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/workbridge.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/workbridge.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <loggerName/>
+                <logLevel/>
+                <threadName/>
+                <message/>
+                <arguments/>
+                <mdc/>
+                <context/>
+                <stackTrace/>
+                <callerData/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <logger name="com.workbridge" level="INFO" />
+
+    <root level="INFO">
+        <appender-ref ref="STRUCTURED" />
+    </root>
+
+</included>

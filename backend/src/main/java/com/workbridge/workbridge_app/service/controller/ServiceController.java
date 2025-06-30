@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -122,14 +123,14 @@ public class ServiceController {
      */
     @GetMapping("/feed")
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
-    public ResponseEntity<ApiResponse<Page<ServiceFeedDTO>>> getServiceFeed(
+    public ResponseEntity<ApiResponse<PagedModel<ServiceFeedDTO>>> getServiceFeed(
         @PageableDefault(
             page = 0,
             size = 20,
             sort = "id",
             direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseFactory.ok(
-            serviceService.getServiceFeed(pageable),
+            new PagedModel<>(serviceService.getServiceFeed(pageable)),
             "Fetched service feed successfully."
         );
     }
@@ -148,8 +149,8 @@ public class ServiceController {
             @Valid @RequestBody UpdateServiceDTO serviceDTO) {
                 return ResponseFactory.ok(
                     serviceService.updateService(
-                        serviceId, 
-                        serviceDTO, 
+                        serviceId,
+                        serviceDTO,
                         SecurityUtil.getAuthenticatedUsername()),
                     "Service updated successfully."
                 );
