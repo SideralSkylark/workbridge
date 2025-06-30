@@ -12,7 +12,6 @@ import com.workbridge.workbridge_app.service.service.ServiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -82,14 +81,14 @@ public class ServiceController {
      */
     @PreAuthorize("hasRole('SERVICE_PROVIDER')")
     @GetMapping("/provider/me")
-    public ResponseEntity<ApiResponse<Page<ServiceResponseDTO>>> getMyServices(
+    public ResponseEntity<ApiResponse<PagedModel<ServiceResponseDTO>>> getMyServices(
         @PageableDefault(
             page = 0,
             size = 20,
             sort = "id",
             direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseFactory.ok(
-            serviceService.getServicesByProvider(SecurityUtil.getAuthenticatedUsername(), pageable),
+            new PagedModel<>(serviceService.getServicesByProvider(SecurityUtil.getAuthenticatedUsername(), pageable)),
             "Fetched services successfully."
         );
     }
@@ -102,7 +101,7 @@ public class ServiceController {
      * @return 200 OK with a page of {@link ServiceResponseDTO} objects and a success message
      */
     @GetMapping("/provider/{providerId}")
-    public ResponseEntity<ApiResponse<Page<ServiceResponseDTO>>> getServicesByProvider(
+    public ResponseEntity<ApiResponse<PagedModel<ServiceResponseDTO>>> getServicesByProvider(
         @PathVariable Long providerId,
         @PageableDefault(
             page = 0,
@@ -110,7 +109,7 @@ public class ServiceController {
             sort = "id",
             direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseFactory.ok(
-            serviceService.getServicesByProviderId(providerId, pageable),
+            new PagedModel<>(serviceService.getServicesByProviderId(providerId, pageable)),
             "Fetched services by provider successfully."
         );
     }

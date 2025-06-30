@@ -23,10 +23,10 @@
  */
 package com.workbridge.workbridge_app.booking.controller;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +54,7 @@ import lombok.RequiredArgsConstructor;
  @RequestMapping("/api/v1/bookings")
  @RequiredArgsConstructor
  public class BookingController {
-    
+
     private final BookingService bookingService;
 
     /**
@@ -65,14 +65,14 @@ import lombok.RequiredArgsConstructor;
      */
     @PreAuthorize("hasRole('SERVICE_SEEKER')")
     @GetMapping("/seeker")
-    public ResponseEntity<ApiResponse<Page<BookingResponseDTO>>> getMyBookings(
+    public ResponseEntity<ApiResponse<PagedModel<BookingResponseDTO>>> getMyBookings(
         @PageableDefault(
             page = 0,
             size = 20,
             sort = "id",
             direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseFactory.ok(
-            bookingService.getUsersBookings(SecurityUtil.getAuthenticatedUsername(), pageable),
+            new PagedModel<>(bookingService.getUsersBookings(SecurityUtil.getAuthenticatedUsername(), pageable)),
             "Fetched bookings successfully."
         );
     }
@@ -85,7 +85,7 @@ import lombok.RequiredArgsConstructor;
      */
     @PreAuthorize("hasRole('SERVICE_PROVIDER')")
     @GetMapping("/provider")
-    public ResponseEntity<ApiResponse<Page<BookingResponseDTO>>> getMyBookedServices(
+    public ResponseEntity<ApiResponse<PagedModel<BookingResponseDTO>>> getMyBookedServices(
         @PageableDefault(
             page = 0,
             size = 20,
@@ -93,7 +93,7 @@ import lombok.RequiredArgsConstructor;
             direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return ResponseFactory.ok(
-            bookingService.getBookingsByProviderId(SecurityUtil.getAuthenticatedUsername(), pageable),//pass username instead
+            new PagedModel<>(bookingService.getBookingsByProviderId(SecurityUtil.getAuthenticatedUsername(), pageable)),//pass username instead
             "Fetched bookings successfully."
         );
     }
@@ -125,11 +125,11 @@ import lombok.RequiredArgsConstructor;
     @PatchMapping("/{bookingId}")
     public ResponseEntity<ApiResponse<BookingResponseDTO>> updateBooking(
         @PathVariable Long bookingId,
-        @Valid @RequestBody UpdateBookingRequestDTO updateBookingRequestDTO) { 
+        @Valid @RequestBody UpdateBookingRequestDTO updateBookingRequestDTO) {
         return ResponseFactory.ok(
             bookingService.updateBooking(
                 SecurityUtil.getAuthenticatedUsername(),
-                bookingId, 
+                bookingId,
                 updateBookingRequestDTO),
             "Booking updated successfully."
         );

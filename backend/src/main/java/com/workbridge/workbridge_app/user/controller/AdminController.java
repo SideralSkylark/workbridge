@@ -1,9 +1,9 @@
 package com.workbridge.workbridge_app.user.controller;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>All responses are wrapped in {@link ResponseEntity} and use DTOs for data transfer.</p>
  *
  * @author Workbridge Team
- * 
+ *
  * @since 2025-06-22
  */
 @RestController
@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class AdminController {
-    
+
     private final UserService userService;
 
     /**
@@ -67,14 +67,14 @@ public class AdminController {
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<Page<UserResponseDTO>>> getAllUsers(
+    public ResponseEntity<ApiResponse<PagedModel<UserResponseDTO>>> getAllUsers(
             @PageableDefault(
                 page = 0,
-                size = 20, 
-                sort = "id", 
+                size = 20,
+                sort = "id",
                 direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseFactory.ok(
-            userService.getAllUsers(pageable),
+            new PagedModel<>(userService.getAllUsers(pageable)),
             "Fetched users successfully"
         );
     }
@@ -90,14 +90,14 @@ public class AdminController {
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/non-admin-users")
-    public ResponseEntity<ApiResponse<Page<UserResponseDTO>>> getAllNonAdminUsers(
+    public ResponseEntity<ApiResponse<PagedModel<UserResponseDTO>>> getAllNonAdminUsers(
             @PageableDefault(
                 page = 0,
                 size = 20,
                 sort = "id",
                 direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseFactory.ok(
-            userService.getAllNonAdminUsers(pageable),
+            new PagedModel<>(userService.getAllNonAdminUsers(pageable)),
             "Fetched non-admin users successfully"
         );
     }
@@ -113,7 +113,7 @@ public class AdminController {
      */
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/provider-requests/pending")
-    public ResponseEntity<ApiResponse<Page<ProviderRequestDTO>>> getPendingProviderRequests(
+    public ResponseEntity<ApiResponse<PagedModel<ProviderRequestDTO>>> getPendingProviderRequests(
             @PageableDefault(
                 page = 0,
                 size = 20,
@@ -121,7 +121,7 @@ public class AdminController {
                 direction = Sort.Direction.ASC) Pageable pageable
             ) {
         return ResponseFactory.ok(
-            userService.getAllProviderRequestNotApproved(pageable),
+            new PagedModel<>(userService.getAllProviderRequestNotApproved(pageable)),
             "Fetched pending provider requests successfully"
         );
     }

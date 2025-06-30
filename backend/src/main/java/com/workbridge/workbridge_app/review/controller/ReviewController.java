@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,9 +51,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
-    
+
     private final ReviewService reviewService;
-    
+
     /**
      * Retrieves a paginated list of reviews for a specific provider.
      *
@@ -61,7 +62,7 @@ public class ReviewController {
      * @return 200 OK with a page of {@link ReviewResponseDTO} objects and a success message
      */
     @GetMapping("/provider/{providerId}")
-    public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByProvider(
+    public ResponseEntity<ApiResponse<PagedModel<ReviewResponseDTO>>> getReviewsByProvider(
         @PathVariable Long providerId,
         @PageableDefault(
             page = 0,
@@ -70,7 +71,7 @@ public class ReviewController {
             direction = Sort.Direction.ASC) Pageable pageable) {
         Page<ReviewResponseDTO> reviews = reviewService.getReviewsByProvider(providerId, pageable);
         return ResponseFactory.ok(
-            reviews,
+            new PagedModel<>(reviews),
             "Reviews retrieved successfully"
         );
     }
@@ -92,7 +93,7 @@ public class ReviewController {
             "Review submitted successfully"
         );
     }
-    
+
     /**
      * Checks if a user has already reviewed a booking.
      *
