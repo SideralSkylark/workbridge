@@ -13,14 +13,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
     @Override
     public boolean beforeHandshake(
@@ -33,14 +36,23 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         if (request instanceof ServletServerHttpRequest servletRequest) {
             String token = servletRequest.getServletRequest().getParameter("token");
 
-            if (token != null && jwtService.extractUsername(token) != null) {
-                String username = jwtService.extractUsername(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (token != null) {
+                try {
+                    String username = jwtService.extractUsername(token);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtService.isTokenValid(token, userDetails)) {
-                    attributes.put("user", userDetails);
-                    return true;
+                    if (jwtService.isTokenValid(token, userDetails)) {
+                        attributes.put("user", userDetails);
+                        log.info("WebSocket handshake accepted for user: {}", username);
+                        return true;
+                    } else {
+                        log.warn("WebSocket handshake denied: invalid or expired JWT for user: {}", username);
+                    }
+                } catch (Exception e) {
+                    log.warn("WebSocket handshake failed: JWT parsing error - {}", e.getMessage());
                 }
+            } else {
+                log.warn("WebSocket handshake denied: missing JWT token in request parameter");
             }
         }
 

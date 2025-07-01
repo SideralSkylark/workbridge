@@ -2,6 +2,8 @@ package com.workbridge.workbridge_app.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -18,39 +20,74 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.workbridge.workbridge_app.security.JwtAuthenticationFilter;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-//TODO: improve security implementation
+    private final SecurityProperties securityProperties;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        log.info("Configuring SecurityFilterChain");
+
         http
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/api/v1/ws-chat", "/api/v1/ws-chat/**").permitAll()
+                .requestMatchers(securityProperties.getPublicUrls().toArray(new String[0])).permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
+            .exceptionHandling(handler -> handler
+            .authenticationEntryPoint((request, response, authException) -> {
+                log.warn("Unauthorized error: {}", authException.getMessage());
+                var errorResponse = com.workbridge.workbridge_app.common.response.ErrorResponse.of(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED,
+                    "Unauthorized - Invalid or missing token",
+                    request.getRequestURI()
+                );
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                com.workbridge.workbridge_app.common.util.JsonWriter.write(response, errorResponse, HttpServletResponse.SC_UNAUTHORIZED);
+                })
+        );
+
+        log.info("Security filter chain configured successfully");
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        log.info("Configuring CORS for origins: {}", securityProperties.getCors().getAllowedOrigins());
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://frontend"));
+        configuration.setAllowedOrigins(securityProperties.getCors().getAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "X-Requested-With",
+            "User-Agent",
+            "Origin"
+        ));
+        configuration.setExposedHeaders(List.of(
+            "Authorization",
+            "Location"
+        ));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

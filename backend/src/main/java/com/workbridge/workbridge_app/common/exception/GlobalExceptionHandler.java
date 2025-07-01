@@ -12,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.stream.Collectors;
 
@@ -86,6 +87,30 @@ public class GlobalExceptionHandler {
                 request
             );
         }
+
+    /**
+     * Handles requests made to non-existent endpoints (HTTP 404).
+     * <p>
+     * Triggered when no handler is found for a given HTTP request, typically due to an invalid path
+     * or missing controller mapping. This handler ensures that clients receive a structured 404 response
+     * instead of a default Spring error page.
+     *
+     * @param ex      the exception thrown when no handler is found
+     * @param request the original HTTP request that caused the error
+     * @return a structured error response with HTTP 404 Not Found status
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> notFound(
+        NoHandlerFoundException ex,
+        HttpServletRequest request
+    ) {
+        log.warn("404 Not Found - No handler for path: {}", request.getRequestURI());
+        return ResponseFactory.error(
+            HttpStatus.NOT_FOUND,
+            "The requested resource was not found",
+            request
+        );
+    }
 
     /**
      * Handles unexpected uncaught exceptions that fall through other handlers.

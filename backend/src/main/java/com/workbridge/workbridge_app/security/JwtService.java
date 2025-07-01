@@ -17,9 +17,13 @@ import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
-    
+
     @Value("${jwt.secret}")
     private String secretKey;
+
+    @Value("${jwt.expiration-ms:86400000}")
+    private long jwtExpirationMs;
+
 
     private Key getSigningKey() {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
@@ -47,7 +51,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) 
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSigningKey())
                 .compact();
     }

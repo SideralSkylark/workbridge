@@ -4,7 +4,7 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
@@ -22,3 +22,13 @@ spring:
     level:
       root: WARN
       com.workbridge: INFO
+
+security:
+    public-urls:
+      - /api/v1/auth/**
+      - /api/v1/ws-chat
+      - /api/v1/ws-chat/**
+    cors:
+      allowed-origins:
+        - http://localhost:4200
+        - http://frontend
