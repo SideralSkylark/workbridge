@@ -18,6 +18,7 @@ import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service class for managing review operations for service providers.
@@ -43,6 +44,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
@@ -58,8 +60,10 @@ public class ReviewService {
      * @throws UserNotFoundException if the provider is not found
      */
     public Page<ReviewResponseDTO> getReviewsByProvider(Long providerId, Pageable pageable) {
+        log.debug("Fetching reviews for providerId={}", providerId);
         ApplicationUser provider = findUserOrThrow(providerId, "Provider not found");
         Page<Review> reviewsPage = reviewRepository.findByReviewed_Id(provider.getId(), pageable);
+        log.info("Retrieved {} reviews for providerId={}", reviewsPage.getTotalElements(), providerId);
         return reviewsPage.map(ReviewMapper::toDTO);
     }
 
@@ -73,12 +77,23 @@ public class ReviewService {
      */
     @Transactional
     public ReviewResponseDTO reviewProvider(ReviewRequestDTO reviewRequestDTO) {
+        log.debug("Attempting to submit review: reviewerId={}, reviewedId={}, bookingId={}",
+                reviewRequestDTO.getReviewerId(),
+                reviewRequestDTO.getReviewedId(),
+                reviewRequestDTO.getBookingId());
         ApplicationUser reviewer = findUserOrThrow(reviewRequestDTO.getReviewerId(), "Reviewer not found");
         ApplicationUser reviewed = findUserOrThrow(reviewRequestDTO.getReviewedId(), "Reviewed not found");
         Booking booking = bookingRepository.findById(reviewRequestDTO.getBookingId())
-                                           .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
+                                           .orElseThrow(() -> {
+                    log.warn("Booking not found: id={}", reviewRequestDTO.getBookingId());
+                    return new BookingNotFoundException("Booking not found");
+                                           });
         Review review = ReviewMapper.toEntity(reviewer, reviewed, booking, reviewRequestDTO);
         Review savedReview = reviewRepository.save(review);
+
+        log.info("Review submitted successfully: reviewId={} bookingId={} reviewerId={} reviewedId={}",
+                savedReview.getId(), booking.getId(), reviewer.getId(), reviewed.getId());
+
         return ReviewMapper.toDTO(savedReview);
     }
 
@@ -90,9 +105,16 @@ public class ReviewService {
      * @throws BookingNotFoundException if the booking is not found
      */
     public boolean hasUserReviewedBooking(Long bookingId) {
+        log.debug("Checking if booking has review: bookingId={}", bookingId);
+
         bookingRepository.findById(bookingId)
-                         .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
-        return reviewRepository.existsByBooking_Id(bookingId);
+                         .orElseThrow(() -> {
+                    log.warn("Booking not found while checking for review: bookingId={}", bookingId);
+                    return new BookingNotFoundException("Booking not found");
+                         });
+        boolean exists = reviewRepository.existsByBooking_Id(bookingId);
+        log.info("Review exists for bookingId={}: {}", bookingId, exists);
+        return exists;
     }
 
     /**
@@ -105,6 +127,9 @@ public class ReviewService {
      */
     private ApplicationUser findUserOrThrow(Long userId, String notFoundMessage) {
         return userRepository.findById(userId)
-                             .orElseThrow(() -> new UserNotFoundException(notFoundMessage));
+                             .orElseThrow(() -> {
+                    log.warn("{}: userId={}", notFoundMessage, userId);
+                    return new UserNotFoundException(notFoundMessage);
+                             });
     }
 }

@@ -23,6 +23,7 @@ import com.workbridge.workbridge_app.user.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service layer for managing booking operations in the application.
@@ -48,8 +49,9 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class BookingService {
-    
+
     private final BookingMapper bookingMapper;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -65,9 +67,12 @@ public class BookingService {
      * @throws UserNotFoundException if the user is not found
      */
     public Page<BookingResponseDTO> getUsersBookings(String username, Pageable pageable) {
+        log.debug("Fetching bookings for seeker: {}", username);
         ApplicationUser user = findUser(username);
-        return bookingRepository.findBySeeker_Id(user.getId(), pageable)
+        Page<BookingResponseDTO> bookings =  bookingRepository.findBySeeker_Id(user.getId(), pageable)
                 .map(bookingMapper::toDTO);
+        log.info("Retrieved {} bookings for seeker: {}", bookings.getTotalElements(), username);
+        return bookings;
     }
 
     /**
@@ -79,9 +84,12 @@ public class BookingService {
      * @throws UserNotFoundException if the user is not found
      */
     public Page<BookingResponseDTO> getBookingsByProviderId(String username, Pageable pageable) {
+        log.debug("Fetching bookings for provider: {}", username);
         ApplicationUser provider = findUser(username);
-        return bookingRepository.findByService_Provider(provider, pageable)
+        Page<BookingResponseDTO> bookings =  bookingRepository.findByService_Provider(provider, pageable)
                 .map(bookingMapper::toDTO);
+        log.info("Retrieved {} bookings for provider: {}", bookings.getTotalElements(), username);
+        return bookings;
     }
 
     /**
@@ -95,13 +103,16 @@ public class BookingService {
      */
     @Transactional
     public BookingResponseDTO createBooking(String username, BookingRequestDTO request) {
+        log.debug("Creating booking for user={} serviceId={}", username, request.getServiceId());
         ApplicationUser seeker = findUser(username);
         Service service = findServiceById(request.getServiceId());
 
         Booking booking = bookingMapper.toEntity(request, seeker, service);
         booking.setStatus(BookingStatus.PENDING);
+        Booking savedBooking = bookingRepository.save(booking);
 
-        return bookingMapper.toDTO(bookingRepository.save(booking));
+        log.info("Booking created: id={} seeker={} service={}", savedBooking.getId(), username, service.getId());
+        return bookingMapper.toDTO(savedBooking);
     }
 
     /**
@@ -116,11 +127,15 @@ public class BookingService {
      */
     @Transactional
     public BookingResponseDTO updateBooking(String username, Long bookingId, UpdateBookingRequestDTO request) {
+        log.debug("Updating booking id={} by user={}", bookingId, username);
         Booking booking = findBookingById(bookingId);
         validateUserIsBookingSeeker(username, booking);
 
         booking.setDate(request.getDate());
-        return bookingMapper.toDTO(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Booking updated: id={} by user={}", bookingId, username);
+        return bookingMapper.toDTO(saved);
     }
 
     /**
@@ -133,11 +148,14 @@ public class BookingService {
      */
     @Transactional
     public void cancelBooking(String username, Long bookingId) {
+        log.debug("Cancelling booking id={} by user={}", bookingId, username);
         Booking booking = findBookingById(bookingId);
         validateUserIsBookingSeeker(username, booking);
 
         reviewRepository.deleteByBooking_Id(bookingId);
         bookingRepository.delete(booking);
+
+        log.info("Booking cancelled and reviews deleted: id={} by user={}", bookingId, username);
     }
 
     /**
@@ -149,7 +167,10 @@ public class BookingService {
      */
     private ApplicationUser findUser(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
+                .orElseThrow(() -> {
+                    log.warn("User not found: {}", username);
+                    return new UserNotFoundException("User not found.");
+                });
     }
 
     /**
@@ -161,7 +182,10 @@ public class BookingService {
      */
     private Service findServiceById(Long serviceId) {
         return serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ServiceNotFoundException("Service not found."));
+                .orElseThrow(() -> {
+                    log.warn("Service not found: id={}", serviceId);
+                    return new ServiceNotFoundException("Service not found.");
+                });
     }
 
     /**
@@ -173,7 +197,10 @@ public class BookingService {
      */
     private Booking findBookingById(Long bookingId) {
         return bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Booking not found."));
+                .orElseThrow(() -> {
+                    log.warn("Booking not found: id={}", bookingId);
+                    return new BookingNotFoundException("Booking not found.");
+                });
     }
 
     /**
@@ -185,6 +212,7 @@ public class BookingService {
      */
     private void validateUserIsBookingSeeker(String username, Booking booking) {
         if (!booking.getSeeker().getUsername().equals(username)) {
+            log.warn("Unauthorized booking modification attempt: user={} bookingId={}", username, booking.getId());
             throw new UserNotAuthorizedException("You are not authorized to modify this booking.");
         }
     }

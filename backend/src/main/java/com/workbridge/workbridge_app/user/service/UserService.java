@@ -25,6 +25,7 @@ import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service class for managing user-related operations, including user retrieval, updates, role management,
@@ -55,6 +56,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserMapper userMapper;
@@ -69,8 +71,11 @@ public class UserService {
      * @return a page of UserResponseDTO objects
      */
     public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable).
+        log.debug("Fetching all users with pagination: {}", pageable);
+        Page<UserResponseDTO> result = userRepository.findAll(pageable).
                                 map(userMapper::toDTO);
+        log.info("Fetched {} users", result.getTotalElements());
+        return result;
     }
 
     /**
@@ -79,6 +84,7 @@ public class UserService {
      * @return List of UserResponseDTO objects representing all users.
      */
     public List<UserResponseDTO> getAllUsers() {
+        log.debug("Fetching all users without pagination");
         return getAllUsers(Pageable.unpaged()).getContent();
     }
 
@@ -89,7 +95,10 @@ public class UserService {
      * @return a page of UserResponseDTO objects
      */
     public Page<UserResponseDTO> getAllNonAdminUsers(Pageable pageable) {
-        return userRepository.findAllNonAdminUsers(pageable).map(userMapper::toDTO);
+        log.debug("Fetching all non-admin users with pagination: {}", pageable);
+        Page<UserResponseDTO> result = userRepository.findAllNonAdminUsers(pageable).map(userMapper::toDTO);
+        log.info("Fetched {} non admin users", result.getTotalElements());
+        return result;
     }
 
     /**
@@ -98,6 +107,7 @@ public class UserService {
      * @return List of UserResponseDTO objects for users without the ADMIN role.
      */
     public List<UserResponseDTO> getAllNonAdminUsers() {
+        log.debug("Fetching all non-admin users without pagination");
         return userRepository.findAllNonAdminUsers().stream().map(userMapper::toDTO).toList();
     }
 
@@ -108,6 +118,7 @@ public class UserService {
      * @return List of UserResponseDTO objects for users with the specified role.
      */
     public List<UserResponseDTO> getUsersByRole(UserRole role) {
+        log.debug("Fetching users by role: {}", role);
         return userRepository.findAllByRole(role).stream().map(userMapper::toDTO).toList();
     }
 
@@ -119,7 +130,10 @@ public class UserService {
      * @return a page of UserResponseDTO objects
      */
     public Page<UserResponseDTO> getUsersByRole(UserRole role, Pageable pageable) {
-        return userRepository.findAllByRole(role, pageable).map(userMapper::toDTO);
+        log.debug("Fetching users by role: {} with pagination: {}", role, pageable);
+        Page<UserResponseDTO> result = userRepository.findAllByRole(role, pageable).map(userMapper::toDTO);
+        log.info("Fetched {}, users with role {}", result.getTotalElements(), role);
+        return result;
     }
 
     /**
@@ -129,7 +143,10 @@ public class UserService {
      * @return a page of ProviderRequestDTO objects
      */
     public Page<ProviderRequestDTO> getAllProviderRequestNotApproved(Pageable pageable) {
-        return providerRequestRepository.findByApprovedFalse(pageable).map(userMapper::toDTO);
+        log.debug("Fetching all unapproved provider requests with pagination: {}", pageable);
+        Page<ProviderRequestDTO> result = providerRequestRepository.findByApprovedFalse(pageable).map(userMapper::toDTO);
+        log.info("Fetched {} unapproved provider requests", result.getTotalElements());
+        return result;
     }
 
     /**
@@ -139,6 +156,7 @@ public class UserService {
      */
     @Transactional
     public List<ProviderRequestDTO> getAllProviderRequestNotApproved() {
+        log.debug("Fetching all unapproved provider requests without pagination");
         return providerRequestRepository.findByApprovedFalse().stream().map(userMapper::toDTO).toList();
     }
 
@@ -179,6 +197,7 @@ public class UserService {
      * @return The saved ApplicationUser entity.
      */
     public ApplicationUser saveUser(ApplicationUser user) {
+        log.debug("Saving user: {}", user.getUsername());
         return userRepository.save(user);
     }
 
@@ -192,12 +211,15 @@ public class UserService {
      */
     @Transactional
     public ApplicationUser updateUser(String username, UpdateUserProfileDTO dto) {
+        log.debug("Updating user '{}': {}", username, dto);
         ApplicationUser user = getUser(username);
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
         user.setEnabled(dto.isEnabled());
         user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        ApplicationUser updated = userRepository.save(user);
+        log.info("User '{}' updated successfully at {}", username, user.getUpdatedAt());
+        return updated;
     }
 
     /**
@@ -206,7 +228,9 @@ public class UserService {
      * @param id The user ID.
      */
     public void deleteUserById(Long id) {
+        log.warn("Deleting user with ID {}", id);
         userRepository.deleteById(id);
+        log.info("User with ID {} deleted successfully", id);
     }
 
     /**
@@ -217,7 +241,9 @@ public class UserService {
      */
     @Transactional
     public void deleteByUsername(String username) {
+        log.warn("Deleting user with username '{}'", username);
         userRepository.delete(getUser(username));
+        log.info("User '{}' deleted successfully", username);
         //TODO: delete related entities
     }
 
@@ -230,6 +256,7 @@ public class UserService {
      */
     @Transactional
     public boolean enableAccount(String email) {
+        log.debug("Enabling account for email '{}'", email);
         return updateAccountStatus(email, true);
     }
 
@@ -242,6 +269,7 @@ public class UserService {
      */
     @Transactional
     public boolean disableAccount(String email) {
+        log.debug("Enabling account for email '{}'", email);
         return updateAccountStatus(email, false);
     }
 
@@ -254,12 +282,15 @@ public class UserService {
      */
     @Transactional
     public void requestToBecomeProvider(String username) {
+        log.debug("User '{}' requested to become a provider", username);
         ApplicationUser user = getUser(username);
         if (user.hasRole(UserRole.SERVICE_PROVIDER)) {
+            log.warn("User '{}' is already a service provider", username);
             throw new IllegalStateException("User is already a service provider.");
         }
 
         providerRequestRepository.save(new ProviderRequest(user));
+        log.info("Provider request submitted for user '{}'", username);
         //TODO: notify admin
     }
 
@@ -272,12 +303,13 @@ public class UserService {
      */
     @Transactional
     public void approveProviderRequest(Long requestId) {
+        log.debug("Approving provider request with ID '{}'", requestId);
         ProviderRequest request = getProviderRequest(requestId);
-
         validateNotApproved(request);
         grantServiceProviderRole(request.getUser());
         request.markApproved(LocalDateTime.now());
         providerRequestRepository.save(request);
+        log.info("Provider request '{}' approved for user '{}'", requestId, request.getUser().getUsername());
         // TODO: notify user
     }
 
@@ -289,9 +321,10 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found.
      */
     public boolean hasPendingProviderRequest(String username) {
-       return providerRequestRepository.existsByUserAndApprovedFalse(getUser(username));
+        log.debug("Checking if user '{}' has pending provider request", username);
+        return providerRequestRepository.existsByUserAndApprovedFalse(getUser(username));
     }
-    
+
     /**
      * Checks if a user is a service provider.
      *
@@ -300,6 +333,7 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found.
      */
     public boolean isServiceProvider(String username) {
+        log.debug("Checking if user '{}' is a service provider", username);
         return getUser(username).isServiceProvider();
     }
 
@@ -332,7 +366,7 @@ public class UserService {
      */
     private ApplicationUser getUser(String username) {
         return getOrThrow(
-            username, 
+            username,
             userRepository::findByUsername,
             "No user found with username: " + username);
     }
@@ -345,8 +379,8 @@ public class UserService {
      * @throws UserNotFoundException if the user is not found.
      */
     private ApplicationUser getUserByEmailOrThrow(String email) {
-        return getOrThrow(email, 
-        userRepository::findByEmail, 
+        return getOrThrow(email,
+        userRepository::findByEmail,
         "No user found with email: " + email);
     }
 
@@ -365,7 +399,10 @@ public class UserService {
         String errorMessage) {
 
         return finder.apply(value)
-                    .orElseThrow(() -> new UserNotFoundException(errorMessage));                   
+                    .orElseThrow(() -> {
+                        log.warn("User lookup failed: {}", errorMessage);
+                        return new UserNotFoundException(errorMessage);
+                    });
     }
 
     /**
@@ -377,8 +414,10 @@ public class UserService {
      */
     private ProviderRequest getProviderRequest(Long id) {
         return providerRequestRepository.findById(id)
-                .orElseThrow(() -> new ProviderRequestNotFoundException(
-                        "No provider request found with id: " + id));
+                .orElseThrow(() -> {
+                    log.warn("Provider request with ID '{}' not found", id);
+                    return new ProviderRequestNotFoundException("No provider request found with id: " + id);
+                });
     }
 
     /**
@@ -388,7 +427,10 @@ public class UserService {
      * @throws IllegalStateException if the request is already approved.
      */
     private void validateNotApproved(ProviderRequest request) {
-        if (request.isApproved()) throw new IllegalStateException("Request already approved.");
+        if (request.isApproved()) {
+            log.warn("Provider request '{}' is already approved", request.getId());
+            throw new IllegalStateException("Request already approved.");
+        }
     }
 
     /**
@@ -401,11 +443,15 @@ public class UserService {
      */
     private boolean updateAccountStatus(String email, boolean enable) {
         ApplicationUser user = getUserByEmailOrThrow(email);
-        if (user.isEnabled() == enable) return false;
+        if (user.isEnabled() == enable) {
+            log.debug("No status change for '{}': already {}", email, enable ? "enabled" : "disabled");
+            return false;
+        }
 
         user.setEnabled(enable);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+        log.info("Account for '{}' set to {}", email, enable ? "ENABLED" : "DISABLED");
         return true;
     }
 
@@ -417,8 +463,12 @@ public class UserService {
      */
     private void grantServiceProviderRole(ApplicationUser user) {
         UserRoleEntity spRole = userRoleRepository.findByRole(UserRole.SERVICE_PROVIDER)
-                .orElseThrow(() -> new IllegalStateException("SERVICE_PROVIDER role missing in DB"));
+                .orElseThrow(() -> {
+                    log.error("SERVICE_PROVIDER role not found in database");
+                    return new IllegalStateException("SERVICE_PROVIDER role missing in DB");
+                });
         user.addRole(spRole);
         userRepository.save(user);
+        log.info("Granted SERVICE_PROVIDER role to user '{}'", user.getUsername());
     }
 }

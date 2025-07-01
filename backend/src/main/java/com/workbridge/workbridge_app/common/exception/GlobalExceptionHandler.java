@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-    
+
     /**
      * Handles validation errors triggered by {@code @Valid} annotations on request bodies.
      * <p>
@@ -67,6 +67,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> authorizationDenied(
         AuthorizationDeniedException ex,
         HttpServletRequest request) {
+        log.warn("Authorization denied");
             return ResponseFactory.error(
                 HttpStatus.FORBIDDEN,
                 ex.getMessage(),
@@ -78,6 +79,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> userNotAuthorized(
         UserNotAuthorizedException ex,
         HttpServletRequest request) {
+        log.warn("User not authorized.");
             return ResponseFactory.error(
                 HttpStatus.UNAUTHORIZED,
                 ex.getMessage(),

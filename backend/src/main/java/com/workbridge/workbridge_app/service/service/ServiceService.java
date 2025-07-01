@@ -66,10 +66,14 @@ public class ServiceService {
      * @throws UserNotServiceProviderException if the user is not a service provider
      */
     public ServiceResponseDTO createService(ServiceRequestDTO serviceDTO, String username) {
-        log.debug("createService: iniciando criação para usuário '{}', dados={}", username, serviceDTO);
+        log.debug("Creating service for user='{}' with data={}", username, serviceDTO);
         ApplicationUser provider = getVerifiedProvider(username);
         Service service = serviceMapper.toEntity(serviceDTO, provider);
         Service saved = serviceRepository.save(service);
+        log.info("Service created successfully. id={}, title={}, provider={}",
+        saved.getId(),
+        saved.getTitle(),
+        username);
         return serviceMapper.toResponseDTO(saved);
     }
 
@@ -83,9 +87,12 @@ public class ServiceService {
      * @throws UserNotServiceProviderException if the user is not a service provider
      */
     public Page<ServiceResponseDTO> getServicesByProvider(String username, Pageable pageable) {
+        log.debug("Fetching services for provider username={}", username);
         ApplicationUser provider = getVerifiedProvider(username);
-        return serviceRepository.findByProviderId(provider.getId(), pageable)
+        Page<ServiceResponseDTO> result = serviceRepository.findByProviderId(provider.getId(), pageable)
                 .map(serviceMapper::toResponseDTO);
+        log.info("Found {} services for provider '{}'", result.getTotalElements(), username);
+        return result;
     }
 
     /**
@@ -98,9 +105,12 @@ public class ServiceService {
      * @throws UserNotServiceProviderException if the user is not a service provider
      */
     public Page<ServiceResponseDTO> getServicesByProviderId(Long providerId, Pageable pageable) {
+        log.debug("Fetching services for providerId={}", providerId);
         ApplicationUser provider = getVerifiedProviderById(providerId);
-        return serviceRepository.findByProviderId(provider.getId(), pageable)
+        Page<ServiceResponseDTO> result = serviceRepository.findByProviderId(provider.getId(), pageable)
                 .map(serviceMapper::toResponseDTO);
+        log.info("Found {} services for providerId={}", result.getTotalElements(), providerId);
+        return result;
     }
 
     /**
@@ -110,8 +120,8 @@ public class ServiceService {
      * @return a page of service feed DTOs
      */
     public Page<ServiceFeedDTO> getServiceFeed(Pageable pageable) {
-        log.info("Fetching service feed.");
-        return serviceRepository.findServiceFeed(pageable)
+        log.info("Fetching service feed with pagination: {}", pageable);
+        Page<ServiceFeedDTO> feed = serviceRepository.findServiceFeed(pageable)
                 .map(projection -> new ServiceFeedDTO(
                     new ServiceResponseDTO(
                         projection.getServiceId(),
@@ -124,6 +134,8 @@ public class ServiceService {
                     projection.getProviderUsername(),
                     projection.getProviderEmail()
                 ));
+        log.info("Fetched {} items in service feed", feed.getTotalElements());
+        return feed;
     }
 
     /**
@@ -140,16 +152,24 @@ public class ServiceService {
         Long serviceId,
         UpdateServiceDTO serviceDTO,
         String username) {
+        log.debug("Updating serviceId={} by user={}", serviceId, username);
         Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ServiceNotFoundException("Service not found"));
+                .orElseThrow(() -> {
+                    log.warn("Service not found: id={}", serviceId);
+                    return new ServiceNotFoundException("Service not found");
+                });
 
         if (!service.getProvider().getUsername().equals(username)) {
+            log.warn("Unauthorized update attempt by '{}'. Owner is '{}'",
+            username,
+            service.getProvider().getUsername());
             throw new UserNotServiceProviderException("You are not the owner of this service");
         }
 
         serviceMapper.updateEntityFromDTO(serviceDTO, service);
 
-        serviceRepository.save(service);
+        Service updated = serviceRepository.save(service);
+        log.info("Service updated successfully: id={}, title={}", updated.getId(), updated.getTitle());
 
         return serviceMapper.toResponseDTO(service);
     }
@@ -162,8 +182,13 @@ public class ServiceService {
      * @throws ServiceNotFoundException if the service is not found
      */
     public ServiceResponseDTO getServiceById(Long serviceId) {
+        log.debug("Fetching service by id={}", serviceId);
         Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ServiceNotFoundException("Service not found."));
+                .orElseThrow(() -> {
+                    log.warn("Service not found: id={}", serviceId);
+                    return new ServiceNotFoundException("Service not found.");
+                });
+        log.info("Service fetched successfully: id={}, title={}", service.getId(), service.getTitle());
 
         return serviceMapper.toResponseDTO(service);
     }
@@ -175,10 +200,13 @@ public class ServiceService {
      * @throws ServiceNotFoundException if the service is not found
      */
     public void deleteService(Long serviceId) {
+        log.debug("Deleting service with id={}", serviceId);
         if (!serviceRepository.existsById(serviceId)) {
+            log.warn("Attempted to delete non-existent service: id={}", serviceId);
             throw new ServiceNotFoundException("Service not found.");
         }
         serviceRepository.deleteById(serviceId);
+        log.info("Service deleted successfully: id={}", serviceId);
     }
 
     /**
@@ -191,9 +219,13 @@ public class ServiceService {
      */
     private ApplicationUser getVerifiedProvider(String username) {
         ApplicationUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.warn("User not found: username={}", username);
+                    return new UserNotFoundException("User not found");
+                });
 
         if (!user.hasRole(UserRole.SERVICE_PROVIDER)) {
+            log.warn("User is not a service provider: username={}", username);
             throw new UserNotServiceProviderException("User is not a service provider");
         }
 
@@ -210,9 +242,13 @@ public class ServiceService {
      */
     private ApplicationUser getVerifiedProviderById(Long id) {
         ApplicationUser user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.warn("User not found: id={}", id);
+                    return new UserNotFoundException("User not found");
+                });
 
         if (!user.hasRole(UserRole.SERVICE_PROVIDER)) {
+            log.warn("User is not a service provider: id={}", id);
             throw new UserNotServiceProviderException("User is not a service provider");
         }
 

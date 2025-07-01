@@ -51,8 +51,8 @@ public class AuthExceptionHandler {
         UserAlreadyExistsException ex,
         HttpServletRequest request) {
         return ResponseFactory.error(
-            HttpStatus.CONFLICT, 
-            ex.getMessage(), 
+            HttpStatus.CONFLICT,
+            ex.getMessage(),
             request
         );
     }

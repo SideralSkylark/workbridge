@@ -47,9 +47,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link VerificationService} – for managing email verification tokens</li>
  *   <li>{@link JwtService} – for generating and managing JWT tokens</li>
  * </ul>
- * 
+ *
  * @author Workbridge Team
- * 
+ *
  * @since 2025-06-22
  */
 @Slf4j
@@ -80,17 +80,17 @@ public class AuthenticationService {
      */
     @Transactional
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
-        log.info("Attempting to register user with email: {}", registerRequestDTO.getEmail());
+        log.debug("Attempting to register user with email: {}", registerRequestDTO.getEmail());
 
         validateRegistrationRequest(registerRequestDTO);
 
         ApplicationUser user = createUser(registerRequestDTO);
         userRepository.save(user);
-        
+
         verificationService.createAndSendVerificationToken(user);
 
         log.info("User registered successfully: {}", user.getEmail());
-        
+
         return new RegisterResponseDTO(user.getEmail());
     }
 
@@ -169,7 +169,7 @@ public class AuthenticationService {
      */
     @Transactional
     public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        log.info("User attempting login with email: {}", loginRequestDTO.getEmail());
+        log.debug("User attempting login with email: {}", loginRequestDTO.getEmail());
 
         ApplicationUser user = userRepository.findByEmail(loginRequestDTO.getEmail())
             .orElseThrow(() -> {
@@ -202,12 +202,12 @@ public class AuthenticationService {
      */
     private void validateRegistrationRequest(RegisterRequestDTO request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            log.info("Registration failed: username already taken - {}", request.getUsername());
+            log.warn("Registration failed: username already taken - {}", request.getUsername());
             throw new UserAlreadyExistsException("Username is already taken");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.info("Registration failed: email already in use - {}", request.getEmail());
+            log.warn("Registration failed: email already in use - {}", request.getEmail());
             throw new UserAlreadyExistsException("Email is already in use");
         }
     }
@@ -229,7 +229,7 @@ public class AuthenticationService {
      */
     private ApplicationUser createUser(RegisterRequestDTO request) {
         log.debug("Creating user with username: {}, roles: {}", request.getUsername(), request.getRoles());
-        
+
         ApplicationUser user = new ApplicationUser();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
