@@ -35,9 +35,9 @@ import org.springframework.web.bind.annotation.*;
  *
  * <p>All endpoints require a valid authenticated session. Role-based
  * access control is enforced where applicable.</p>
- * 
+ *
  * @author Workbridge Team
- * 
+ *
  * @since 2025-06-22
  */
 @RestController
@@ -52,7 +52,7 @@ public class UserController {
     /**
      * Get the profile of the currently authenticated user.
      * <p>
-     * Retrieves user details based on the authentication context. 
+     * Retrieves user details based on the authentication context.
      * Converts the internal {@link ApplicationUser} to {@link UserResponseDTO}.
      *
      * @return 200 OK with the user data if authenticated and found
@@ -84,7 +84,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponseDTO>> updateUserDetails(
         @Valid @RequestBody UpdateUserProfileDTO payload) {
         ApplicationUser updated = userService.updateUser(
-            SecurityUtil.getAuthenticatedUsername(), 
+            SecurityUtil.getAuthenticatedUsername(),
             payload);
         return ResponseFactory.ok(
             userMapper.toDTO(updated),
@@ -143,11 +143,11 @@ public class UserController {
         boolean requested = userService.hasPendingProviderRequest(username);
         boolean approved  = userService.isServiceProvider(username);
         Map<String, Boolean> status = Map.of(
-            "requested", requested, 
+            "requested", requested,
             "approved", approved);
         return ResponseFactory.ok(
-            status, 
+            status,
             "Fetched provider request status"
         );
-    } 
+    }
 }

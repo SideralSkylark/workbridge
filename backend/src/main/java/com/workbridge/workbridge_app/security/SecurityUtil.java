@@ -34,4 +34,18 @@ public class SecurityUtil {
         }
         return auth.getName();
     }
+
+    public static Long getAuthenticatedId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || auth.getName() == null || auth.getName().isBlank()) {
+            throw new IllegalStateException("Authenticated user not found");
+        }
+
+        Object principal =auth.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            return userPrincipal.getId();
+        }
+        throw new IllegalStateException("Unexpected principal type: " + principal);
+    }
 }

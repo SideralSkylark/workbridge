@@ -1,5 +1,6 @@
 package com.workbridge.workbridge_app.user.service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.workbridge.workbridge_app.booking.repository.BookingRepository;
+import com.workbridge.workbridge_app.review.repository.ReviewRepository;
+import com.workbridge.workbridge_app.security.SecurityUtil;
+import com.workbridge.workbridge_app.service.repository.ServiceRepository;
 import com.workbridge.workbridge_app.user.dto.ProviderRequestDTO;
 import com.workbridge.workbridge_app.user.dto.UpdateUserProfileDTO;
 import com.workbridge.workbridge_app.user.dto.UserResponseDTO;
@@ -62,6 +67,9 @@ public class UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final ReviewRepository reviewRepository;
+    private final BookingRepository bookingRepository;
+    private final ServiceRepository serviceRepository;
     private final ProviderRequestRepository providerRequestRepository;
 
     /**
@@ -241,10 +249,25 @@ public class UserService {
      */
     @Transactional
     public void deleteByUsername(String username) {
-        log.warn("Deleting user with username '{}'", username);
-        userRepository.delete(getUser(username));
+        log.info("Deleting user with username '{}'", username);
+        ApplicationUser user = getUser(username);
+
+        if (user.isDeleted()) {
+            log.warn("User '{}' is already deleted. Skipping deletion.", username);
+            return;
+        }
+
+        Long deleterId = SecurityUtil.getAuthenticatedId();
+
+        user.setDeleted(true);
+        user.setDeletedAt(Instant.now());
+        user.setDeletedByUserId(deleterId);
+
+        softDeleteRelatedEntities(user, deleterId);
+
+        userRepository.save(user);
+        //TODO: refactor when implementing new functionalities(ie: chat payments and so on)
         log.info("User '{}' deleted successfully", username);
-        //TODO: delete related entities
     }
 
     /**
@@ -471,4 +494,21 @@ public class UserService {
         userRepository.save(user);
         log.info("Granted SERVICE_PROVIDER role to user '{}'", user.getUsername());
     }
+
+    /**
+     * Soft deletes all related entities to a user.
+     *
+     * @param user The ApplicationUser to delete its dependencies.
+     */
+    @Transactional
+    private void softDeleteRelatedEntities(ApplicationUser user, Long deleterId) {
+        log.info("Soft-deleting related entities for user '{}'", user.getUsername());
+
+        reviewRepository.softDeleteByUser(user.getId(), deleterId);
+        bookingRepository.softDeleteBySeeker(user.getId(), deleterId);
+        serviceRepository.softDeleteByProvider(user.getId(), deleterId);
+
+        log.info("Soft-delete complete for related entities of user '{}'", user.getUsername());
+    }
+
 }

@@ -1,10 +1,12 @@
 package com.workbridge.workbridge_app.user.entity;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
+@SQLRestriction("deleted = false")
 public class ApplicationUser implements UserDetails {
 
     @Id
@@ -33,10 +36,16 @@ public class ApplicationUser implements UserDetails {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "user_roles", 
+        name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
          inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<UserRoleEntity> roles = new HashSet<>();
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean deleted = false;
+
+    private Instant deletedAt;
+    private Long deletedByUserId;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

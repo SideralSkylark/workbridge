@@ -189,7 +189,7 @@ public class AuthenticationService {
 
         String token = jwtService.generateToken(user);
 
-        log.info("Login successful for user: {}", user.getEmail());
+        log.info("Login successful for user: {}", user.getId());
 
         return buildAuthenticationResponse(user, token);
     }

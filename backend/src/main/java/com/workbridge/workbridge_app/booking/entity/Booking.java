@@ -2,6 +2,8 @@ package com.workbridge.workbridge_app.booking.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import com.workbridge.workbridge_app.payment.entity.Payment;
 import com.workbridge.workbridge_app.service.entity.Service;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
+@SQLRestriction("deleted = false")
 public class Booking {
 
     @Id
@@ -24,7 +27,7 @@ public class Booking {
     private Service service;
 
     @ManyToOne
-    private ApplicationUser seeker; 
+    private ApplicationUser seeker;
 
     private LocalDateTime date;
 
@@ -33,6 +36,13 @@ public class Booking {
 
     @OneToOne
     private Payment payment;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean deleted = false;
+
+    private LocalDateTime deletedAt;
+
+    private Long deletedByUser;
 
     public boolean isSeeker(ApplicationUser user) {
         return user != null && user.hasRole(UserRole.SERVICE_SEEKER);

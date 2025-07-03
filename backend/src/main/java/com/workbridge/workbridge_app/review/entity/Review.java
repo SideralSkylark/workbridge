@@ -2,6 +2,8 @@ package com.workbridge.workbridge_app.review.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import com.workbridge.workbridge_app.booking.entity.Booking;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 import com.workbridge.workbridge_app.user.entity.UserRole;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
+@SQLRestriction("deleted = false")
 public class Review {
 
     @Id
@@ -27,12 +30,19 @@ public class Review {
     private Booking booking;
 
     @ManyToOne
-    private ApplicationUser reviewer; 
+    private ApplicationUser reviewer;
 
     @ManyToOne
-    private ApplicationUser reviewed; 
-    
+    private ApplicationUser reviewed;
+
     private LocalDateTime createdAt;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean deleted = false;
+
+    private LocalDateTime deletedAt;
+
+    private Long deletedByUser;
 
 
     public boolean isReviewer(ApplicationUser user) {
