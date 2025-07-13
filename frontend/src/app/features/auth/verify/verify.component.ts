@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { VerifyRequest } from './model/verify-request.model';
 
 @Component({
   selector: 'app-verify',
@@ -48,9 +49,13 @@ export class VerifyComponent {
     if (this.verifyForm.invalid) return;
 
     this.loading = true;
-    const code = this.verifyForm.value.code;
+    const request: VerifyRequest = {
+      email: this.email,
+      code: this.verifyForm.value.code
+    }
 
-    this.authService.verifyCode(this.email, code).subscribe({
+
+    this.authService.verifyCode(request).subscribe({
       next: () => {
         localStorage.removeItem('verification_email');
         this.router.navigate(['/login']);

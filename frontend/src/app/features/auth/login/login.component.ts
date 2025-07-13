@@ -4,6 +4,7 @@
   import { Router, RouterModule } from '@angular/router';
   import { AuthService } from '../auth.service';
   import { console } from 'inspector';
+  import { LoginRequest } from './model/login-request.model';
 
   @Component({
     selector: 'app-login',
@@ -17,7 +18,7 @@
     loading = false;
     submitted = false;
     error = '';
-    showPassword = false
+    showPassword = false;
 
     constructor(
       private formBuilder: FormBuilder,
@@ -26,7 +27,7 @@
     ) {
       this.loginForm = this.formBuilder.group({
         email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
+        password: ['', [Validators.required, Validators.minLength(8)]],
         rememberMe: [false]
       });
     }
@@ -36,14 +37,18 @@
     onSubmit() {
       this.submitted = true;
       this.error = '';
-    
+
       if (this.loginForm.invalid) return;
-    
+
       this.loading = true;
-    
-      const { email, password } = this.loginForm.value;
-    
-      this.authService.login(email, password).subscribe({
+
+      const loginRequest: LoginRequest = {
+        email: this.loginForm.value.email,
+        password: this.loginForm.value.password
+      };
+
+
+      this.authService.login(loginRequest).subscribe({
         next: () => {
           this.loading = false;
 
@@ -76,17 +81,17 @@
         seeker:   { email: 'seeker@gmail.com',   password: 'seeker123' },
         provider: { email: 'provider@gmail.com', password: 'provider123' }
       };
-    
+
       const selected = credentials[role];
-    
+
       this.loginForm.patchValue({
         email: selected.email,
         password: selected.password
       });
-    
-      this.onSubmit(); 
+
+      this.onSubmit();
     }
-    
+
     togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
 

@@ -366,6 +366,7 @@ public class UserService {
      * @param users The list of ApplicationUser entities to convert.
      * @return List of UserResponseDTO objects.
      */
+    @SuppressWarnings("unused")
     private List<UserResponseDTO> mapToUserResponseDTO(List<ApplicationUser> users) {
         return users.stream().map(userMapper::toDTO).toList();
     }
@@ -376,6 +377,7 @@ public class UserService {
      * @param requests The list of ProviderRequest entities to convert.
      * @return List of ProviderRequestDTO objects.
      */
+    @SuppressWarnings("unused")
     private List<ProviderRequestDTO> mapToProviderRequestDTO(List<ProviderRequest> requests) {
         return requests.stream().map(userMapper::toDTO).toList();
     }

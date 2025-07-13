@@ -1,6 +1,7 @@
 package com.workbridge.workbridge_app.auth.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -131,15 +132,15 @@ public class AuthController {
      *   <li>A new token is generated and sent</li>
      * </ul>
      *
-     * @param request DTO containing the user's email
+     * @param  String containing the user's email
      * @return 200 OK with the user's email confirming dispatch
      * @throws UserNotFoundException if the email is not registered
      */
-    @PostMapping("/resend-verification")
+    @PostMapping("/resend-verification/{email}")
     public ResponseEntity<ApiResponse<RegisterResponseDTO>>
-     resendVerification(@Valid @RequestBody EmailVerificationDTO request) {
+     resendVerification(@PathVariable String email) {
         return ResponseFactory.ok(
-            authenticationService.resendVerificationCode(request.getEmail()),
+            authenticationService.resendVerificationCode(email),
             "Verification code resent successfully."
         );
     }

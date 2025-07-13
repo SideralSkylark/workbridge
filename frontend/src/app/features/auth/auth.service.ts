@@ -3,18 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { RegisterRequestDTO } from './register/models/register-requestDTO.model';
 import { RegisterResponseDTO } from './register/models/register-responseDTO.model';
-
-interface AuthResponse {
-  token: string;
-  id: number;
-  username: string;
-  email: string;
-  roles: string[];
-  updatedAt?: string;
-}
+import { ApiResponse } from '../../shared/models/api-response.model';
+import { LoginRequest } from './login/model/login-request.model';
+import { AuthResponse } from './model/auth-response.model';
+import { response } from 'express';
+import { VerifyRequest } from './verify/model/verify-request.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,33 +20,41 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  register(data: RegisterRequestDTO): Observable<RegisterResponseDTO> {
-    return this.http.post<RegisterResponseDTO>(`${this.apiUrl}/v1/auth/register`, data);
+  register(request: RegisterRequestDTO): Observable<RegisterResponseDTO> {
+    return this.http.post<ApiResponse<RegisterResponseDTO>>(`${this.apiUrl}/v1/auth/register`, request).pipe(
+      map(response => response.data)
+    );
   }
 
-  verify(email: string, code: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/v1/auth/verify`, { email, code });
+  verify(request: VerifyRequest): Observable<AuthResponse> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/v1/auth/verify`, request).pipe(
+      map(response => response.data)
+    );
   }
 
   resendVerification(email: string): Observable<RegisterResponseDTO> {
-    return this.http.post<RegisterResponseDTO>(`${this.apiUrl}/v1/auth/resend-verification`, { email });
+    return this.http.post<ApiResponse<RegisterResponseDTO>>(`${this.apiUrl}/v1/auth/resend-verification/${email}`, null).pipe(
+      map(response => response.data)
+    );
   }
 
-  verifyCode(email: string, code: string) {
-    return this.verify(email, code);
+  verifyCode(request: VerifyRequest) {
+    return this.verify(request);
   }
 
-  login(email: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/v1/auth/login`, { email, password }).pipe(
+  login(request: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/v1/auth/login`, request).pipe(
       tap(response => {
-        localStorage.setItem('jwt', response.token);
-        localStorage.setItem('user', JSON.stringify({
-          id: response.id,
-          username: response.username,
-          email: response.email,
-          roles: response.roles
+        const user = response.data;
+        localStorage.setItem("jwt", user.token);
+        localStorage.setItem("user", JSON.stringify({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          roles: user.roles
         }));
-      })
+      }),
+      map(response => response.data)
     );
   }
 
