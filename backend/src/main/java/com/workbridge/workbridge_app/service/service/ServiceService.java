@@ -7,7 +7,6 @@ import com.workbridge.workbridge_app.service.dto.UpdateServiceDTO;
 import com.workbridge.workbridge_app.service.entity.Service;
 import com.workbridge.workbridge_app.service.exception.ServiceNotFoundException;
 import com.workbridge.workbridge_app.service.mapper.ServiceMapper;
-import com.workbridge.workbridge_app.service.projection.ServiceFeedProjection;
 import com.workbridge.workbridge_app.service.repository.ServiceRepository;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 import com.workbridge.workbridge_app.user.entity.UserRole;
