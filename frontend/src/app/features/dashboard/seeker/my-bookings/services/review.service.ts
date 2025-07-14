@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
+import { response } from 'express';
+import { ApiResponse } from '../../../../../shared/models/api-response.model';
 
 export interface ReviewRequestDTO {
   rating: number;
@@ -33,10 +35,14 @@ export class ReviewService {
   }
 
   createReview(review: ReviewRequestDTO): Observable<ReviewResponseDTO> {
-    return this.http.post<ReviewResponseDTO>(`${this.apiUrl}/review`, review);
+    return this.http.post<ApiResponse<ReviewResponseDTO>>(`${this.apiUrl}`, review).pipe(
+      map(response => response.data)
+    );
   }
 
   hasUserReviewedBooking(bookingId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/check/${bookingId}`);
+    return this.http.get<ApiResponse<boolean>>(`${this.apiUrl}/booking/${bookingId}/reviewed`).pipe(
+      map(response => response.data)
+    );
   }
 }

@@ -132,9 +132,9 @@ export class ReviewComponent implements OnInit {
     const review: ReviewRequestDTO = {
       rating: this.rating,
       comment: this.comment,
+      bookingId: this.bookingId,
       reviewerId: userId,
-      reviewedId: this.providerId,
-      bookingId: this.bookingId
+      reviewedId: this.providerId
     };
 
     this.reviewService.createReview(review).subscribe({

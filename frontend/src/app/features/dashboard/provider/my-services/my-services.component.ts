@@ -49,8 +49,7 @@ export class ServicesComponent implements OnInit {
     this.newService = {
       title: '',
       description: '',
-      price: 0,
-      providerId: providerId
+      price: 0
     };
   }
 
@@ -92,45 +91,44 @@ export class ServicesComponent implements OnInit {
   }
 
   submitForm(): void {
-    if (this.editingServiceId !== null) {
-      const updatedService = {
-        ...this.newService,
-        id: this.editingServiceId
-      };
+  if (this.editingServiceId !== null) {
+    const updatedService: CreateServiceDTO = {
+      title: this.newService.title,
+      description: this.newService.description,
+      price: this.newService.price
+    };
 
-      this.serviceService.updateService(this.editingServiceId, updatedService).subscribe({
-        next: (res) => {
-          const index = this.services.findIndex(s => s.id === this.editingServiceId);
-          if (index !== -1) this.services[index] = res;
+    this.serviceService.updateService(this.editingServiceId, updatedService).subscribe({
+      next: (res) => {
+        const index = this.services.findIndex(s => s.id === this.editingServiceId);
+        if (index !== -1) this.services[index] = res;
+        this.cancelForm();
+      },
+      error: (error) => {
+        console.error('Failed to update service:', error);
+      }
+    });
+  } else {
+    const serviceToCreate: CreateServiceDTO = { ...this.newService };
 
-          this.cancelForm();
-        },
-        error: (error) => {
-          console.error('Failed to update service:', error);
-        }
-      });
-    } else {
-      const serviceToSend = { ...this.newService };
-
-      this.serviceService.createService(serviceToSend).subscribe({
-        next: (createdService) => {
-          this.services.push(createdService);
-          this.cancelForm();
-        },
-        error: (error) => {
-          console.error('Failed to create service:', error);
-        }
-      });
-    }
+    this.serviceService.createService(serviceToCreate).subscribe({
+      next: (createdService) => {
+        this.services.push(createdService);
+        this.cancelForm();
+      },
+      error: (error) => {
+        console.error('Failed to create service:', error);
+      }
+    });
   }
+}
 
   editService(service: Service): void {
     this.editingServiceId = service.id!;
     this.newService = {
       title: service.title,
       description: service.description,
-      price: service.price,
-      providerId: service.providerId
+      price: service.price
     };
 
     this.showForm = true;

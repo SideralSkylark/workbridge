@@ -37,7 +37,7 @@ export class BookedServicesComponent implements OnInit {
     const providerId = this.authService.getUserId(); // Get provider ID from AuthService
 
     if (providerId) {
-      this.bookingService.getMyBookedServices(providerId).subscribe(
+      this.bookingService.getMyBookedServices().subscribe(
         (data: BookingResponseDTO[]) => {
           this.bookings = data;
           this.isLoading = false; // Data is fetched, set loading to false

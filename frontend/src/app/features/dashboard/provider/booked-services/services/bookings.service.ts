@@ -5,6 +5,9 @@ import { Observable } from 'rxjs';
 import { BookingRequestDTO } from '../../../seeker/feed/models/booking-requestDTO.model';
 import { BookingResponseDTO } from '../models/booking-responseDTO.model';
 import { map } from 'rxjs/operators';
+import { ApiResponse } from '../../../../../shared/models/api-response.model';
+import { PageModel } from '../../../../../shared/models/page-model.model';
+import { response } from 'express';
 
 export interface Booking {
   id: number;
@@ -22,25 +25,29 @@ export class BookingService {
   constructor(private http: HttpClient) {}
 
   getMyBookings(): Observable<BookingResponseDTO[]> {
-    return this.http.get<BookingResponseDTO[]>(`${this.baseUrl}/me`);
+    return this.http.get<ApiResponse<PageModel<BookingResponseDTO>>>(`${this.baseUrl}/seeker`).pipe(
+      map(response => response.data.content)
+    );
   }
 
-  getMyBookedServices(providerId: number): Observable<BookingResponseDTO[]> {
-    return this.http.get<BookingResponseDTO[]>(`${this.baseUrl}/provider`, {
-      params: {providerId: providerId.toString()}
-    });
+  getMyBookedServices(): Observable<BookingResponseDTO[]> {
+    return this.http.get<ApiResponse<PageModel<BookingResponseDTO>>>(`${this.baseUrl}/provider`).pipe(
+      map(response => response.data.content)
+    );
   }
 
 
 
   createBooking(bookingRequest: BookingRequestDTO): Observable<BookingResponseDTO> {
-    return this.http.post<BookingResponseDTO>(`${this.baseUrl}/book`, bookingRequest);
+    return this.http.post<ApiResponse<BookingResponseDTO>>(`${this.baseUrl}/book`, bookingRequest).pipe(
+      map(response => response.data)
+    );
   }
 
   cancelBooking(bookingId: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/cancel`, null, {
-      params: { bookingId: bookingId.toString() }
-    });
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/${bookingId}/cancel`, null).pipe(
+      map(response => response.data)
+    );
   }
 
   getLatestBookingByService(serviceId: number): Observable<Booking | null> {

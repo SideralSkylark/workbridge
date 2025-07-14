@@ -2,6 +2,7 @@ export interface BookingResponseDTO {
     id: number;
     providerId: number;
     seekerName: string;
+    serviceId: number;
     serviceTitle: string;
     serviceDescription: string;
     price: number;
@@ -9,4 +10,3 @@ export interface BookingResponseDTO {
     date: string;
     status: string;
   }
-  
