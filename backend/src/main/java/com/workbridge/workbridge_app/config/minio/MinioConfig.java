@@ -17,7 +17,7 @@ public class MinioConfig {
     public S3Client s3Client(MinioProperties props) {
         return S3Client.builder()
             .endpointOverride(URI.create(props.getUrl()))
-            .region(Region.AF_SOUTH_1)
+            .region(Region.US_EAST_1)
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(props.getAccessKey(), props.getSecretKey())
             ))

@@ -86,11 +86,16 @@ public class MinioImageStorageService implements ImageStorageService {
         String bucket = properties.getBucket();
 
         try {
-            HeadBucketRequest headBucketRequest = HeadBucketRequest.builder().bucket(bucket).build();
-            s3Client.headBucket(headBucketRequest);
-        } catch (NoSuchBucketException e) {
-            log.warn("Bucket '{}' does not exist. Creating it now...", bucket);
-            s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+            s3Client.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                log.warn("Bucket '{}' not found. Creating it...", bucket);
+                s3Client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+            } else if (e.statusCode() == 403 || e.statusCode() == 409) {
+                log.warn("Bucket '{}' might already exist but is not accessible. Skipping creation.", bucket);
+            } else {
+                throw e;
+            }
         }
     }
 
