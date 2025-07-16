@@ -1,8 +1,5 @@
 package com.workbridge.workbridge_app.image.controller;
 
-import java.net.URL;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.workbridge.workbridge_app.common.response.ApiResponse;
 import com.workbridge.workbridge_app.common.response.ResponseFactory;
+import com.workbridge.workbridge_app.image.dto.GetImageResponseDTO;
 import com.workbridge.workbridge_app.image.dto.UploadResponseDTO;
 import com.workbridge.workbridge_app.image.service.ImageStorageService;
 
@@ -28,7 +26,12 @@ public class ImageController {
     private final ImageStorageService imageStorageService;
 
     @GetMapping("/{key}")
-    
+    public ResponseEntity<ApiResponse<GetImageResponseDTO>> getImageUrl(@PathVariable String key) {
+        return ResponseFactory.ok(
+            imageStorageService.getImageUrl(key),
+            "Image Url retrieved successfully."
+        );
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UploadResponseDTO>> upload(@RequestParam("file") MultipartFile file) {

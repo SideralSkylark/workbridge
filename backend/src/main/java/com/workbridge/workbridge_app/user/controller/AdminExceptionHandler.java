@@ -43,7 +43,8 @@ public class AdminExceptionHandler {
     public ResponseEntity<ErrorResponse> userNotFound(
         UserNotFoundException ex,
         HttpServletRequest request) {
-        log.warn("User not found: {}", ex.getMessage());
+        log.warn("AdminController - User not found on {} {}: {}",
+            request.getMethod(), request.getRequestURI(), ex.getMessage());
         return ResponseFactory.error(
             HttpStatus.NOT_FOUND,
             ex.getMessage(),
@@ -61,9 +62,14 @@ public class AdminExceptionHandler {
     public ResponseEntity<ErrorResponse> illegalState(
         IllegalStateException ex,
         HttpServletRequest request) {
-        log.warn("Illegal operation: {}", ex.getMessage());
+        HttpStatus status = ex.getMessage().toLowerCase().contains("authenticated")
+                ? HttpStatus.UNAUTHORIZED
+                : HttpStatus.BAD_REQUEST;
+
+        log.warn("AdminController - Illegal state on {} {}: {}",
+            request.getMethod(), request.getRequestURI(), ex.getMessage());
         return ResponseFactory.error(
-            HttpStatus.BAD_REQUEST,
+            status,
             ex.getMessage(),
             request
         );

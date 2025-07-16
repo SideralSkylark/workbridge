@@ -22,9 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * It ensures consistent error reporting for client-side handling and improves
  * debuggability through logging.
- * 
+ *
  * @author Workbridge Team
- * 
+ *
  * @since 2025-06-22
  */
 @RestControllerAdvice(assignableTypes = UserController.class)
@@ -38,9 +38,11 @@ public class UserExceptionHandler {
      * @return 404 NOT FOUND with the exception message as response body
      */
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> UserNotFound(
+    public ResponseEntity<ErrorResponse> userNotFound(
         UserNotFoundException ex,
         HttpServletRequest request) {
+        log.warn("UserController - User not found on {} {}: {}",
+            request.getMethod(), request.getRequestURI(), ex.getMessage());
         return ResponseFactory.error(
             HttpStatus.NOT_FOUND,
             ex.getMessage(),
@@ -63,13 +65,15 @@ public class UserExceptionHandler {
      *         400 BAD REQUEST otherwise
      */
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> IllegalState(
+    public ResponseEntity<ErrorResponse> illegalState(
         IllegalStateException ex,
         HttpServletRequest request) {
-        // Distinguish between auth errors and bad requests via message inspection
-        HttpStatus status = ex.getMessage().toLowerCase().contains("authenticated") 
-                            ? HttpStatus.UNAUTHORIZED 
-                            : HttpStatus.BAD_REQUEST;
+        HttpStatus status = ex.getMessage().toLowerCase().contains("authenticated")
+                ? HttpStatus.UNAUTHORIZED
+                : HttpStatus.BAD_REQUEST;
+
+        log.warn("UserController - Illegal state on {} {}: {}",
+            request.getMethod(), request.getRequestURI(), ex.getMessage());
 
         return ResponseFactory.error(
             status,
