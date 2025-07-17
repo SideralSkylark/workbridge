@@ -1,14 +1,13 @@
-<!-- verify.component.html -->
-<div class="login-wrapper">
-    <div class="login-card shadow">
-      <div class="text-center mb-4">
-        <i class="bi bi-envelope-check display-3 text-primary"></i>
-        <h2 class="h4 mt-2 fw-semibold">Email Verification</h2>
-        <p class="text-muted small mb-0">Enter the 6-digit code sent to <strong>{{ email }}</strong></p>
+<div class="verify-wrapper">
+    <div class="verify-card">
+      <div class="verify-header">
+        <i class="bi bi-envelope-check verify-icon"></i>
+        <h2 class="verify-title">Email Verification</h2>
+        <p class="verify-subtitle">Enter the 6-digit code sent to <strong>{{ email }}</strong></p>
       </div>
-  
-      <form *ngIf="verifyForm" [formGroup]="verifyForm" (ngSubmit)="onSubmit()" novalidate>
-        <div class="mb-3">
+
+      <form *ngIf="verifyForm" [formGroup]="verifyForm" (ngSubmit)="onSubmit()" novalidate class="verify-form">
+        <div class="form-group">
           <label for="code" class="form-label">Verification Code</label>
           <input type="text" id="code" class="form-control"
             formControlName="code"
@@ -19,19 +18,33 @@
             <span *ngIf="f['code'].errors['pattern']">Must be 6 digits</span>
           </div>
         </div>
-  
-        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-  
-        <div class="d-grid mb-2">
-          <button [disabled]="loading" class="btn btn-primary">
+
+        <div *ngIf="error" class="alert-danger">
+          <i class="bi bi-exclamation-circle"></i>
+          <span>{{ error }}</span>
+        </div>
+
+        <div class="form-actions">
+          <button [disabled]="loading" class="btn btn-outline-primary w-100 py-2 mb-3">
             <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
             Verify
           </button>
         </div>
-  
-        <div class="text-center">
-          <button type="button" class="btn btn-link p-0 small" (click)="resendCode()">Resend Code</button>
-        </div>
+
+        <div class="resend-link">
+  <button type="button"
+          class="resend-link__button"
+          (click)="resendCode()"
+          [disabled]="resendCooldown > 0">
+    <i class="bi bi-arrow-clockwise" *ngIf="!resendInProgress"></i>
+    <i class="bi bi-hourglass" *ngIf="resendInProgress"></i>
+    {{ resendCooldown > 0 ? 'Resend available in' : 'Resend Code' }}
+  </button>
+
+  <div class="resend-link__timer" *ngIf="resendCooldown > 0">
+    {{ resendCooldown }} seconds
+  </div>
+</div>
       </form>
     </div>
-  </div>  
+  </div>

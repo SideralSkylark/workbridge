@@ -1,22 +1,24 @@
 <div class="login-wrapper">
-  <div class="login-card">
+  <div class="card login-card">
     <div class="login-header text-center">
       <i class="bi bi-person-circle login-icon"></i>
-      <h1 class="login-title">Bem vindo</h1>
+      <h1 class="login-title mb-2">Bem vindo</h1>
       <p class="login-subtitle">Faça login para continuar</p>
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-      <div class="form-group">
-        <label for="email">Endereço Email</label>
-        <div class="input-group" [class.invalid]="submitted && f['email'].errors">
-          <span class="input-group-icon">
-            <i class="bi bi-envelope"></i>
+      <div class="form-group mb-3">
+        <label for="email" class="form-label">Endereço Email</label>
+        <div class="input-group" [class.is-invalid]="submitted && f['email'].errors">
+          <span class="input-group-text">
+            <i class="bi bi-envelope text-muted"></i>
           </span>
           <input
             type="email"
             id="email"
+            class="form-control"
             formControlName="email"
+            [class.is-invalid]="submitted && f['email'].errors"
             [attr.aria-invalid]="submitted && f['email'].errors"
             [attr.aria-describedby]="submitted && f['email'].errors ? 'email-errors' : null"
             placeholder="name@example.com"
@@ -24,35 +26,37 @@
           />
           <div *ngIf="submitted && f['email'].errors" class="invalid-feedback" id="email-errors">
             <div class="error-message" *ngIf="f['email'].errors['required']">
-              <i class="bi bi-exclamation-circle"></i>
+              <i class="bi bi-exclamation-circle-fill"></i>
               <span>Por favor, insira seu email</span>
             </div>
             <div class="error-message" *ngIf="f['email'].errors['email']">
-              <i class="bi bi-exclamation-circle"></i>
-              <span>Formato de email inválido</span>
+              <i class="bi bi-exclamation-circle-fill"></i>
+              <span> Formato de email inválido</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="input-group" [class.invalid]="submitted && f['password'].errors">
-          <span class="input-group-icon">
-            <i class="bi bi-lock"></i>
+      <div class="form-group mb-3">
+        <label for="password" class="form-label">Password</label>
+        <div class="input-group" [class.is-invalid]="submitted && f['password'].errors">
+          <span class="input-group-text">
+            <i class="bi bi-lock text-muted"></i>
           </span>
           <input
             type="password"
             id="password"
+            class="form-control"
             formControlName="password"
+            [class.is-invalid]="submitted && f['password'].errors"
             [attr.aria-invalid]="submitted && f['password'].errors"
             [attr.aria-describedby]="submitted && f['password'].errors ? 'password-errors' : null"
             placeholder="••••••••"
             required
           />
-          <button 
-            class="password-toggle" 
-            type="button" 
+          <button
+            class="btn btn-outline-secondary password-toggle"
+            type="button"
             (click)="togglePasswordVisibility()"
             [attr.aria-label]="showPassword ? 'Ocultar password' : 'Mostrar password'"
           >
@@ -60,65 +64,68 @@
           </button>
           <div *ngIf="submitted && f['password'].errors" class="invalid-feedback" id="password-errors">
             <div class="error-message" *ngIf="f['password'].errors['required']">
-              <i class="bi bi-exclamation-circle"></i>
+              <i class="bi bi-exclamation-circle-fill"></i>
               <span>Por favor, insira sua password</span>
             </div>
             <div class="error-message" *ngIf="f['password'].errors['minlength']">
-              <i class="bi bi-exclamation-circle"></i>
-              <span>A password deve ter pelo menos 6 caracteres</span>
+              <i class="bi bi-exclamation-circle-fill"></i>
+              <span> A password deve ter pelo menos 6 caracteres</span>
             </div>
           </div>
         </div>
-        <div class="password-hint" *ngIf="f['password'].value?.length > 0 && f['password'].value?.length < 6">
-          <i class="bi bi-info-circle"></i>
-          <span>Mais {{6 - f['password'].value?.length}} caracteres necessários</span>
+        <div class="password-hint text-info mt-2 small" *ngIf="f['password'].value?.length > 0 && f['password'].value?.length < 6">
+          <i class="bi bi-info-circle-fill m-2"></i>
+          <span> Mais {{6 - f['password'].value?.length}} caracteres necessários</span>
         </div>
       </div>
 
-      <div class="form-options">
+      <div class="form-options d-flex justify-content-between align-items-center mb-4">
         <div class="form-check">
-          <input 
-            type="checkbox" 
-            id="rememberMe" 
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="rememberMe"
             formControlName="rememberMe"
             aria-label="Lembrar de mim"
           />
-          <label for="rememberMe">Lembre-se de mim</label>
+          <label class="form-check-label" for="rememberMe">Lembre-se de mim</label>
         </div>
-        <a href="#" class="forgot-password">Esqueceu a password?</a>
+        <a href="#" class="text-decoration-none">Esqueceu a password?</a>
       </div>
 
-      <div *ngIf="error" class="alert alert-error" role="alert">
+      <div *ngIf="error" class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
         <i class="bi bi-exclamation-circle-fill"></i>
-        <div>{{ error }}</div>
+        <div class=""> {{ error }}</div>
       </div>
 
       <div class="form-actions">
-        <button 
-          type="submit" 
-          [disabled]="loading" 
-          class="btn btn-primary"
+        <button
+          type="submit"
+          [disabled]="loading"
+          class="btn btn-outline-primary w-100 py-2 mb-3"
           aria-label="Entrar na conta"
         >
-          <span *ngIf="loading" class="spinner" aria-hidden="true"></span>
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
           <span>Login</span>
         </button>
-        
+
         <div class="register-link">
           <span>Não tem uma conta?</span>
-          <a routerLink="/register" aria-label="Criar nova conta">Registre-se</a>
+          <a routerLink="/register" class="ms-1" aria-label="Criar nova conta">Registre-se</a>
         </div>
-        
-        <div class="divider" aria-hidden="true">
-          <span>ou</span>
+
+        <div class="divider d-flex align-items-center my-3">
+          <hr class="flex-grow-1" />
+          <span class="mx-3  small">ou</span>
+          <hr class="flex-grow-1" />
         </div>
-        
-        <button 
-          type="button" 
-          class="btn btn-google"
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
           aria-label="Continuar com Google"
         >
-          <i class="bi bi-google"></i>
+          <i class="bi bi-google text-danger"></i>
           <span>Continue com Google</span>
         </button>
       </div>

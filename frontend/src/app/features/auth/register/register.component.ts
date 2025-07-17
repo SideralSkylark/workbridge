@@ -89,4 +89,42 @@ export class RegisterComponent {
       }
     });
   }
+
+  getPasswordStrength(): number {
+  const password = this.registerForm.get('password')?.value || '';
+
+  if (password.length === 0) return 0;
+
+  let strength = 0;
+
+  // Length check
+  if (password.length >= 6) strength += 25;
+  if (password.length >= 8) strength += 25;
+
+  // Character variety checks
+  if (/[a-z]/.test(password)) strength += 15;
+  if (/[A-Z]/.test(password)) strength += 15;
+  if (/[0-9]/.test(password)) strength += 10;
+  if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+
+  return Math.min(strength, 100);
+}
+
+getPasswordStrengthColor(): string {
+  const strength = this.getPasswordStrength();
+
+  if (strength < 30) return '#ce7067'; // Red
+  if (strength < 60) return '#ee7c1fff'; // Orange
+  if (strength < 80) return '#dfa11a'; // Yellow
+  return '#3e8343'; // Green
+}
+
+getPasswordStrengthText(): string {
+  const strength = this.getPasswordStrength();
+
+  if (strength < 30) return 'Weak';
+  if (strength < 60) return 'Fair';
+  if (strength < 80) return 'Good';
+  return 'Strong';
+}
 }
