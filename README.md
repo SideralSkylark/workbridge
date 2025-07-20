@@ -102,16 +102,19 @@ MINIO_BUCKET=your_minio_bucket_name
 
 ---
 
----
-
 ### **2. Build Docker Containers**
 
 From the project root, run:
 
 ```bash
+docker build -t workbridge-base:1.0 -f Dockerfile.base .
+```
+To build the base image followed by:
+
+```bash
 docker compose build
 ```
-
+> You need a .jdk folder in the backend directory if you plan on using the base image, this base image was created to reduce the building time and to keep the java version consistent.
 ---
 
 ### **3. Start Application**
@@ -121,6 +124,15 @@ To launch the application in detached mode:
 ```bash
 docker compose up -d
 ```
+
+> ⚠️ Note:
+    The Angular frontend container is currently not fully configured. If you're developing locally, use the following command instead:
+
+    ```bash
+    ng serve
+    ```
+    
+    If you plan to use the frontend container, make sure to update the environment configuration so it calls the container name (e.g., workbridge-backend) instead of localhost.
 
 ---
 
