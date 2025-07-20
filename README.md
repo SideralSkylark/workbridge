@@ -153,7 +153,7 @@ mvn test
 ## **Architecture Diagrams**
 
 ### **Class Diagram**
-
+![Class diagram](diagrams/workbridge.jpg)
 ---
 
 ## **Planned Enhancements**
