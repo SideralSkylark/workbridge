@@ -1,6 +1,6 @@
 # **WorkBridge**
 
-**WorkBridge** is an application designed to seamlessly connect service-based entrepreneurs with service seekers. It provides an intuitive platform for both parties to conduct business and complete secure transactions.
+**WorkBridge** is a digital platform designed to seamlessly connect service-based entrepreneurs with clients seeking their services. It offers an intuitive, secure environment for discovering, booking, and paying for services.
 
 ---
 
@@ -8,87 +8,105 @@
 
 ### **Purpose**
 
-**WorkBridge** serves as a digital marketplace connecting service seekers with service providers. The platform simplifies the process of booking services, managing transactions, and enabling secure in-app payments.
+WorkBridge functions as a digital service marketplace that facilitates interactions between service seekers and providers. It simplifies the entire lifecycle of a service transaction — from discovery and communication to booking and secure in-app payments.
 
-### **Core Functionalities**
+---
 
-#### **For Service Providers:**
-- List services for visibility.
-- Manage service offerings (edit, remove, etc.).
+### **Core Features**
 
-#### **For Service Seekers:**
-- Book services from listed providers.
-- Cancel bookings if needed.
-- Rate and review service providers.
-- Chat with service providers for additional details.
+#### **For Service Providers**
 
-#### **For Admins:**
-- Enable or disable user accounts.
-- Monitor activity history for both service providers and seekers.
-- Access detailed breakdowns of app revenue.
+* Publish and manage service listings.
+* Set pricing and availability.
+* Communicate with clients via in-app chat.
+
+#### **For Service Seekers**
+
+* Browse and book available services.
+* Cancel bookings as needed.
+* Communicate with providers.
+* Rate and review completed services.
+
+#### **For Administrators**
+
+* Manage user accounts (enable/disable access).
+* Monitor user activity and system interactions.
+* Access financial reports and app performance metrics.
 
 ---
 
 ## **Functional Requirements**
 
-### **1. User Accounts:**
-- Service seekers and providers can register, log in, and manage profiles.
-- Admins can manage user accounts, including disabling accounts when necessary.
+### **1. User Management**
 
-### **2. Service Listings:**
-- Service providers can list services, including descriptions, prices, and availability.
+* Users can register, log in, and update their profiles.
+* Admins have privileges to manage, disable, or remove accounts.
 
-### **3. Booking & Cancellation:**
-- Service seekers can seamlessly book and cancel services.
+### **2. Service Listings**
 
-### **4. Ratings & Reviews:**
-- Users can leave ratings and reviews based on their experiences with service providers.
+* Providers can create and maintain listings, including titles, descriptions, pricing, and availability.
 
-### **5. Communication:**
-- Service seekers and providers can chat for clarification before finalizing bookings.
+### **3. Bookings and Cancellations**
 
-### **6. Payments:**
-- The app supports secure in-app payments for services.
+* Seekers can book services and cancel when necessary.
+* Booking data is stored and managed securely.
 
-### **7. Admin Management:**
-- Admins can manage users, track activities, and view revenue reports.
+### **4. Ratings and Reviews**
+
+* After a service is completed, seekers can rate and review the provider.
+* Reviews are visible to other users to ensure service quality transparency.
+
+### **5. Messaging**
+
+* Integrated chat system allows users to communicate directly before and after bookings.
+
+### **6. Payments**
+
+* Secure in-app payment processing for all service transactions.
+* Payment records are linked to booking history.
+
+### **7. Administrative Tools**
+
+* Admin dashboard to manage users, review platform usage, and access revenue statistics.
 
 ---
 
 ## **Setup Instructions**
 
-### **1. Create `.env` Files**
+### **1. Environment Configuration**
 
-At the root of the project, create a `.env` file with the following content:
+#### **1.1 Create ****************`.env`**************** Files**
+
+At the root of the project, create a `.env` file with the following variables:
 
 ```env
 DB_URL=jdbc:postgresql://workbridge-db:5432/workbridge_db
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
+
+EMAIL_USERNAME=your_email_address
+EMAIL_PASSWORD=your_email_password
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+
+JWT_SECRET=your_jwt_secret_key
+
+MINIO_USER=your_minio_user
+MINIO_PASSWORD=your_minio_password
+
+MINIO_URL=http://workbridge-minio:9000
+MINIO_ACCESS_KEY=your_minio_access_key
+MINIO_SECRET_KEY=your_minio_secret_key
+MINIO_BUCKET=your_minio_bucket_name
 ```
-
-Additionally, create a `.env` file inside the backend directory for local testing. Since this environment does not have access to the Docker network, `localhost` should be used instead:
-
-```env
-DB_URL=jdbc:postgresql://localhost:5432/workbridge_db
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
-
-In the future, we may integrate test execution into the Docker Compose setup.
 
 ---
-### **1.5. Create a shared network**
-
-```bash
-docker network create shared-bridge
-```
 
 ---
 
 ### **2. Build Docker Containers**
 
-From the root directory, build the Docker containers by running:
+From the project root, run:
 
 ```bash
 docker compose build
@@ -96,9 +114,9 @@ docker compose build
 
 ---
 
-### **3. Start the App in Detached Mode**
+### **3. Start Application**
 
-To start the app in the background, use:
+To launch the application in detached mode:
 
 ```bash
 docker compose up -d
@@ -106,27 +124,27 @@ docker compose up -d
 
 ---
 
-### **4. Running Tests**
+### **4. Running Backend Tests**
 
-To run tests, navigate to the backend directory and execute the following command:
+Navigate to the `backend` directory and run:
 
 ```bash
 mvn test
 ```
 
-This will spin up a temporary database for test execution. However, an active database container must be running and accepting connections before executing the test command. Ensure the database container is manually started before proceeding.
+> ⚠️ *Make sure the database container is running and accepting connections before executing tests, as a temporary test database will be initialized.*
 
 ---
 
-## **Diagrams**
+## **Architecture Diagrams**
 
 ### **Class Diagram**
 
-![Class Diagram](diagrams/workbridge.jpg)
+---
 
-**Future Updates:**
-- **Availability Entity**: A new entity will be added to track the availability of service providers for their services.
-- **Category Entity**: A new category structure will be added to classify services based on type (e.g., graphic design, plumbing, etc.).
+### **Planned Enhancements**
 
-These changes will help streamline filtering and searching for services based on both availability and category.
+* **Availability Entity**: Will be introduced to manage providers' availability schedules.
+* **Category Entity**: Services will be categorized (e.g., Plumbing, Graphic Design) to improve searchability and user navigation.
 
+> These additions will enhance the filtering experience and make it easier for users to find relevant services.
