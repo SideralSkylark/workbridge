@@ -23,6 +23,8 @@ import com.workbridge.workbridge_app.common.response.ApiResponse;
 import com.workbridge.workbridge_app.common.response.ResponseFactory;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 /**
@@ -162,10 +164,25 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthenticationResponseDTO>>
-     login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+     login(
+        @Valid @RequestBody LoginRequestDTO loginRequest,
+        HttpServletResponse response) {
         return ResponseFactory.ok(
-            authenticationService.login(loginRequest),
+            authenticationService.login(loginRequest, response),
             "User logged in successfully."
         );
+    }
+
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        authenticationService.refreshAccessToken(request, response);
+        return ResponseFactory.ok("Token refreshed successfully");
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
+        authenticationService.logout(request, response);
+        return ResponseFactory.ok();
     }
 }

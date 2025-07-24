@@ -13,11 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthenticationResponseDTO {
-    
-    private String token;
     private Long id;
     private String username;
     private String email;
     private Set<String> roles;
-    private LocalDateTime updatedAt;  
+    private LocalDateTime updatedAt;
 }

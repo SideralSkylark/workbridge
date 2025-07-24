@@ -12,12 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.workbridge.workbridge_app.auth.dto.AuthenticationResponseDTO;
 import com.workbridge.workbridge_app.auth.dto.EmailVerificationDTO;
 import com.workbridge.workbridge_app.auth.dto.LoginRequestDTO;
+import com.workbridge.workbridge_app.auth.dto.LoginResponseDTO;
 import com.workbridge.workbridge_app.auth.dto.RegisterRequestDTO;
 import com.workbridge.workbridge_app.auth.dto.RegisterResponseDTO;
 import com.workbridge.workbridge_app.auth.exception.InvalidCredentialsException;
+import com.workbridge.workbridge_app.auth.exception.InvalidTokenException;
 import com.workbridge.workbridge_app.auth.exception.TokenExpiredException;
 import com.workbridge.workbridge_app.auth.exception.TokenVerificationException;
 import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
+import com.workbridge.workbridge_app.auth.util.CookieUtil;
+import com.workbridge.workbridge_app.auth.util.CookieUtil.TokenType;
 import com.workbridge.workbridge_app.security.JwtService;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 import com.workbridge.workbridge_app.user.entity.UserRole;
@@ -26,6 +30,8 @@ import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 import com.workbridge.workbridge_app.user.repository.UserRepository;
 import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +68,8 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final VerificationService verificationService;
+    private final RefreshTokenService refreshTokenService;
+    private final CookieUtil cookieUtil;
 
    /**
      * Registers a new user account.
@@ -118,9 +126,8 @@ public class AuthenticationService {
         userRepository.save(user);
 
         log.info("Email verified successfully for user: {}", user.getEmail());
-
-        String tokenJwt = jwtService.generateToken(user);
-        return buildAuthenticationResponse(user, tokenJwt);
+        //TODO: refactor tests for this method
+        return buildAuthenticationResponse(user);
     }
 
     /**
@@ -168,7 +175,7 @@ public class AuthenticationService {
      * @throws UserNotFoundException if the account is not verified
      */
     @Transactional
-    public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO) {
+    public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
         log.debug("User attempting login with email: {}", loginRequestDTO.getEmail());
 
         ApplicationUser user = userRepository.findByEmail(loginRequestDTO.getEmail())
@@ -187,12 +194,40 @@ public class AuthenticationService {
             throw new UserNotFoundException("Account not verified. Please verify your email first.");
         }
 
-        String token = jwtService.generateToken(user);
+        issueTokens(user, response);
 
         log.info("Login successful for user: {}", user.getId());
 
-        return buildAuthenticationResponse(user, token);
+        return buildAuthenticationResponse(user);
     }
+
+    public void refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
+        String oldRefreshToken = cookieUtil.extractTokenFromCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE);
+
+        if (oldRefreshToken == null || !refreshTokenService.validateRefreshToken(oldRefreshToken)) {
+            log.warn("Invalid refresh token in refresh request");
+            cookieUtil.clearCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE);
+            cookieUtil.clearCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE);
+            throw new InvalidTokenException("Invalid or expired refresh token");
+        }
+
+        ApplicationUser user = refreshTokenService.getUserFromToken(oldRefreshToken);
+        issueTokens(user, response);
+
+        log.info("Refreshed tokens for user: {}", user.getId());
+    }
+
+    @Transactional
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = cookieUtil.extractTokenFromCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE);
+        if (refreshToken != null) {
+            refreshTokenService.deleteByToken(refreshToken);
+        }
+
+        cookieUtil.clearCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE);
+        cookieUtil.clearCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE);
+    }
+
 
     /**
      * Validates whether the given username and email are unique.
@@ -286,6 +321,14 @@ public class AuthenticationService {
             });
     }
 
+    private void issueTokens(ApplicationUser user, HttpServletResponse response) {
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user).getToken();
+
+        cookieUtil.setTokenCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE , accessToken, TokenType.ACCESS);
+        cookieUtil.setTokenCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE, refreshToken, TokenType.REFRESH);
+    }
+
     /**
      * Builds an {@link AuthenticationResponseDTO} from the given user and JWT token.
      *
@@ -293,11 +336,10 @@ public class AuthenticationService {
      * @param token the generated JWT token
      * @return a response DTO containing user information and token
      */
-    private AuthenticationResponseDTO buildAuthenticationResponse(ApplicationUser user, String token) {
+    private AuthenticationResponseDTO buildAuthenticationResponse(ApplicationUser user) {
         log.debug("Building authentication response for user: {}", user.getEmail());
 
         return AuthenticationResponseDTO.builder()
-            .token(token)
             .id(user.getId())
             .username(user.getUsername())
             .email(user.getEmail())

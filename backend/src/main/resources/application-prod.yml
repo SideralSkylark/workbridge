@@ -32,3 +32,7 @@ security:
       allowed-origins:
         - http://localhost:4200
         - http://frontend
+
+auth:
+  cookie:
+    secure: true

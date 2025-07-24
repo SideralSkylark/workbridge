@@ -43,10 +43,13 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/v1/auth/login`, request).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(
+      `${this.apiUrl}/v1/auth/login`,
+      request,
+      { withCredentials: true }
+      ).pipe(
       tap(response => {
         const user = response.data;
-        localStorage.setItem("jwt", user.token);
         localStorage.setItem("user", JSON.stringify({
           id: user.id,
           username: user.username,

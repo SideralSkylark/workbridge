@@ -34,25 +34,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
         @NonNull HttpServletRequest request,
         @NonNull HttpServletResponse response,
-        @NonNull FilterChain filterChain) throws ServletException, IOException {
+        @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
-
+        String jwt = null;
+        String username = null;
         String path = request.getServletPath();
 
-        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX) || path.startsWith("/ws-chat")) {
+        // 1. Ignore WebSocket paths
+        if (path.startsWith("/ws-chat")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 2. Try to get JWT from HttpOnly cookie
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // 3. If not in cookie, try Authorization header (for Postman/dev)
+        if (jwt == null) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+                jwt = authHeader.substring(BEARER_PREFIX.length());
+            }
+        }
+
+        // 4. If no token is present, skip auth and continue the chain
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            jwt = authHeader.substring(BEARER_PREFIX.length());
             username = jwtService.extractUsername(jwt);
         } catch (Exception exception) {
             log.warn("Failed to extract username from JWT. Reason: {}", exception.getMessage());
-
             var errorResponse = com.workbridge.workbridge_app.common.response.ErrorResponse.of(
                 org.springframework.http.HttpStatus.UNAUTHORIZED,
                 "Unauthorized - Invalid JWT token",
@@ -62,19 +84,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 5. If username is present and not already authenticated, authenticate
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    userDetails,
-        null,
-                    userDetails.getAuthorities());
-
+                var authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                log.info("Successfully authenticated user: {}", username);
+
+                log.info("Authenticated user '{}' via {}", username,
+                    request.getCookies() != null ? "cookie" : "Authorization header");
+
             } else {
                 log.warn("JWT token for user '{}' is invalid or expired", username);
                 var errorResponse = com.workbridge.workbridge_app.common.response.ErrorResponse.of(
@@ -86,6 +109,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }
