@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class TokenCleanupService {
     private final int ONE_HOUR_MS = 3600000; // 1 hour in milliseconds
+    // private final int SEVEN_DAYS_MS = 1;
 
     private final VerificationTokenRepository tokenRepository;
 
@@ -26,10 +27,17 @@ public class TokenCleanupService {
      * Runs every hour by default.
      */
     @Transactional
-    @Scheduled(fixedRate = ONE_HOUR_MS) 
-    public void cleanExpiredTokens() {
+    @Scheduled(fixedRate = ONE_HOUR_MS)
+    public void cleanExpiredVerificationTokens() {
         tokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
         log.info("Expired verification tokens have been cleaned up.");
     }
+
+    // Future enhancement:
+    // @Transactional
+    // @Scheduled(fixedRate = Duration.ofDays(7).toMillis())
+    // public void cleanExpiredRefreshTokens() {
+    //     // TODO: Implement deletion logic for expired refresh tokens
+    // }
 }
 

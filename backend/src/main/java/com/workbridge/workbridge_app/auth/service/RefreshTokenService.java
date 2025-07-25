@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.workbridge.workbridge_app.auth.entity.RefreshToken;
@@ -18,14 +21,23 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
+
+    private static final String USER_AGENT_HEADER = "User-Agent";
+    private static final String ERR_TOKEN_NOT_FOUND = "Refresh token not found";
+    private static final String ERR_TOKEN_EXPIRED_OR_REVOKED = "Refresh token expired or revoked";
+
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final int refreshTokenValidityDays = 7;
+    @Value("${auth.refresh-token-validity-days:7}")
+    private int refreshTokenValidityDays;
+
 
     @Transactional
-    public RefreshToken createRefreshToken(ApplicationUser user) {
+    public RefreshToken createRefreshToken(ApplicationUser user, HttpServletRequest request) {
         RefreshToken token = RefreshToken.builder()
             .token(UUID.randomUUID().toString())
+            .ip(request.getRemoteAddr())
+            .userAgent(request.getHeader(USER_AGENT_HEADER))
             .expiresAt(LocalDateTime.now().plusDays(refreshTokenValidityDays))
             .revoked(false)
             .user(user)
@@ -37,10 +49,10 @@ public class RefreshTokenService {
     /**
      * Checks if the refresh token is valid (exists, not expired, not revoked).
      */
-    public boolean validateRefreshToken(String token) {
+    public boolean isTokenValid(String token) {
         return refreshTokenRepository.findByToken(token)
-            .filter(t -> !t.isRevoked() && t.getExpiresAt().isAfter(LocalDateTime.now()))
-            .isPresent();
+            .map(this::isTokenUsable)
+            .orElse(false);
     }
 
     /**
@@ -48,13 +60,7 @@ public class RefreshTokenService {
      * Throws exception if token is invalid.
      */
     public ApplicationUser getUserFromToken(String token) {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-            .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
-
-        if (refreshToken.isRevoked() || refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidTokenException("Refresh token expired or revoked");
-        }
-
+        RefreshToken refreshToken = getValidTokenOrThrow(token);
         return refreshToken.getUser();
     }
 
@@ -62,25 +68,16 @@ public class RefreshTokenService {
      * Rotates a refresh token: revoke the old one and create a new one.
      */
     @Transactional
-    public String rotateRefreshToken(String oldToken) {
-        RefreshToken existing = refreshTokenRepository.findByToken(oldToken)
-            .orElseThrow(() -> new InvalidTokenException("Old refresh token not found"));
-
-        if (existing.isRevoked() || existing.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidTokenException("Old refresh token expired or revoked");
+    public String rotateRefreshToken(String oldToken, HttpServletRequest request) {
+        if (oldToken == null || oldToken.isBlank()) {
+            throw new InvalidTokenException("Missing refresh token.");
         }
 
-        // Revoke old
+        RefreshToken existing = getValidTokenOrThrow(oldToken);
         existing.setRevoked(true);
         refreshTokenRepository.save(existing);
 
-        // Create and return new token
-        RefreshToken newToken = createRefreshToken(existing.getUser());
-        return newToken.getToken();
-    }
-
-    public Optional<RefreshToken> findByToken(String token) {
-        return refreshTokenRepository.findByToken(token);
+        return createRefreshToken(existing.getUser(), request).getToken();
     }
 
     @Transactional
@@ -88,7 +85,37 @@ public class RefreshTokenService {
         refreshTokenRepository.deleteByUserId(userId);
     }
 
+    public Optional<RefreshToken> findByToken(String token) {
+        return refreshTokenRepository.findByToken(token);
+    }
+
+    public Optional<RefreshToken> findByTokenId(Long tokenId) {
+        return refreshTokenRepository.findById(tokenId);
+    }
+
+    public Page<RefreshToken> findAllByUserId(long userId, Pageable pageable) {
+        return refreshTokenRepository.findAllByUserId(pageable, userId);
+    }
+
     public void deleteByToken(String token) {
         refreshTokenRepository.deleteByToken(token);
+    }
+
+    private RefreshToken getValidTokenOrThrow(String token) {
+        return refreshTokenRepository.findByToken(token)
+            .filter(this::isTokenUsable)
+            .orElseThrow(() -> new InvalidTokenException(
+                isTokenExpired(token) ? ERR_TOKEN_EXPIRED_OR_REVOKED : ERR_TOKEN_NOT_FOUND
+            ));
+    }
+
+    private boolean isTokenUsable(RefreshToken token) {
+        return !token.isRevoked() && token.getExpiresAt().isAfter(LocalDateTime.now());
+    }
+
+    private boolean isTokenExpired(String token) {
+        return refreshTokenRepository.findByToken(token)
+            .map(t -> t.getExpiresAt().isBefore(LocalDateTime.now()))
+            .orElse(false);
     }
 }

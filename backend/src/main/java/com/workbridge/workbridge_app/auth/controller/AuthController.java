@@ -1,6 +1,11 @@
 package com.workbridge.workbridge_app.auth.controller;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,13 +19,16 @@ import com.workbridge.workbridge_app.auth.dto.EmailVerificationDTO;
 import com.workbridge.workbridge_app.auth.dto.LoginRequestDTO;
 import com.workbridge.workbridge_app.auth.dto.RegisterRequestDTO;
 import com.workbridge.workbridge_app.auth.dto.RegisterResponseDTO;
+import com.workbridge.workbridge_app.auth.dto.SessionDTO;
 import com.workbridge.workbridge_app.auth.exception.InvalidCredentialsException;
 import com.workbridge.workbridge_app.auth.exception.TokenExpiredException;
 import com.workbridge.workbridge_app.auth.exception.TokenVerificationException;
 import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
 import com.workbridge.workbridge_app.auth.service.AuthenticationService;
 import com.workbridge.workbridge_app.common.response.ApiResponse;
+import com.workbridge.workbridge_app.common.response.MessageResponse;
 import com.workbridge.workbridge_app.common.response.ResponseFactory;
+import com.workbridge.workbridge_app.security.SecurityUtil;
 import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -166,23 +174,43 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthenticationResponseDTO>>
      login(
         @Valid @RequestBody LoginRequestDTO loginRequest,
+        HttpServletRequest request,
         HttpServletResponse response) {
         return ResponseFactory.ok(
-            authenticationService.login(loginRequest, response),
+            authenticationService.login(loginRequest, request,  response),
             "User logged in successfully."
         );
     }
 
-
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    @PostMapping("/refresh-token")
+    public ResponseEntity<MessageResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.refreshAccessToken(request, response);
-        return ResponseFactory.ok("Token refreshed successfully");
+        return ResponseFactory.okMessage("Token refreshed successfully");
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.logout(request, response);
+        return ResponseFactory.ok();
+    }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<ApiResponse<PagedModel<SessionDTO>>> listSessions(
+        @PageableDefault(
+            page = 0,
+            size = 20,
+            sort = "id",
+            direction = Sort.Direction.DESC
+        )Pageable pageable) {
+        return ResponseFactory.ok(
+           new PagedModel<>(authenticationService.listSessions(SecurityUtil.getAuthenticatedUsername(), pageable)),
+            "Sessions fetched successfully."
+        );
+    }
+
+    @PostMapping("/logout/{tokenId}")
+    public ResponseEntity<ApiResponse<Void>> remoteLogout(@PathVariable Long tokenId) {
+        authenticationService.logoutWithToken(tokenId);
         return ResponseFactory.ok();
     }
 }

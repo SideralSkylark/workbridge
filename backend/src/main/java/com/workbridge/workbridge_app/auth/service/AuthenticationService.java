@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,17 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 import com.workbridge.workbridge_app.auth.dto.AuthenticationResponseDTO;
 import com.workbridge.workbridge_app.auth.dto.EmailVerificationDTO;
 import com.workbridge.workbridge_app.auth.dto.LoginRequestDTO;
-import com.workbridge.workbridge_app.auth.dto.LoginResponseDTO;
 import com.workbridge.workbridge_app.auth.dto.RegisterRequestDTO;
 import com.workbridge.workbridge_app.auth.dto.RegisterResponseDTO;
+import com.workbridge.workbridge_app.auth.dto.SessionDTO;
+import com.workbridge.workbridge_app.auth.entity.RefreshToken;
 import com.workbridge.workbridge_app.auth.exception.InvalidCredentialsException;
 import com.workbridge.workbridge_app.auth.exception.InvalidTokenException;
 import com.workbridge.workbridge_app.auth.exception.TokenExpiredException;
 import com.workbridge.workbridge_app.auth.exception.TokenVerificationException;
 import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
+import com.workbridge.workbridge_app.auth.mapper.SessionMapper;
 import com.workbridge.workbridge_app.auth.util.CookieUtil;
 import com.workbridge.workbridge_app.auth.util.CookieUtil.TokenType;
 import com.workbridge.workbridge_app.security.JwtService;
+import com.workbridge.workbridge_app.security.SecurityUtil;
 import com.workbridge.workbridge_app.user.entity.ApplicationUser;
 import com.workbridge.workbridge_app.user.entity.UserRole;
 import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
@@ -63,6 +68,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
+    private static final String ACCESS_COOKIE = CookieUtil.ACCESS_TOKEN_COOKIE;
+    private static final String REFRESH_COOKIE = CookieUtil.REFRESH_TOKEN_COOKIE;
+
     private final UserRepository userRepository;
     private final UserRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -70,6 +78,7 @@ public class AuthenticationService {
     private final VerificationService verificationService;
     private final RefreshTokenService refreshTokenService;
     private final CookieUtil cookieUtil;
+    private final SessionMapper sessionMapper;
 
    /**
      * Registers a new user account.
@@ -90,15 +99,13 @@ public class AuthenticationService {
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
         log.debug("Attempting to register user with email: {}", registerRequestDTO.getEmail());
 
-        validateRegistrationRequest(registerRequestDTO);
+        validateUniqueUser(registerRequestDTO);
 
         ApplicationUser user = createUser(registerRequestDTO);
         userRepository.save(user);
-
         verificationService.createAndSendVerificationToken(user);
 
         log.info("User registered successfully: {}", user.getEmail());
-
         return new RegisterResponseDTO(user.getEmail());
     }
 
@@ -121,12 +128,10 @@ public class AuthenticationService {
         verificationService.verifyToken(emailVerificationDTO.getEmail(), emailVerificationDTO.getCode());
 
         ApplicationUser user = findUserByEmailOrThrow(emailVerificationDTO.getEmail());
-
         user.setEnabled(true);
         userRepository.save(user);
 
         log.info("Email verified successfully for user: {}", user.getEmail());
-        //TODO: refactor tests for this method
         return buildAuthenticationResponse(user);
     }
 
@@ -145,7 +150,6 @@ public class AuthenticationService {
         log.debug("Resending verification code to: {}", email);
 
         ApplicationUser user = findUserByEmailOrThrow(email);
-
         if (user.isEnabled()) {
             log.info("User already verified: {}", email);
             return new RegisterResponseDTO(user.getEmail());
@@ -155,7 +159,6 @@ public class AuthenticationService {
         verificationService.createAndSendVerificationToken(user);
 
         log.info("Verification code resent to: {}", email);
-
         return new RegisterResponseDTO(user.getEmail());
     }
 
@@ -175,7 +178,10 @@ public class AuthenticationService {
      * @throws UserNotFoundException if the account is not verified
      */
     @Transactional
-    public AuthenticationResponseDTO login(LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
+    public AuthenticationResponseDTO login(
+        LoginRequestDTO loginRequestDTO,
+        HttpServletRequest request,
+        HttpServletResponse response) {
         log.debug("User attempting login with email: {}", loginRequestDTO.getEmail());
 
         ApplicationUser user = userRepository.findByEmail(loginRequestDTO.getEmail())
@@ -194,38 +200,58 @@ public class AuthenticationService {
             throw new UserNotFoundException("Account not verified. Please verify your email first.");
         }
 
-        issueTokens(user, response);
+        issueTokens(user, response, request);
 
         log.info("Login successful for user: {}", user.getId());
-
         return buildAuthenticationResponse(user);
     }
 
     public void refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
-        String oldRefreshToken = cookieUtil.extractTokenFromCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE);
+        String token = cookieUtil.extractTokenFromCookie(request, REFRESH_COOKIE);
 
-        if (oldRefreshToken == null || !refreshTokenService.validateRefreshToken(oldRefreshToken)) {
+        if (token == null || !refreshTokenService.isTokenValid(token)) {
             log.warn("Invalid refresh token in refresh request");
-            cookieUtil.clearCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE);
-            cookieUtil.clearCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE);
+            cookieUtil.clearCookie(response, ACCESS_COOKIE);
+            cookieUtil.clearCookie(response, REFRESH_COOKIE);
             throw new InvalidTokenException("Invalid or expired refresh token");
         }
 
-        ApplicationUser user = refreshTokenService.getUserFromToken(oldRefreshToken);
-        issueTokens(user, response);
+        ApplicationUser user = refreshTokenService.getUserFromToken(token);
+        issueTokens(user, response, request);
 
         log.info("Refreshed tokens for user: {}", user.getId());
     }
 
     @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = cookieUtil.extractTokenFromCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE);
+        String refreshToken = cookieUtil.extractTokenFromCookie(request, REFRESH_COOKIE);
         if (refreshToken != null) {
             refreshTokenService.deleteByToken(refreshToken);
         }
-
         cookieUtil.clearCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE);
         cookieUtil.clearCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE);
+        log.info("User logged out.");
+    }
+
+    public Page<SessionDTO> listSessions(String username, Pageable pageable) {
+        ApplicationUser user = findUserByUsernameOrThrow(username);
+        return refreshTokenService.findAllByUserId(user.getId(), pageable)
+            .map(sessionMapper::toSessionDTO);
+    }
+
+    @Transactional
+    public void logoutWithToken(Long tokenId) {
+        RefreshToken token = refreshTokenService.findByTokenId(tokenId)
+            .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
+
+        String currentUsername = SecurityUtil.getAuthenticatedUsername();
+        if (!token.getUser().getUsername().equals(currentUsername)) {
+            log.error("Unauthorized session invalidation attempt by: {}", currentUsername);
+            throw new InvalidTokenException("You are not authorized to invalidate this session.");
+        }
+
+        refreshTokenService.deleteByToken(token.getToken());
+        log.info("Session invalidated for token: {}", tokenId);
     }
 
 
@@ -235,14 +261,13 @@ public class AuthenticationService {
      * @param request the registration request
      * @throws UserAlreadyExistsException if the username or email is already taken
      */
-    private void validateRegistrationRequest(RegisterRequestDTO request) {
+    private void validateUniqueUser(RegisterRequestDTO request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            log.warn("Registration failed: username already taken - {}", request.getUsername());
+            log.warn("Username taken: {}", request.getUsername());
             throw new UserAlreadyExistsException("Username is already taken");
         }
-
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Registration failed: email already in use - {}", request.getEmail());
+            log.warn("Email in use: {}", request.getEmail());
             throw new UserAlreadyExistsException("Email is already in use");
         }
     }
@@ -265,18 +290,17 @@ public class AuthenticationService {
     private ApplicationUser createUser(RegisterRequestDTO request) {
         log.debug("Creating user with username: {}, roles: {}", request.getUsername(), request.getRoles());
 
-        ApplicationUser user = new ApplicationUser();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setEnabled(false);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
         Set<UserRoleEntity> roles = resolveRoles(request.getRoles());
 
-        user.setRoles(roles);
-        return user;
+        return ApplicationUser.builder()
+            .username(request.getUsername())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .enabled(false)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .roles(roles)
+            .build();
     }
 
     /**
@@ -303,6 +327,35 @@ public class AuthenticationService {
             .collect(Collectors.toSet());
     }
 
+    private void issueTokens(ApplicationUser user, HttpServletResponse response, HttpServletRequest request) {
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user, request).getToken();
+
+        cookieUtil.setTokenCookie(response, ACCESS_COOKIE , accessToken, TokenType.ACCESS);
+        cookieUtil.setTokenCookie(response, REFRESH_COOKIE, refreshToken, TokenType.REFRESH);
+    }
+
+    /**
+     * Builds an {@link AuthenticationResponseDTO} from the given user and JWT token.
+     *
+     * @param user the authenticated user
+     * @param token the generated JWT token
+     * @return a response DTO containing user information and token
+     */
+    private AuthenticationResponseDTO buildAuthenticationResponse(ApplicationUser user) {
+        log.debug("Building authentication response for user: {}", user.getEmail());
+
+        return AuthenticationResponseDTO.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .email(user.getEmail())
+            .roles(user.getRoles().stream()
+                .map(role -> role.getRole().name())
+                .collect(Collectors.toSet()))
+            .updatedAt(user.getUpdatedAt())
+            .build();
+    }
+
     /**
      * Retrieves a user by their email or throws a {@link UserNotFoundException} if not found.
      *
@@ -321,30 +374,11 @@ public class AuthenticationService {
             });
     }
 
-    private void issueTokens(ApplicationUser user, HttpServletResponse response) {
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = refreshTokenService.createRefreshToken(user).getToken();
-
-        cookieUtil.setTokenCookie(response, CookieUtil.ACCESS_TOKEN_COOKIE , accessToken, TokenType.ACCESS);
-        cookieUtil.setTokenCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE, refreshToken, TokenType.REFRESH);
-    }
-
-    /**
-     * Builds an {@link AuthenticationResponseDTO} from the given user and JWT token.
-     *
-     * @param user the authenticated user
-     * @param token the generated JWT token
-     * @return a response DTO containing user information and token
-     */
-    private AuthenticationResponseDTO buildAuthenticationResponse(ApplicationUser user) {
-        log.debug("Building authentication response for user: {}", user.getEmail());
-
-        return AuthenticationResponseDTO.builder()
-            .id(user.getId())
-            .username(user.getUsername())
-            .email(user.getEmail())
-            .roles(user.getRoles().stream().map(role -> role.getRole().name()).collect(Collectors.toSet()))
-            .updatedAt(user.getUpdatedAt())
-            .build();
+    private ApplicationUser findUserByUsernameOrThrow(String username) {
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> {
+                log.warn("User not found for username: {}", username);
+                return new UserNotFoundException("User not found");
+            });
     }
 }

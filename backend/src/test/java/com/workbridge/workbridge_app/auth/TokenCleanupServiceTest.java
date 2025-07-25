@@ -24,7 +24,7 @@ public class TokenCleanupServiceTest {
 
     @Test
     void shouldDeleteExpiredTokensSuccessfully() {
-        cleanupService.cleanExpiredTokens();
+        cleanupService.cleanExpiredVerificationTokens();
         verify(tokenRepository).deleteByExpiresAtBefore(any(LocalDateTime.class));
     }
 }
