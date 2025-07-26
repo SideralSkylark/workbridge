@@ -1,210 +1,233 @@
-// package com.workbridge.workbridge_app.auth;
+package com.workbridge.workbridge_app.auth;
 
-// import static org.junit.jupiter.api.Assertions.*;
-// import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-// import java.time.LocalDateTime;
-// import java.util.List;
-// import java.util.Optional;
-// import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
-// import com.workbridge.workbridge_app.auth.dto.*;
-// import com.workbridge.workbridge_app.auth.exception.InvalidCredentialsException;
-// import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
-// import com.workbridge.workbridge_app.auth.service.AuthenticationService;
-// import com.workbridge.workbridge_app.auth.service.VerificationService;
-// import com.workbridge.workbridge_app.security.JwtService;
-// import com.workbridge.workbridge_app.user.entity.ApplicationUser;
-// import com.workbridge.workbridge_app.user.entity.UserRole;
-// import com.workbridge.workbridge_app.user.entity.UserRoleEntity;
-// import com.workbridge.workbridge_app.user.exception.UserNotFoundException;
-// import com.workbridge.workbridge_app.user.repository.UserRepository;
-// import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Nested;
-// import org.junit.jupiter.api.Test;
-// import org.mockito.*;
+import com.workbridge.workbridge_app.auth.dto.*;
+import com.workbridge.workbridge_app.auth.entity.RefreshToken;
+import com.workbridge.workbridge_app.auth.exception.InvalidTokenException;
+import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
+import com.workbridge.workbridge_app.auth.mapper.SessionMapper;
+import com.workbridge.workbridge_app.auth.service.AuthenticationService;
+import com.workbridge.workbridge_app.auth.service.RefreshTokenService;
+import com.workbridge.workbridge_app.auth.service.VerificationService;
+import com.workbridge.workbridge_app.auth.util.CookieUtil;
+import com.workbridge.workbridge_app.auth.util.CookieUtil.TokenType;
+import com.workbridge.workbridge_app.security.JwtService;
+import com.workbridge.workbridge_app.user.entity.*;
+import com.workbridge.workbridge_app.user.repository.UserRepository;
+import com.workbridge.workbridge_app.user.repository.UserRoleRepository;
 
-// import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-// public class AuthenticationServiceTest {
+class AuthenticationServiceTest {
 
-//     @Mock private UserRepository userRepository;
-//     @Mock private UserRoleRepository roleRepository;
-//     @Mock private PasswordEncoder passwordEncoder;
-//     @Mock private JwtService jwtService;
-//     @Mock private VerificationService verificationService;
+    @InjectMocks private AuthenticationService authenticationService;
+    @Mock private UserRepository userRepository;
+    @Mock private UserRoleRepository roleRepository;
+    @Mock private VerificationService verificationService;
+    @Mock private RefreshTokenService refreshTokenService;
+    @Mock private CookieUtil cookieUtil;
+    @Mock private SessionMapper sessionMapper;
+    @Mock private JwtService jwtService;
+    @Mock private HttpServletRequest httpRequest;
+    @Mock private HttpServletResponse httpResponse;
+    @Mock private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-//     @InjectMocks private AuthenticationService authenticationService;
+    private final String username = "john";
+    private final String email = "john@example.com";
+    private final String password = "password";
 
-//     @Captor private ArgumentCaptor<ApplicationUser> userCaptor;
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-//     private final String username = "User1";
-//     private final String email = "user@gmail.com";
-//     private final String password = "user1234";
-//     private final List<String> roles = List.of("SERVICE_SEEKER");
+    private ApplicationUser buildUser(boolean enabled) {
+        return ApplicationUser.builder()
+            .id(1L)
+            .email(email)
+            .username(username)
+            .enabled(enabled)
+            .password("hashed")
+            .roles(Set.of(new UserRoleEntity(1L, UserRole.SERVICE_SEEKER)))
+            .updatedAt(LocalDateTime.now())
+            .build();
+    }
 
-//     @BeforeEach
-//     void setUp() {
-//         MockitoAnnotations.openMocks(this);
-//     }
+    @Nested
+    class RegisterTests {
+        @Test
+        void shouldRegisterUserSuccessfully() {
+            RegisterRequestDTO request = new RegisterRequestDTO(username, email, password, List.of("SERVICE_SEEKER"), "INACTIVE");
+            when(userRepository.existsByUsername(username)).thenReturn(false);
+            when(userRepository.existsByEmail(email)).thenReturn(false);
+            when(passwordEncoder.encode(password)).thenReturn("hashed");
+            when(roleRepository.findByRole(UserRole.SERVICE_SEEKER)).thenReturn(Optional.of(new UserRoleEntity(1L, UserRole.SERVICE_SEEKER)));
 
-//     private RegisterRequestDTO buildRegisterRequest() {
-//         RegisterRequestDTO dto = new RegisterRequestDTO();
-//         dto.setUsername(username);
-//         dto.setEmail(email);
-//         dto.setPassword(password);
-//         dto.setRoles(roles);
-//         dto.setStatus("INACTIVE");
-//         return dto;
-//     }
+            RegisterResponseDTO response = authenticationService.register(request);
 
-//     private ApplicationUser buildUser(boolean enabled) {
-//         ApplicationUser user = new ApplicationUser();
-//         user.setUsername(username);
-//         user.setEmail(email);
-//         user.setPassword("hashed");
-//         user.setEnabled(enabled);
-//         user.setUpdatedAt(LocalDateTime.now());
-//         user.setRoles(Set.of(new UserRoleEntity(UserRole.SERVICE_SEEKER)));
-//         return user;
-//     }
+            assertEquals(email, response.getEmail());
+            verify(userRepository).save(any(ApplicationUser.class));
+            verify(verificationService).createAndSendVerificationToken(any(ApplicationUser.class));
+        }
 
-//     @Nested
-//     class RegisterTests {
+        @Test
+        void shouldThrowIfUsernameExists() {
+            RegisterRequestDTO request = new RegisterRequestDTO(username, email, password, List.of("USER"), "INACTIVE");
+            when(userRepository.existsByUsername(username)).thenReturn(true);
+            assertThrows(UserAlreadyExistsException.class, () -> authenticationService.register(request));
+        }
+    }
 
-//         @Test
-//         void shouldRegisterUserSuccessfully() {
-//             RegisterRequestDTO request = buildRegisterRequest();
-//             UserRoleEntity roleEntity = new UserRoleEntity();
-//             roleEntity.setRole(UserRole.SERVICE_SEEKER);
+    @Nested
+    class VerifyTests {
+        @Test
+        void shouldEnableUserOnSuccessfulVerification() {
+            ApplicationUser user = buildUser(false);
+            EmailVerificationDTO dto = new EmailVerificationDTO(email, "123456");
 
-//             when(userRepository.existsByUsername(request.getUsername())).thenReturn(false);
-//             when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-//             when(passwordEncoder.encode(password)).thenReturn("hashed");
-//             when(roleRepository.findByRole(UserRole.SERVICE_SEEKER)).thenReturn(Optional.of(roleEntity));
+            doNothing().when(verificationService).verifyToken(email, "123456");
+            when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            when(userRepository.save(user)).thenReturn(user);
 
-//             RegisterResponseDTO response = authenticationService.register(request);
+            AuthenticationResponseDTO response = authenticationService.verify(dto);
 
-//             verify(userRepository).save(userCaptor.capture());
-//             ApplicationUser savedUser = userCaptor.getValue();
+            assertTrue(user.isEnabled());
+            assertEquals(username, response.getUsername());
+            assertEquals(email, response.getEmail());
+        }
+    }
 
-//             assertEquals(email, savedUser.getEmail());
-//             assertFalse(savedUser.isEnabled());
-//             assertEquals(email, response.getEmail());
-//             verify(verificationService).createAndSendVerificationToken(savedUser);
-//         }
+    @Nested
+    class ResendVerificationCodeTests {
+        @Test
+        void shouldResendCodeIfUserIsNotVerified() {
+            ApplicationUser user = buildUser(false);
+            when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-//         @Test
-//         void shouldThrowExceptionWhenUsernameExists() {
-//             RegisterRequestDTO request = buildRegisterRequest();
-//             when(userRepository.existsByUsername(username)).thenReturn(true);
-//             assertThrows(UserAlreadyExistsException.class, () -> authenticationService.register(request));
-//         }
+            RegisterResponseDTO response = authenticationService.resendVerificationCode(email);
 
-//         @Test
-//         void shouldThrowExceptionWhenEmailExists() {
-//             RegisterRequestDTO request = buildRegisterRequest();
-//             when(userRepository.existsByEmail(email)).thenReturn(true);
-//             assertThrows(UserAlreadyExistsException.class, () -> authenticationService.register(request));
-//         }
+            assertEquals(email, response.getEmail());
+            verify(verificationService).deleteExistingToken(email);
+            verify(verificationService).createAndSendVerificationToken(user);
+        }
 
-//         @Test
-//         void shouldThrowExceptionWhenRoleIsInvalid() {
-//             RegisterRequestDTO request = buildRegisterRequest();
-//             when(userRepository.existsByUsername(any())).thenReturn(false);
-//             when(userRepository.existsByEmail(any())).thenReturn(false);
-//             when(roleRepository.findByRole(UserRole.SERVICE_SEEKER)).thenThrow(IllegalArgumentException.class);
-//             assertThrows(IllegalArgumentException.class, () -> authenticationService.register(request));
-//         }
-//     }
+        @Test
+        void shouldNotResendIfUserIsVerified() {
+            ApplicationUser user = buildUser(true);
+            when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-//     @Nested
-//     class VerifyTests {
+            RegisterResponseDTO response = authenticationService.resendVerificationCode(email);
 
-//         @Test
-//         void shouldVerifyEmailSuccessfully() {
-//             ApplicationUser user = buildUser(false);
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-//             when(jwtService.generateToken(user)).thenReturn("jwt-token");
+            assertEquals(email, response.getEmail());
+            verify(verificationService, never()).createAndSendVerificationToken(any());
+            verify(verificationService, never()).deleteExistingToken(any());
+        }
+    }
 
-//             AuthenticationResponseDTO response = authenticationService.verify(new EmailVerificationDTO(email, "123456"));
+    @Nested
+    class LoginTests {
+        @Test
+        void shouldLoginSuccessfully() {
+            ApplicationUser user = buildUser(true);
+            LoginRequestDTO dto = new LoginRequestDTO(email, password);
 
-//             assertTrue(user.isEnabled());
-//             assertEquals("jwt-token", response.getAccessToken());
-//             verify(verificationService).verifyToken(email, "123456");
-//             verify(userRepository).save(user);
-//         }
-//     }
+            when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches(password, "hashed")).thenReturn(true);
+            when(jwtService.generateToken(user)).thenReturn("access-token");
+            when(refreshTokenService.createRefreshToken(eq(user), any())).thenReturn(RefreshToken
+                .builder()
+                    .id(1L)
+                    .token("refresh-token")
+                    .user(user).
+                    createdAt(LocalDateTime.now()).build());
 
-//     @Nested
-//     class ResendVerificationCodeTests {
+            AuthenticationResponseDTO response = authenticationService.login(dto, httpRequest, httpResponse);
 
-//         @Test
-//         void shouldResendVerificationCodeIfNotVerified() {
-//             ApplicationUser user = buildUser(false);
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            assertEquals(email, response.getEmail());
+            verify(cookieUtil).setTokenCookie(eq(httpResponse), any(), eq("access-token"), eq(TokenType.ACCESS));
+            verify(cookieUtil).setTokenCookie(eq(httpResponse), any(), eq("refresh-token"), eq(TokenType.REFRESH));
+        }
+    }
 
-//             RegisterResponseDTO response = authenticationService.resendVerificationCode(email);
+    @Nested
+    class RefreshTokenTests {
+        @Test
+        void shouldRefreshAccessToken() {
+            ApplicationUser user = buildUser(true);
 
-//             assertEquals(email, response.getEmail());
-//             verify(verificationService).deleteExistingToken(email);
-//             verify(verificationService).createAndSendVerificationToken(user);
-//         }
+            when(cookieUtil.extractTokenFromCookie(httpRequest, "refresh_token")).thenReturn("old-token");
+            when(refreshTokenService.isTokenValid("old-token")).thenReturn(true);
+            when(refreshTokenService.getUserFromToken("old-token")).thenReturn(user);
+            when(jwtService.generateToken(user)).thenReturn("new-access-token");
+            when(refreshTokenService.createRefreshToken(eq(user), any())).thenReturn(RefreshToken
+                .builder()
+                    .id(2L)
+                    .token("new-refresh-token")
+                    .user(user)
+                    .createdAt(LocalDateTime.now())
+                    .build());
 
-//         @Test
-//         void shouldNotResendIfUserAlreadyVerified() {
-//             ApplicationUser user = buildUser(true);
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            authenticationService.refreshAccessToken(httpRequest, httpResponse);
 
-//             RegisterResponseDTO response = authenticationService.resendVerificationCode(email);
+            verify(cookieUtil).setTokenCookie(eq(httpResponse), any(), eq("new-access-token"), eq(TokenType.ACCESS));
+            verify(cookieUtil).setTokenCookie(eq(httpResponse), any(), eq("new-refresh-token"), eq(TokenType.REFRESH));
+        }
 
-//             assertEquals(email, response.getEmail());
-//             verify(verificationService, never()).createAndSendVerificationToken(any());
-//             verify(verificationService, never()).deleteExistingToken(any());
-//         }
-//     }
+        @Test
+        void shouldThrowIfRefreshTokenInvalid() {
+            when(cookieUtil.extractTokenFromCookie(httpRequest, "refresh_token")).thenReturn(null);
+            assertThrows(InvalidTokenException.class, () -> authenticationService.refreshAccessToken(httpRequest, httpResponse));
+        }
+    }
 
-//     @Nested
-//     class LoginTests {
+    @Nested
+    class LogoutTests {
+        @Test
+        void shouldClearCookiesAndRevokeToken() {
+            when(cookieUtil.extractTokenFromCookie(httpRequest, "refresh_token")).thenReturn("token");
 
-//         @Test
-//         void shouldLoginSuccessfully() {
-//             ApplicationUser user = buildUser(true);
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-//             when(passwordEncoder.matches("user1234", "hashed")).thenReturn(true);
-//             when(jwtService.generateToken(user)).thenReturn("jwt-token");
+            authenticationService.logout(httpRequest, httpResponse);
 
-//             AuthenticationResponseDTO response = authenticationService.login(new LoginRequestDTO(email, "user1234"));
+            verify(refreshTokenService).deleteByToken("token");
+            verify(cookieUtil, times(2)).clearCookie(eq(httpResponse), any());
+        }
+    }
 
-//             assertEquals("jwt-token", response.getAccessToken());
-//             assertEquals(email, response.getEmail());
-//         }
+    @Nested
+    class ListSessionsTests {
+        @Test
+        void shouldReturnUserSessions() {
+            ApplicationUser user = buildUser(true);
+            RefreshToken token = RefreshToken
+                .builder()
+                    .id(1L)
+                    .token("token")
+                    .user(user)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            SessionDTO dto = new SessionDTO();
 
-//         @Test
-//         void shouldThrowIfUserNotFound() {
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-//             assertThrows(InvalidCredentialsException.class,
-//                     () -> authenticationService.login(new LoginRequestDTO(email, "pass")));
-//         }
+            when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+            when(refreshTokenService.findAllByUserId(eq(1L), any())).thenReturn(new PageImpl<>(List.of(token)));
+            when(sessionMapper.toSessionDTO(token)).thenReturn(dto);
 
-//         @Test
-//         void shouldThrowIfPasswordInvalid() {
-//             ApplicationUser user = buildUser(true);
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-//             when(passwordEncoder.matches("wrongpass", "hashed")).thenReturn(false);
-//             assertThrows(InvalidCredentialsException.class,
-//                     () -> authenticationService.login(new LoginRequestDTO(email, "wrongpass")));
-//         }
+            Page<SessionDTO> sessions = authenticationService.listSessions(username, Pageable.unpaged());
 
-//         @Test
-//         void shouldThrowIfUserNotVerified() {
-//             ApplicationUser user = buildUser(false);
-//             when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-//             when(passwordEncoder.matches("user1234", "hashed")).thenReturn(true);
-//             assertThrows(UserNotFoundException.class,
-//                     () -> authenticationService.login(new LoginRequestDTO(email, "user1234")));
-//         }
-//     }
-// }
+            assertEquals(1, sessions.getContent().size());
+        }
+    }
+}

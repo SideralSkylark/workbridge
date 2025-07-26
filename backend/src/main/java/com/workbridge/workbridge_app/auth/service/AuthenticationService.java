@@ -43,24 +43,28 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * AuthenticationService
  *
- * <p>This service handles core authentication and registration functionality
- * for the WorkBridge application. It is responsible for:
+ * <p>This service manages the core authentication flow of the WorkBridge application.
+ * It provides functionality for:
  *
  * <ul>
- *   <li>Registering new users and assigning roles</li>
- *   <li>Sending and verifying email verification codes</li>
- *   <li>Resending verification codes upon user request</li>
- *   <li>Authenticating users and issuing JWT access tokens</li>
+ *   <li>User registration and role assignment</li>
+ *   <li>Email verification (initial and resend)</li>
+ *   <li>User login (authentication) and token issuance</li>
+ *   <li>JWT refresh token lifecycle handling</li>
+ *   <li>User logout and session revocation</li>
+ *   <li>Session listing and targeted session invalidation</li>
  * </ul>
  *
- * <p>It works in collaboration with:
+ * <p>Collaborates with:
  * <ul>
- *   <li>{@link VerificationService} – for managing email verification tokens</li>
- *   <li>{@link JwtService} – for generating and managing JWT tokens</li>
+ *   <li>{@link VerificationService} – for email verification logic</li>
+ *   <li>{@link JwtService} – for generating access tokens</li>
+ *   <li>{@link RefreshTokenService} – for refresh token lifecycle management</li>
+ *   <li>{@link CookieUtil} – for secure cookie handling</li>
+ *   <li>{@link SessionMapper} – for transforming session entities to DTOs</li>
  * </ul>
  *
- * @author Workbridge Team
- *
+ * @author WorkBridge
  * @since 2025-06-22
  */
 @Slf4j
@@ -173,7 +177,9 @@ public class AuthenticationService {
      * </ul>
      *
      * @param loginRequestDTO DTO containing the user's email and password
-     * @return an {@link AuthenticationResponseDTO} with the JWT token and user details
+     * @param request to extract client data to be persisted
+     * @param response to bind the generated tokens to a cookie
+     * @return an {@link AuthenticationResponseDTO} with the  user details
      * @throws InvalidCredentialsException if credentials are invalid
      * @throws UserNotFoundException if the account is not verified
      */
@@ -206,6 +212,16 @@ public class AuthenticationService {
         return buildAuthenticationResponse(user);
     }
 
+    /**
+     * Refreshes the user's access token using a valid refresh token from the HTTP cookie.
+     *
+     * <p>If the refresh token is valid and not expired, new tokens (access and refresh)
+     * are issued and stored in cookies.
+     *
+     * @param request the HTTP request containing the refresh token cookie
+     * @param response the HTTP response where new cookies will be set
+     * @throws InvalidTokenException if the refresh token is missing, invalid, or expired
+     */
     public void refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String token = cookieUtil.extractTokenFromCookie(request, REFRESH_COOKIE);
 
@@ -222,6 +238,12 @@ public class AuthenticationService {
         log.info("Refreshed tokens for user: {}", user.getId());
     }
 
+    /**
+     * Logs out the current user by revoking their refresh token and clearing authentication cookies.
+     *
+     * @param request the HTTP request containing the refresh token cookie
+     * @param response the HTTP response used to clear the cookies
+     */
     @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieUtil.extractTokenFromCookie(request, REFRESH_COOKIE);
@@ -233,12 +255,30 @@ public class AuthenticationService {
         log.info("User logged out.");
     }
 
+    /**
+     * Lists all active sessions for the specified user.
+     *
+     * <p>Returns paginated session data using tokens tied to the user.
+     *
+     * @param username the username of the user
+     * @param pageable pagination information
+     * @return a page of {@link SessionDTO} representing active sessions
+     * @throws UserNotFoundException if the user is not found
+     */
     public Page<SessionDTO> listSessions(String username, Pageable pageable) {
         ApplicationUser user = findUserByUsernameOrThrow(username);
         return refreshTokenService.findAllByUserId(user.getId(), pageable)
             .map(sessionMapper::toSessionDTO);
     }
 
+    /**
+     * Logs out (invalidates) a single session using the token ID.
+     *
+     * <p>Only allows the authenticated user to invalidate their own session token.
+     *
+     * @param tokenId the ID of the refresh token to invalidate
+     * @throws InvalidTokenException if the token does not exist or doesn't belong to the user
+     */
     @Transactional
     public void logoutWithToken(Long tokenId) {
         RefreshToken token = refreshTokenService.findByTokenId(tokenId)
@@ -327,6 +367,16 @@ public class AuthenticationService {
             .collect(Collectors.toSet());
     }
 
+    /**
+     * Issues new access and refresh tokens for the given user and stores them in cookies.
+     *
+     * <p>Uses {@link JwtService} to generate the access token and
+     * {@link RefreshTokenService} for refresh token generation.
+     *
+     * @param user the authenticated user
+     * @param response the HTTP response used to set cookies
+     * @param request the HTTP request used for IP and user agent info
+     */
     private void issueTokens(ApplicationUser user, HttpServletResponse response, HttpServletRequest request) {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = refreshTokenService.createRefreshToken(user, request).getToken();
@@ -374,6 +424,16 @@ public class AuthenticationService {
             });
     }
 
+    /**
+     * Retrieves a user by their username or throws a {@link UserNotFoundException} if not found.
+     *
+     * <p>The username is expected to be already normalized (lowercased and trimmed) by the caller.
+     * If the user does not exist, a warning is logged and a {@code UserNotFoundException} is thrown.
+     *
+     * @param username The normalized username  of the user to retrieve
+     * @return The {@link ApplicationUser} corresponding to the given username
+     * @throws UserNotFoundException if no user is found with the specified username
+     */
     private ApplicationUser findUserByUsernameOrThrow(String username) {
         return userRepository.findByUsername(username)
             .orElseThrow(() -> {

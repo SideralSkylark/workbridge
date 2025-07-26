@@ -36,44 +36,32 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 /**
- * REST controller responsible for user authentication and registration endpoints.
- * <p>
- * This controller provides endpoints for:
+ * REST controller responsible for user authentication and registration operations.
+ *
+ * <p>This controller provides endpoints for:</p>
  * <ul>
  *   <li>User registration</li>
- *   <li>Email verification</li>
- *   <li>Resending verification codes</li>
- *   <li>User login and JWT token generation</li>
+ *   <li>Email verification and resending verification codes</li>
+ *   <liUser login with JWT issuance</li>
+ *   <li>Access token refresh</li>
+ *   <li>Logout (current and remote sessions)</li>
+ *   <li>Listing active sessions</li>
  * </ul>
  *
- * <p>Each endpoint delegates to the {@link AuthenticationService} for business logic
- * and uses DTOs to exchange data between the frontend and backend.</p>
+ * <p>It delegates authentication logic to {@link AuthenticationService} and returns
+ * consistent responses using {@link ApiResponse} and {@link ResponseFactory}.</p>
  *
- * <p>All endpoints return appropriate HTTP status codes and standardized API responses using {@link ApiResponse} and {@link ResponseFactory}:</p>
+ * <p>Typical responses:</p>
  * <ul>
- *   <li><b>201 Created</b> for successful registration</li>
- *   <li><b>200 OK</b> for successful login and verification operations</li>
- *   <li><b>4xx</b> codes for validation, authentication, and business errors</li>
+ *   <li><b>201 Created</b> – for successful registration</li>
+ *   <li><b>200 OK</b> – for successful login, verification, logout, etc.</li>
+ *   <li><b>4xx</b> – for user, token, or credential-related errors</li>
  * </ul>
  *
- * <p>Validation is enforced using {@code @Valid} and specific exceptions such as:</p>
- * <ul>
- *   <li>{@link UserAlreadyExistsException}</li>
- *   <li>{@link UserNotFoundException}</li>
- *   <li>{@link InvalidCredentialsException}</li>
- *   <li>{@link TokenVerificationException}</li>
- *   <li>{@link TokenExpiredException}</li>
- * </ul>
+ * <p>All request DTOs are validated using {@code @Valid}. Exception handling is centralized via
+ * {@link com.workbridge.workbridge_app.auth.exception} and custom handlers.</p>
  *
- * <p>Typical usage:</p>
- * <pre>
- *   POST /api/v1/auth/register            // Register a new user
- *   POST /api/v1/auth/verify              // Verify email with code
- *   POST /api/v1/auth/resend-verification // Resend verification code
- *   POST /api/v1/auth/login               // Login and get JWT
- * </pre>
- *
- * @author Workbridge Team
+ * @author WorkBridge
  * @since 2025-06-22
  */
 @RestController
@@ -84,19 +72,11 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     /**
-     * Registers a new user account.
+     * Registers a new user account and sends a verification email.
      *
-     * <p>This endpoint performs:
-     * <ol>
-     *   <li>Validation of the request payload</li>
-     *   <li>Uniqueness check on username and email</li>
-     *   <li>User creation and persistence</li>
-     *   <li>Email verification token generation and dispatch</li>
-     * </ol>
-     *
-     * @param registerRequest DTO with username, email, password and roles
-     * @return 201 Created with user's email indicating successful registration
-     * @throws UserAlreadyExistsException if the email or username is already in use
+     * @param registerRequest DTO containing username, email, password, and roles
+     * @return 201 Created with the user's email
+     * @throws UserAlreadyExistsException if username or email already exists
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponseDTO>>
@@ -108,19 +88,14 @@ public class AuthController {
     }
 
     /**
-     * Verifies a user's email using a verification code.
+     * Verifies a user’s email address using the verification code sent to their inbox.
      *
-     * <p>This endpoint:
-     * <ul>
-     *   <li>Validates the verification code</li>
-     *   <li>Activates the user account</li>
-     *   <li>Generates a JWT token</li>
-     * </ul>
+     * <p>Also activates the user and returns a JWT token.</p>
      *
-     * @param emailVerificationDTO DTO containing email and verification code
-     * @return 200 OK with JWT token and basic user information
-     * @throws UserNotFoundException if no user is found with the given email
-     * @throws TokenVerificationException if the token is invalid
+     * @param emailVerificationDTO DTO with email and verification code
+     * @return 200 OK with authentication response (token and user info)
+     * @throws UserNotFoundException if the user doesn't exist
+     * @throws TokenVerificationException if token is invalid
      * @throws TokenExpiredException if the token has expired
      */
     @PostMapping("/verify")
@@ -135,16 +110,9 @@ public class AuthController {
     /**
      * Resends a new verification code to the specified email address.
      *
-     * <p>If the user is already verified, no new code is sent, and the response returns immediately.
-     * Otherwise:
-     * <ul>
-     *   <li>Any existing tokens are deleted</li>
-     *   <li>A new token is generated and sent</li>
-     * </ul>
-     *
-     * @param  String containing the user's email
-     * @return 200 OK with the user's email confirming dispatch
-     * @throws UserNotFoundException if the email is not registered
+     * @param email User's email address
+     * @return 200 OK confirming the dispatch
+     * @throws UserNotFoundException if no user exists for the given email
      */
     @PostMapping("/resend-verification/{email}")
     public ResponseEntity<ApiResponse<RegisterResponseDTO>>
@@ -156,18 +124,15 @@ public class AuthController {
     }
 
     /**
-     * Authenticates a user and returns a JWT token upon successful login.
+     * Logs in a user and returns a JWT access token and refresh token via HTTP-only cookie.
      *
-     * <p>This endpoint:
-     * <ol>
-     *   <li>Validates the provided email and password</li>
-     *   <li>Checks if the user has verified their email</li>
-     *   <li>Returns a signed JWT token along with user metadata</li>
-     * </ol>
+     * <p>Only verified users are allowed to log in.</p>
      *
-     * @param loginRequest DTO with user's email and password
-     * @return 200 OK with authentication response (token and user info)
-     * @throws InvalidCredentialsException if email or password is incorrect
+     * @param loginRequest DTO with email and password
+     * @param request HTTP request (used for device/IP tracking)
+     * @param response HTTP response (used to attach refresh token cookie)
+     * @return 200 OK with access token and user info
+     * @throws InvalidCredentialsException if credentials are incorrect
      * @throws UserNotFoundException if the user is not verified
      */
     @PostMapping("/login")
@@ -182,18 +147,44 @@ public class AuthController {
         );
     }
 
+    /**
+     * Refreshes the access token using the refresh token stored in the user's cookie.
+     *
+     * <p>The refreshed token is set in the response header.</p>
+     *
+     * @param request HTTP request (used to extract refresh token)
+     * @param response HTTP response (used to set new access token)
+     * @return 200 OK with success message
+     */
     @PostMapping("/refresh-token")
     public ResponseEntity<MessageResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.refreshAccessToken(request, response);
         return ResponseFactory.okMessage("Token refreshed successfully");
     }
 
+    /**
+     * Logs out the currently authenticated user and invalidates their current session.
+     *
+     * <p>This removes the refresh token and clears session-related data.</p>
+     *
+     * @param request HTTP request containing session info
+     * @param response HTTP response to clear cookies
+     * @return 200 OK
+     */
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.logout(request, response);
         return ResponseFactory.ok();
     }
 
+    /**
+     * Retrieves all active sessions for the currently logged-in user.
+     *
+     * <p>Useful for multi-device session management.</p>
+     *
+     * @param pageable Pagination and sorting parameters (sorted by token ID descending by default)
+     * @return 200 OK with a list of session DTOs
+     */
     @GetMapping("/sessions")
     public ResponseEntity<ApiResponse<PagedModel<SessionDTO>>> listSessions(
         @PageableDefault(
@@ -208,6 +199,14 @@ public class AuthController {
         );
     }
 
+    /**
+     * Logs out a specific session (remote logout) by its token ID.
+     *
+     * <p>This allows users to terminate other device sessions remotely.</p>
+     *
+     * @param tokenId ID of the refresh token/session to revoke
+     * @return 200 OK
+     */
     @PostMapping("/logout/{tokenId}")
     public ResponseEntity<ApiResponse<Void>> remoteLogout(@PathVariable Long tokenId) {
         authenticationService.logoutWithToken(tokenId);

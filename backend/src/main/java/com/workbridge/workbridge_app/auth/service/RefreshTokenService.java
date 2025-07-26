@@ -18,6 +18,30 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for managing refresh tokens, including:
+ * <ul>
+ *   <li>Creating new refresh tokens during login or token rotation</li>
+ *   <li>Validating token existence, expiration, and revocation state</li>
+ *   <li>Rotating tokens securely</li>
+ *   <li>Revoking or deleting tokens</li>
+ *   <li>Querying token-related data (by token, ID, or user)</li>
+ * </ul>
+ *
+ * <p>Refresh tokens are persisted in the database and associated with:
+ * <ul>
+ *   <li>User ID</li>
+ *   <li>Client IP address</li>
+ *   <li>User agent (browser/device info)</li>
+ *   <li>Expiration date</li>
+ *   <li>Revocation status</li>
+ * </ul>
+ *
+ * <p>Default expiration is configurable via the property {@code auth.refresh-token-validity-days} (default = 7).</p>
+ *
+ * @author WorkBridge
+ * @since 2025-06-22
+ */
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
@@ -31,7 +55,16 @@ public class RefreshTokenService {
     @Value("${auth.refresh-token-validity-days:7}")
     private int refreshTokenValidityDays;
 
-
+    /**
+     * Creates a new refresh token associated with a user and request metadata.
+     *
+     * <p>The token includes client IP and user agent, and is set to expire based on
+     * the configured validity period.</p>
+     *
+     * @param user    The authenticated user
+     * @param request The HTTP request (to extract IP and user-agent)
+     * @return Persisted {@link RefreshToken} entity
+     */
     @Transactional
     public RefreshToken createRefreshToken(ApplicationUser user, HttpServletRequest request) {
         RefreshToken token = RefreshToken.builder()
@@ -47,7 +80,10 @@ public class RefreshTokenService {
     }
 
     /**
-     * Checks if the refresh token is valid (exists, not expired, not revoked).
+     * Validates whether the given refresh token is active (exists, not revoked, and not expired).
+     *
+     * @param token The token string
+     * @return {@code true} if the token is valid and usable; {@code false} otherwise
      */
     public boolean isTokenValid(String token) {
         return refreshTokenRepository.findByToken(token)
@@ -56,8 +92,11 @@ public class RefreshTokenService {
     }
 
     /**
-     * Retrieves the user from a valid refresh token.
-     * Throws exception if token is invalid.
+     * Retrieves the user associated with a valid refresh token.
+     *
+     * @param token The token string
+     * @return The {@link ApplicationUser} who owns the token
+     * @throws InvalidTokenException if the token is not found or is revoked/expired
      */
     public ApplicationUser getUserFromToken(String token) {
         RefreshToken refreshToken = getValidTokenOrThrow(token);
@@ -65,7 +104,14 @@ public class RefreshTokenService {
     }
 
     /**
-     * Rotates a refresh token: revoke the old one and create a new one.
+     * Rotates a refresh token by revoking the existing one and issuing a new one.
+     *
+     * <p>This is typically done after successful access token renewal.</p>
+     *
+     * @param oldToken The current token string to be revoked
+     * @param request  The HTTP request for capturing new IP/user-agent
+     * @return New refresh token string
+     * @throws InvalidTokenException if the old token is missing or invalid
      */
     @Transactional
     public String rotateRefreshToken(String oldToken, HttpServletRequest request) {
@@ -80,27 +126,72 @@ public class RefreshTokenService {
         return createRefreshToken(existing.getUser(), request).getToken();
     }
 
+    /**
+     * Revokes all refresh tokens associated with a user by deleting them.
+     *
+     * @param userId ID of the user
+     */
     @Transactional
     public void revokeAllTokensForUser(Long userId) {
         refreshTokenRepository.deleteByUserId(userId);
     }
 
+    /**
+     * Finds a refresh token by its token string.
+     *
+     * @param token The token string
+     * @return Optional containing the token if found
+     */
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
 
+    /**
+     * Finds a refresh token by its database ID.
+     *
+     * @param tokenId The token's ID
+     * @return Optional containing the token if found
+     */
     public Optional<RefreshToken> findByTokenId(Long tokenId) {
         return refreshTokenRepository.findById(tokenId);
     }
 
+    /**
+     * Retrieves a paginated list of refresh tokens associated with a user.
+     *
+     * @param userId   User's ID
+     * @param pageable Pagination and sorting parameters
+     * @return Page of {@link RefreshToken}
+     */
     public Page<RefreshToken> findAllByUserId(long userId, Pageable pageable) {
         return refreshTokenRepository.findAllByUserId(pageable, userId);
     }
 
+    /**
+     * Deletes a refresh token by its token string.
+     *
+     * @param token Token string to delete
+     */
     public void deleteByToken(String token) {
         refreshTokenRepository.deleteByToken(token);
     }
 
+    /**
+     * Method used to set life expectancy of a token, this method is used to setup unit tests
+     *
+     * @param validityInDays expects the number of days a token should remain active
+     */
+    public void setTokenValidity(int validityInDays) {
+        this.refreshTokenValidityDays = validityInDays;
+    }
+
+    /**
+     * Retrieves a valid token or throws an exception if it's missing, expired, or revoked.
+     *
+     * @param token The token string
+     * @return Valid {@link RefreshToken}
+     * @throws InvalidTokenException if invalid
+     */
     private RefreshToken getValidTokenOrThrow(String token) {
         return refreshTokenRepository.findByToken(token)
             .filter(this::isTokenUsable)
@@ -109,10 +200,22 @@ public class RefreshTokenService {
             ));
     }
 
+    /**
+     * Checks if a token is usable (not revoked and not expired).
+     *
+     * @param token RefreshToken to validate
+     * @return {@code true} if usable
+     */
     private boolean isTokenUsable(RefreshToken token) {
         return !token.isRevoked() && token.getExpiresAt().isAfter(LocalDateTime.now());
     }
 
+    /**
+     * Checks whether a token has expired.
+     *
+     * @param token Token string
+     * @return {@code true} if expired; {@code false} otherwise
+     */
     private boolean isTokenExpired(String token) {
         return refreshTokenRepository.findByToken(token)
             .map(t -> t.getExpiresAt().isBefore(LocalDateTime.now()))

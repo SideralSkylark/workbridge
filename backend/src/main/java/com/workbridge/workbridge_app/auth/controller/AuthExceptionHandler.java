@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.workbridge.workbridge_app.auth.exception.InvalidCredentialsException;
+import com.workbridge.workbridge_app.auth.exception.InvalidTokenException;
 import com.workbridge.workbridge_app.auth.exception.TokenExpiredException;
 import com.workbridge.workbridge_app.auth.exception.TokenVerificationException;
 import com.workbridge.workbridge_app.auth.exception.UserAlreadyExistsException;
@@ -100,7 +101,7 @@ public class AuthExceptionHandler {
      * @param request the HTTP request for extracting the URI
      * @return 400 BAD REQUEST with a descriptive error message
      */
-    @ExceptionHandler({TokenVerificationException.class, TokenExpiredException.class})
+    @ExceptionHandler({TokenVerificationException.class, TokenExpiredException.class, InvalidTokenException.class})
     public ResponseEntity<ErrorResponse> tokenError(
         RuntimeException ex,
         HttpServletRequest request) {
