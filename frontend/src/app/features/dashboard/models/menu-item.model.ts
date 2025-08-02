@@ -6,5 +6,5 @@ export interface MenuItem {
     children?: MenuItem[];
     isOpen?: boolean;
     action?: () => void;
+    expanded?: boolean;
 }
-  

@@ -1,37 +1,67 @@
-<button class="btn d-md-none m-3" (click)="toggleSidebar()">
-  <i class="bi bi-lightning-charge-fill fs-3"></i> WorkBridge
+<!-- Botão toggle no mobile -->
+<button
+  class="mobile-logo-toggle"
+  *ngIf="!isSidebarOpen"
+  (click)="toggleSidebar()"
+  aria-label="Abrir menu lateral"
+  [attr.aria-expanded]="isSidebarOpen">
+  <i class="bi bi-lightning-charge-fill"></i>
 </button>
 
-<aside class="sidebar" [ngClass]="{ 'open': isSidebarOpen }">
-  <div class="sidebar-brand mb-4">
-    <i class="bi bi-lightning-charge-fill me-2"></i> WorkBridge
+<!-- Sidebar -->
+<aside class="sidebar" [ngClass]="{ 'open': isSidebarOpen }" role="navigation" aria-label="Menu lateral">
+  <div class="sidebar-brand" (click)="toggleSidebar()" tabindex="0">
+    <i class="bi bi-lightning-charge-fill me-2"></i>
+    WorkBridge
   </div>
-  <ul>
-    <li *ngFor="let item of visibleMenuItems" [ngClass]="{ 'has-children': item.children }">
-      <a 
+
+  <ul class="sidebar-menu">
+    <li
+      *ngFor="let item of visibleMenuItems"
+      [ngClass]="{ 'has-children': item.children, 'open': item.expanded }">
+
+      <!-- Link normal -->
+      <a
         *ngIf="!item.action"
         [routerLink]="item.route"
         routerLinkActive="active"
-        (click)="toggleChildMenu(item)">
-        <i [class]="item.icon"></i> {{ item.label }}
+        (click)="toggleChildMenu(item)"
+        [attr.aria-haspopup]="item.children ? 'true' : null"
+        [attr.aria-expanded]="item.expanded ?? null">
+        <i [class]="item.icon"></i>
+        {{ item.label }}
       </a>
-      <a 
+
+      <!-- Link com ação -->
+      <a
         *ngIf="item.action"
-        href="#" 
+        href="#"
         (click)="item.action(); $event.preventDefault();">
-        <i [class]="item.icon"></i> {{ item.label }}
+        <i [class]="item.icon"></i>
+        {{ item.label }}
       </a>
+
+      <!-- Submenu -->
+      <ul class="child-menu" *ngIf="item.children && item.expanded">
+        <li *ngFor="let child of item.children">
+          <a [routerLink]="child.route" routerLinkActive="active">
+            {{ child.label }}
+          </a>
+        </li>
+      </ul>
     </li>
   </ul>
-  
 </aside>
 
-<main class="dashboard-content">
-  <router-outlet></router-outlet> 
-</main>
-
-<div 
-  class="sidebar-backdrop d-md-none" 
-  *ngIf="isSidebarOpen" 
-  (click)="toggleSidebar()">
+<!-- Backdrop no mobile -->
+<div
+  class="sidebar-backdrop d-md-none"
+  *ngIf="isSidebarOpen"
+  (click)="toggleSidebar()"
+  aria-hidden="true">
 </div>
+
+<!-- Conteúdo principal -->
+<main class="dashboard-content">
+  <router-outlet></router-outlet>
+</main>

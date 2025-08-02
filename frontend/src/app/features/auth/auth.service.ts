@@ -21,58 +21,69 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   register(request: RegisterRequestDTO): Observable<RegisterResponseDTO> {
-    return this.http.post<ApiResponse<RegisterResponseDTO>>(`${this.apiUrl}/v1/auth/register`, request).pipe(
+    return this.http.post<ApiResponse<RegisterResponseDTO>>(
+      `${this.apiUrl}/v1/auth/register`, request
+    ).pipe(
       map(response => response.data)
     );
   }
 
   verify(request: VerifyRequest): Observable<AuthResponse> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/v1/auth/verify`, request).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(
+      `${this.apiUrl}/v1/auth/verify`, request
+    ).pipe(
+      tap(response => this.storeUserInfo(response.data)),
       map(response => response.data)
     );
   }
 
   resendVerification(email: string): Observable<RegisterResponseDTO> {
-    return this.http.post<ApiResponse<RegisterResponseDTO>>(`${this.apiUrl}/v1/auth/resend-verification/${email}`, null).pipe(
+    return this.http.post<ApiResponse<RegisterResponseDTO>>(
+      `${this.apiUrl}/v1/auth/resend-verification/${email}`, null
+    ).pipe(
       map(response => response.data)
     );
-  }
-
-  verifyCode(request: VerifyRequest) {
-    return this.verify(request);
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<ApiResponse<AuthResponse>>(
-      `${this.apiUrl}/v1/auth/login`,
-      request,
-      { withCredentials: true }
+      `${this.apiUrl}/v1/auth/login`, request, { withCredentials: true }
       ).pipe(
-      tap(response => {
-        const user = response.data;
-        localStorage.setItem("user", JSON.stringify({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          roles: user.roles
-        }));
-      }),
+      tap(response => this.storeUserInfo(response.data)),
       map(response => response.data)
     );
   }
 
-  logout() {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('user')
-    this.router.navigate(['/login']);
+  logout(): void {
+    this.http.post(`${this.apiUrl}/v1/auth/logout`, {}, { withCredentials: true })
+      .subscribe({
+        next: () => {
+          this.clearUserInfo();
+          this.router.navigate(['/login']);
+        },
+        error: err => {
+          console.error('Logout failed', err);
+          this.clearUserInfo();
+          this.router.navigate(['/login']);
+        }
+      })
+  }
+
+  private storeUserInfo(user: AuthResponse): void {
+    localStorage.setItem("user", JSON.stringify({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      roles: user.roles
+    }));
+  }
+
+  private clearUserInfo(): void {
+    localStorage.removeItem('user');
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('jwt');
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('jwt');
+    return !!localStorage.getItem('user');
   }
 
   getUserRoles(): string[] {

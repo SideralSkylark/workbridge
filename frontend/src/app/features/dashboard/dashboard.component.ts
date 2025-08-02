@@ -7,29 +7,53 @@ import { ChatService } from './chat/services/chat.service';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   imports: [RouterLink, RouterOutlet, CommonModule],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
-  standalone: true,
+  styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
   userRoles: string[] = [];
   isSidebarOpen = false;
 
   menuItems: MenuItem[] = [
-    { label: 'Painel Admin', icon: 'bi bi-shield-lock', route: '/dashboard/admin', roles: ['ADMIN'] },
-    { label: 'Requisicoes de Servicos', icon: 'bi bi-box', route: '/dashboard/requests', roles: ['SERVICE_SEEKER'] },
-    { label: 'Gerir Servicos', icon: 'bi bi-gear', route: '/dashboard/manage', roles: ['SERVICE_PROVIDER'], },
-    { label: 'Chat', icon: 'bi bi-chat-dots', route: '/dashboard/chat', roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER'] },
+    {
+      label: 'Painel Admin',
+      icon: 'bi bi-shield-lock',
+      route: '/dashboard/admin',
+      roles: ['ADMIN']
+    },
+    {
+      label: 'Requisições de Serviços',
+      icon: 'bi bi-box',
+      route: '/dashboard/requests',
+      roles: ['SERVICE_SEEKER']
+    },
+    {
+      label: 'Gerir Serviços',
+      icon: 'bi bi-gear',
+      route: '/dashboard/manage',
+      roles: ['SERVICE_PROVIDER']
+    },
+    {
+      label: 'Chat',
+      icon: 'bi bi-chat-dots',
+      route: '/dashboard/chat',
+      roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER']
+    },
     {
       label: 'Logout',
       icon: 'bi bi-box-arrow-right',
       route: '/',
       roles: ['ADMIN', 'SERVICE_SEEKER', 'SERVICE_PROVIDER'],
-      action: () => this.logout() },
+      action: () => this.logout()
+    }
   ];
 
-  constructor(private authService: AuthService, private chatService: ChatService) {}
+  constructor(
+    private authService: AuthService,
+    private chatService: ChatService
+  ) {}
 
   ngOnInit(): void {
     this.userRoles = this.authService.getUserRoles();
@@ -48,7 +72,7 @@ export class DashboardComponent implements OnInit {
 
   toggleChildMenu(item: MenuItem): void {
     if (item.children) {
-      item.isOpen = !item.isOpen;
+      item.expanded = !item.expanded;
     }
   }
 

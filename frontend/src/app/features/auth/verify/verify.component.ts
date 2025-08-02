@@ -67,7 +67,7 @@ export class VerifyComponent implements OnDestroy {
       code: this.verifyForm.value.code
     }
 
-    this.authService.verifyCode(request).subscribe({
+    this.authService.verify(request).subscribe({
       next: () => {
         localStorage.removeItem('verification_email');
         localStorage.removeItem('resend_cooldown_expiry'); // Clear cooldown on successful verification

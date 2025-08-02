@@ -1,9 +1,10 @@
+/* Enhanced Dashboard Component with Consistent Styling */
 .sidebar {
-  background: var(--white);
-  padding: 1.5rem 1rem;
+  background: var(--bg-primary);
+  padding: var(--space-lg) var(--space-md);
   min-height: 100vh;
-  width: 250px;
-  box-shadow: var(--shadow-md);
+  width: 280px;
+  box-shadow: var(--shadow-lg);
   position: fixed;
   top: 0;
   left: 0;
@@ -13,17 +14,22 @@
 
   .sidebar-brand {
     font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--primary-color);
+    font-weight: var(--font-weight-semibold);
+    color: var(--primary-500);
     display: flex;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
-    
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    transition: color var(--transition-fast);
+
     i {
-      margin-right: 0.75rem;
+      margin-right: var(--space-sm);
       font-size: 1.5rem;
+      color: inherit;
+    }
+
+    &:hover {
+      color: var(--primary-600);
     }
   }
 
@@ -33,81 +39,81 @@
     margin: 0;
 
     li {
-      margin-bottom: 0.5rem;
+      margin-bottom: var(--space-xs);
       position: relative;
 
       a {
         display: flex;
         align-items: center;
-        padding: 0.75rem 1rem;
+        padding: var(--space-sm) var(--space-md);
         text-decoration: none;
-        border-radius: var(--border-radius-md);
-        color: var(--text-dark);
-        font-weight: 500;
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-weight: var(--font-weight-medium);
         transition: all var(--transition-fast);
 
         i {
-          margin-right: 0.75rem;
+          margin-right: var(--space-sm);
           font-size: 1.2rem;
-          color: var(--primary-color);
-          transition: color var(--transition-fast);
+          color: var(--text-muted);
+          transition: inherit;
         }
 
         &:hover {
-          background-color: var(--primary-bg);
-          color: var(--primary-color);
+          background-color: var(--bg-tertiary);
+          color: var(--text-primary);
 
           i {
-            color: var(--primary-color);
+            color: var(--primary-500);
           }
         }
 
         &.active {
-          background-color: var(--primary-color);
-          color: var(--white);
+          background-color: oklch(from var(--primary-500) l c h / 0.15);
+          color: var(--primary-600);
+          font-weight: var(--font-weight-semibold);
 
           i {
-            color: var(--white);
+            color: var(--primary-500);
           }
         }
       }
 
-      // Styles for child items (indented under parent)
       &.has-children {
         position: relative;
 
-        // Style for child items
         ul.child-menu {
           display: none;
-          padding-left: 1.5rem;  // Indent child items
-          margin-top: 0.5rem;
+          padding-left: var(--space-lg);
+          margin-top: var(--space-xs);
           list-style: none;
         }
 
-        // Show child items when the parent is clicked
         &.open ul.child-menu {
           display: block;
         }
 
-        // Add a subtle background change to child items
         ul.child-menu li {
-          background-color: var(--gray-100);  /* Lighter background for children */
+          background-color: transparent;
         }
 
         ul.child-menu li a {
-          padding: 0.5rem 1rem;
-        }
+          padding: var(--space-xs) var(--space-md);
+          font-size: 0.9rem;
+          color: var(--text-muted);
 
-        // Style for hover on child items
-        ul.child-menu li a:hover {
-          background-color: var(--primary-bg);
-          color: var(--primary-color);
+          &:hover {
+            color: var(--text-primary);
+          }
+
+          &.active {
+            color: var(--primary-600);
+          }
         }
       }
     }
   }
 
-  // Hide sidebar on small screens
   @media (max-width: 768px) {
     transform: translateX(-100%);
     position: fixed;
@@ -119,15 +125,35 @@
 }
 
 .dashboard-content {
-  margin-left: 250px;
-  padding: 2rem;
+  margin-left: 280px;
+  padding: var(--space-xl);
   transition: margin-left var(--transition-normal);
   min-height: 100vh;
-  background-color: var(--gray-100);
+  background-color: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle gradient background like login */
+  background-image:
+    radial-gradient(
+      circle at 70% 30%,
+      oklch(from var(--primary-500) l c h / 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 30% 70%,
+      oklch(from var(--primary-500) l c h / 0.05) 0%,
+      transparent 50%
+    );
+
+  @media (max-width: 992px) {
+    padding: var(--space-lg);
+  }
 
   @media (max-width: 768px) {
     margin-left: 0;
-    padding: 1.5rem 1rem;
+    padding: var(--space-md);
+    background-image: none;
   }
 }
 
@@ -142,30 +168,232 @@
   backdrop-filter: blur(2px);
 }
 
-// Mobile toggle button
-.sidebar-toggle {
+/* Mobile toggle button */
+.btn.d-md-none {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
+  top: var(--space-md);
+  left: var(--space-md);
   z-index: 1001;
-  background-color: var(--primary-color);
+  background-color: var(--primary-500);
   color: var(--white);
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-fast);
-  
-  &:hover {
-    background-color: var(--primary-dark);
-    transform: scale(1.05);
+
+  i {
+    margin-right: var(--space-xs);
+    color: inherit;
   }
-  
+
+  &:hover {
+    background-color: var(--primary-600);
+    transform: translateY(-1px);
+  }
+
   @media (min-width: 769px) {
     display: none;
+  }
+}
+
+/* Card styling for dashboard content */
+.card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  margin-bottom: var(--space-lg);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-header {
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+  }
+
+  .card-body {
+    padding: var(--space-lg);
+  }
+}
+
+/* Enhanced Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+  position: fixed;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 1001;
+  background-color: var(--primary-500);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--primary-600);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  .menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 20px;
+    height: 16px;
+
+    .bar {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background-color: var(--white);
+      border-radius: 1px;
+      transition: all var(--transition-fast);
+    }
+  }
+
+  .brand-short {
+    display: none;
+  }
+
+  &[aria-expanded="true"] {
+    .menu-icon {
+      .bar:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      .bar:nth-child(2) {
+        opacity: 0;
+      }
+      .bar:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    width: auto;
+    padding: var(--space-xs) var(--space-md);
+
+    .brand-short {
+      display: block;
+      margin-left: var(--space-sm);
+      font-weight: var(--font-weight-semibold);
+
+      i {
+        font-size: 1.1rem;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+/* Adjust backdrop for better mobile experience */
+.sidebar-backdrop {
+  @media (max-width: 768px) {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    transition: opacity var(--transition-fast), visibility var(--transition-fast);
+    opacity: 0;
+    visibility: hidden;
+
+    *[aria-expanded="true"] + & {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+/* Mobile Logo Toggle Button */
+.mobile-logo-toggle {
+  position: fixed;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 1001;
+  background-color: var(--primary-500);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+
+  i {
+    font-size: 1.5rem;
+    transition: transform var(--transition-fast);
+  }
+
+  &:hover {
+    background-color: var(--primary-600);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  /* When sidebar is open */
+  .sidebar.open ~ & {
+    i {
+      transform: rotate(90deg);
+    }
+  }
+
+  @media (min-width: 769px) {
+    display: none;
+  }
+}
+
+/* Ensure sidebar brand is hidden on mobile when closed */
+.sidebar:not(.open) .sidebar-brand {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+/* Adjust z-indexes to ensure proper stacking */
+.sidebar {
+  z-index: 1000;
+}
+
+.mobile-logo-toggle {
+  z-index: 1001;
+}
+
+.sidebar-backdrop {
+  z-index: 999;
+}
+
+/* Slightly increase backdrop blur on mobile */
+.sidebar-backdrop {
+  @media (max-width: 768px) {
+    backdrop-filter: blur(5px);
   }
 }

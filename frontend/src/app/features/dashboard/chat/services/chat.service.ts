@@ -17,7 +17,7 @@ export class ChatService {
   constructor(private authService: AuthService, private http: HttpClient) {}
 
   connect(): void {
-    const token = this.authService.getToken();
+    const token = ''; /*this.authService.getToken();*/
     if (!token) {
       console.error('Token JWT não encontrado.');
       return;
@@ -52,7 +52,7 @@ export class ChatService {
   }
 
   sendMessage(payload: { recipientUsername: string; content: string; timestamp: string }): void {
-    const token = this.authService.getToken();
+    const token = '';/*this.authService.getToken();*/
     const currentUser = this.decodeJwtUsername(token!);
 
     if (!this.stompClient || !this.connected) {
