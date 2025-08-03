@@ -13,6 +13,10 @@ import com.workbridge.workbridge_app.auth.entity.RefreshToken;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
+
+    @Query("SELECT rt FROM RefreshToken rt JOIN FETCH rt.user WHERE rt.token = :token")
+    Optional<RefreshToken> findByTokenWithUser(@Param("token") String token);
+    
     Page<RefreshToken> findAllByUserId(Pageable pageable, Long userId);
 
     @Modifying

@@ -3,13 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { tap, map, observeOn } from 'rxjs/operators';
 import { RegisterRequestDTO } from './register/models/register-requestDTO.model';
 import { RegisterResponseDTO } from './register/models/register-responseDTO.model';
 import { ApiResponse } from '../../shared/models/api-response.model';
 import { LoginRequest } from './login/model/login-request.model';
 import { AuthResponse } from './model/auth-response.model';
-import { response } from 'express';
 import { VerifyRequest } from './verify/model/verify-request.model';
 
 @Injectable({
@@ -51,6 +50,14 @@ export class AuthService {
       ).pipe(
       tap(response => this.storeUserInfo(response.data)),
       map(response => response.data)
+    );
+  }
+
+  refreshToken(): Observable<boolean> {
+    return this.http.post(`${this.apiUrl}/v1/auth/refresh-token`, {}, {
+      withCredentials: true, observe: 'response'
+    }).pipe(
+      map(() => true),
     );
   }
 

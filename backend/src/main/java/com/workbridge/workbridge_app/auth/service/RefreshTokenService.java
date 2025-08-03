@@ -193,7 +193,7 @@ public class RefreshTokenService {
      * @throws InvalidTokenException if invalid
      */
     private RefreshToken getValidTokenOrThrow(String token) {
-        return refreshTokenRepository.findByToken(token)
+        return refreshTokenRepository.findByTokenWithUser(token)
             .filter(this::isTokenUsable)
             .orElseThrow(() -> new InvalidTokenException(
                 isTokenExpired(token) ? ERR_TOKEN_EXPIRED_OR_REVOKED : ERR_TOKEN_NOT_FOUND

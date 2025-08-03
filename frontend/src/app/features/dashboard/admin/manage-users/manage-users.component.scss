@@ -1,328 +1,152 @@
-@import '../../provider/my-services/my-services.component.scss';
-
 :host {
   display: block;
-  padding: 1rem;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  
+}
 
-  .section-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 1.5rem;
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--space-lg);
+  color: var(--text-primary);
+}
+
+.user-card {
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: none;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
   }
 
-  .user-card {
-    @extend .service-card;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
-
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.08);
-    }
+  .card-body {
+    padding: var(--space-md);
 
     .card-title {
-      color: #5a4fcf;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
     }
 
     .card-text {
-      color: #495057;
-      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xs);
     }
 
     .user-roles {
-      margin-bottom: 0.5rem;
+      margin-top: var(--space-sm);
+    }
 
-      .role-badge {
-        font-size: 0.65rem; // smaller font
-        font-weight: 500;
-        padding: 0.25em 0.5em;
-        border-radius: 0.4rem;
-        text-transform: capitalize; // makes "service provider" look nicer
-        letter-spacing: 0.02em;
-        color: #fff;
-        transition: all 0.2s ease;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-      }
+    .role-badge {
+      font-size: 0.75rem;
+      padding: 0.35em 0.6em;
+      border-radius: var(--radius-sm);
+      text-transform: capitalize;
     }
 
     .card-subtitle {
-      margin-top: 0.5rem;
-      font-size: 0.95rem;
-      color: #6c757d;
-
-      strong {
-        color: #212529;
-      }
-    }
-
-    .btn-outline-warning {
-      color: #ffc107;
-      border-color: #ffc107;
-
-      &:hover {
-        background-color: #ffc107;
-        color: #212529;
-      }
-    }
-
-    .btn-outline-success {
-      color: #198754;
-      border-color: #198754;
-
-      &:hover {
-        background-color: #198754;
-        color: #fff;
-      }
+      margin-top: var(--space-sm);
+      font-size: 0.9rem;
     }
   }
 
-  .empty-state {
-    @extend .empty-state;
+  .card-footer {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    text-align: right;
 
-    i {
-      font-size: 3.5rem;
-      color: #adb5bd;
-    }
-
-    .lead {
-      font-size: 1.2rem;
-      margin-top: 1rem;
+    .btn {
+      font-size: 0.875rem;
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.8rem;
     }
   }
 
-  .loading {
-    @extend .loading;
-  }
-}
-
-.manage-users-container {
-  padding: 1.5rem;
-
-  .section-title {
-    margin-bottom: 2rem;
-  }
-
-  .user-card {
-    margin-bottom: 1.5rem;
-    background-color: var(--white);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
+  &.loading {
+    .card-body,
+    .card-footer {
+      padding: var(--space-md);
     }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.25rem;
-      background-color: var(--white);
-      border-bottom: 1px solid var(--border-color);
+    .skeleton {
+      background-color: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      position: relative;
+      overflow: hidden;
 
-      .user-title {
-        font-weight: 600;
-        color: var(--text-dark);
-        font-size: 1.2rem;
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        animation: shimmer 1.5s infinite;
+        background-size: 200% 100%;
       }
-    }
 
-    .card-body {
-      padding: 1.5rem;
+      &.skeleton-title {
+        width: 60%;
+        height: 1.4rem;
+      }
 
-      .user-details {
-        margin-bottom: 1.5rem;
+      &.skeleton-text {
+        height: 0.8rem;
+        width: 100%;
+        margin-bottom: 0.5rem;
 
-        .detail-item {
-          display: flex;
-          align-items: center;
-          margin-bottom: 0.75rem;
-
-          i {
-            color: var(--primary-color);
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
-            width: 20px;
-            text-align: center;
-          }
-
-          span {
-            color: var(--text-dark);
-            font-size: 1rem;
-          }
+        &.short {
+          width: 40%;
         }
       }
 
-      .user-actions {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-
-          i {
-            margin: 0;
-          }
-        }
-      }
-    }
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    background-color: var(--white);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-
-    i {
-      font-size: 3rem;
-      color: var(--gray-400);
-      margin-bottom: 1rem;
-    }
-
-    p {
-      color: var(--text-light);
-      font-size: 1.1rem;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    .empty-state-action {
-      margin-top: 1.5rem;
-    }
-  }
-
-  .loading-state {
-    .skeleton-card {
-      margin-bottom: 1.5rem;
-      padding: 1.25rem;
-      background-color: var(--white);
-      border-radius: var(--border-radius-lg);
-      box-shadow: var(--shadow-sm);
-
-      .skeleton-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-
-        .skeleton-title {
-          width: 60%;
-          height: 1.5rem;
-          border-radius: var(--border-radius-md);
-        }
-
-        .skeleton-badge {
-          width: 20%;
-          height: 1.5rem;
-          border-radius: var(--border-radius-md);
-        }
-      }
-
-      .skeleton-details {
-        .skeleton-text {
-          height: 1rem;
-          margin-bottom: 0.75rem;
-          border-radius: var(--border-radius-md);
-        }
-
-        .skeleton-actions {
-          display: flex;
-          gap: 0.75rem;
-          margin-top: 1.5rem;
-
-          .skeleton-btn {
-            width: 100px;
-            height: 2.5rem;
-            border-radius: var(--border-radius-md);
-          }
-        }
+      &.skeleton-btn {
+        width: 40%;
+        height: 1.8rem;
       }
     }
   }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .manage-users-container {
-    padding: 1rem;
-
-    .user-card {
-      .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-      }
-
-      .user-actions {
-        flex-direction: column;
-
-        .btn {
-          width: 100%;
-        }
-      }
-    }
-  }
-}
-
-/* Badge Styling */
-.badge.bg-success {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border-radius: var(--border-radius-md);
-  background-color: var(--success-color) !important;
-  color: white;
-  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
-  transition: all var(--transition-fast);
-  animation: badgeAppear 0.5s ease-out;
+.empty-state {
+  padding: var(--space-xl) 0;
+  color: var(--text-muted);
 
   i {
-    font-size: 1rem;
-    margin: 0;
-    animation: checkmarkPulse 1.5s infinite;
+    font-size: 3rem;
+    color: var(--text-faded);
+    margin-bottom: var(--space-sm);
   }
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  .lead {
+    font-size: 1.1rem;
   }
 }
 
-@keyframes badgeAppear {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
+@media (prefers-color-scheme: light) {
+  .skeleton::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(150, 150, 150, 0.2),
+      transparent
+    );
   }
 }
 
-@keyframes checkmarkPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
+@media (prefers-color-scheme: dark) {
+  .skeleton::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(80, 80, 80, 0.2),
+      transparent
+    );
   }
 }

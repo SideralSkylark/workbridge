@@ -1,6 +1,6 @@
-<h5 class="section-title">Gerir Usuarios</h5>
+<h2 class="section-title">Gerir Usuários</h2>
 
-<!-- Loading Skeletons -->
+<!-- Skeleton -->
 <div *ngIf="isLoading" class="row g-4">
   <div class="col-md-6 col-lg-4" *ngFor="let _ of [1, 2, 3]">
     <div class="card user-card h-100 loading">
@@ -19,7 +19,7 @@
 <!-- Empty State -->
 <div *ngIf="!isLoading && users.length === 0" class="empty-state text-center">
   <i class="bi bi-people"></i>
-  <p class="lead">Nenhum usuario registado.</p>
+  <p class="lead">Nenhum usuário registado.</p>
 </div>
 
 <!-- User Cards -->
@@ -29,6 +29,7 @@
       <div class="card-body">
         <h5 class="card-title">{{ user.username }}</h5>
         <p class="card-text">{{ user.email }}</p>
+
         <div class="user-roles mb-2">
           <span
             *ngFor="let role of user.roles"
@@ -37,23 +38,31 @@
               'bg-primary': role === 'ROLE_ADMIN',
               'bg-success': role === 'ROLE_USER',
               'bg-secondary': role !== 'ROLE_ADMIN' && role !== 'ROLE_USER'
-            }">
+            }"
+          >
             {{ getFriendlyRole(role) }}
           </span>
         </div>
-        <p class="card-subtitle">
+
+        <p class="card-subtitle d-flex align-items-center gap-1">
           Status:
-          <strong [ngClass]="{ 'text-success': user.enabled, 'text-danger': !user.enabled }">
-            {{ user.enabled ? 'Active' : 'Disabled' }}
-          </strong>
+          <span
+            class="badge"
+            [ngClass]="user.enabled ? 'bg-success' : 'bg-danger'"
+          >
+            {{ user.enabled ? 'Ativo' : 'Desativado' }}
+          </span>
         </p>
       </div>
-      <div class="card-footer">
+
+      <div class="card-footer d-flex justify-end">
         <button
-          class="btn btn-sm"
+          class="btn btn-sm d-flex align-items-center gap-1"
           [ngClass]="user.enabled ? 'btn-outline-warning' : 'btn-outline-success'"
-          (click)="toggleUserStatus(user)">
-          {{ user.enabled ? 'Disable' : 'Activate' }}
+          (click)="toggleUserStatus(user)"
+        >
+          <i class="bi" [ngClass]="user.enabled ? 'bi-person-dash' : 'bi-person-check'"></i>
+          {{ user.enabled ? 'Desativar' : 'Ativar' }}
         </button>
       </div>
     </div>
