@@ -150,9 +150,11 @@ public class UserService {
      * @param pageable the pagination and sorting information
      * @return a page of ProviderRequestDTO objects
      */
+    @Transactional()
     public Page<ProviderRequestDTO> getAllProviderRequestNotApproved(Pageable pageable) {
         log.debug("Fetching all unapproved provider requests with pagination: {}", pageable);
-        Page<ProviderRequestDTO> result = providerRequestRepository.findByApprovedFalse(pageable).map(userMapper::toDTO);
+        Page<ProviderRequest> providerRequests = providerRequestRepository.findByApprovedFalse(pageable);
+        Page<ProviderRequestDTO> result = providerRequests.map(userMapper::toDTO);
         log.info("Fetched {} unapproved provider requests", result.getTotalElements());
         return result;
     }
