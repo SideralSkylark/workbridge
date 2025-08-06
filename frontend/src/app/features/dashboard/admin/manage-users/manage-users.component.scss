@@ -3,7 +3,66 @@
   padding: 0;
   margin: 0;
   width: 100%;
+}
+.dashboard-content {
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    align-items: flex-start;
 
+    .filter-input {
+      flex: 2 1 250px;
+    }
+
+    .filter-select {
+      flex: 1 1 160px;
+    }
+
+    input.form-control,
+    select.form-select {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      transition: border-color 0.2s ease-in-out;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px oklch(0.6 0.18 250 / 0.4);
+      }
+    }
+
+    button.btn {
+      font-size: 0.875rem;
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-sm);
+
+      &.btn-outline-secondary {
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        background-color: transparent;
+
+        &:hover {
+          background-color: var(--bg-tertiary);
+        }
+      }
+
+      &.btn-primary {
+        background-color: var(--primary);
+        color: #fff;
+        border: none;
+
+        &:hover {
+          background-color: oklch(0.6 0.15 250);
+        }
+      }
+    }
+  }
 }
 
 .section-title {
@@ -27,31 +86,64 @@
   .card-body {
     padding: var(--space-md);
 
+    .avatar {
+      width: 50px;
+      height: 50px;
+      font-size: 1.1rem;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
     .card-title {
       font-size: 1.2rem;
       font-weight: 600;
       color: var(--text-primary);
+      margin-bottom: 0;
     }
 
-    .card-text {
-      color: var(--text-secondary);
-      margin-bottom: var(--space-xs);
+    small {
+      color: var(--text-muted);
+    }
+
+    .card-subtitle {
+      margin-top: var(--space-sm);
+      font-size: 0.9rem;
     }
 
     .user-roles {
       margin-top: var(--space-sm);
     }
 
-    .role-badge {
+    .badge {
       font-size: 0.75rem;
-      padding: 0.35em 0.6em;
+      padding: 0.25em 0.5em;
       border-radius: var(--radius-md);
       text-transform: capitalize;
     }
 
-    .card-subtitle {
-      margin-top: var(--space-sm);
-      font-size: 0.9rem;
+    .badge-admin {
+      background-color: oklch(0.3 0.1 303);
+    }
+
+    .badge-provider {
+      background-color: oklch(0.4 0.12 303);
+    }
+
+    .badge-seeker {
+      background-color: oklch(0.5 0.12 303);
+    }
+
+    .badge-success {
+      background-color: oklch(54.879% 0.11914 145.174);
+    }
+
+    .badge-danger {
+      background-color: oklab(64.942% 0.10738 0.05368);
+    }
+
+    .card-text {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xs);
     }
   }
 
