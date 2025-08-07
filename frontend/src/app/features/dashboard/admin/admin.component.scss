@@ -22,11 +22,14 @@
 
 .dropdown-toggle {
   font-weight: 500;
+  border: 1px solid var(--text-primary);
   border-radius: var(--radius-sm);
+  color: var(--text-primary);
 }
 
 .dropdown-menu {
   background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: 0.95rem;
   padding: var(--space-xs) 0;

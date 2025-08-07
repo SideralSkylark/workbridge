@@ -1,0 +1,134 @@
+:host {
+  display: block;
+  width: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Cabeçalho da página */
+.dashboard-header {
+  padding: var(--space-lg);
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.header-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 2 0;
+  color: var(--text-primary);
+}
+
+.header-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+/* Botão de ações rápidas */
+.dropdown-toggle {
+  font-weight: 500;
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+/* Menu de ações rápidas */
+.dropdown-menu {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  padding: var(--space-xs) 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.dropdown-item {
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  .fw-medium {
+    font-weight: 500;
+  }
+
+  small {
+    font-size: 0.8rem;
+  }
+}
+
+/* Dropdown texto informativo (ex: status de requisição) */
+.dropdown-item-text {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.95rem;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  .fw-medium {
+    font-weight: 500;
+  }
+
+  small {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+}
+
+/* Área de conteúdo principal */
+.manage-content {
+  padding: var(--space-xl);
+}
+
+/* Modal de confirmação */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-card {
+  background-color: var(--bg-secondary);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+  width: 100%;
+
+  i {
+    font-size: 2rem;
+  }
+
+  h5 {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  p {
+    color: var(--text-muted);
+  }
+
+  button {
+    margin-top: var(--space-sm);
+  }
+}
+
+/* Área de conteúdo do router-outlet */
+.content-wrapper {
+  margin-top: var(--space-lg);
+}

@@ -2,7 +2,7 @@
   <div class="mb-3">
     <div>
       <h2 class="section-title">Gerir Usuários</h2>
-      <p class="text-muted small">Gera e monitore todos <strong>usuários</strong></p>
+      <p class="section-subtitle small">Gera e monitore todos <strong>usuários</strong></p>
     </div>
     <div class="filters mb-4">
       <input
@@ -102,10 +102,5 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div *ngIf="!isLoading && users.length === 0" class="empty-state">
-    <i class="bi bi-people"></i>
-    <p class="lead">Nenhum usuário registado.</p>
   </div>
 </div>
