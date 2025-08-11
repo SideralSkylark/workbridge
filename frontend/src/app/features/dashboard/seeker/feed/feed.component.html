@@ -1,16 +1,16 @@
 <div class="dashboard-content">
-  <!-- Enhanced Search and Filter Bar -->
-  <div class="search-bar d-flex align-items-center gap-3 mb-4">
-    <div class="d-flex align-items-center gap-3 w-100">
-      <h2 class="section-title mb-0">Feed de Serviços</h2>
+  <!-- Search and Filter Bar -->
+  <div class="search-bar sticky-top">
+    <div class="search-bar-inner">
+      <h2 class="section-title">Feed de Serviços</h2>
 
-      <div class="input-group flex-grow-1">
-        <span class="input-group-text bg-black border-end-0">
-          <i class="bi bi-search" aria-hidden="true"></i>
+      <div class="input-group search-input">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
         </span>
         <input
           type="text"
-          class="form-control border-start-0"
+          class="form-control"
           placeholder="Pesquisar serviços por nome ou descrição..."
           [(ngModel)]="searchQuery"
           (input)="filterServices()"
@@ -18,18 +18,30 @@
           autocomplete="off" />
       </div>
 
-      <button class="btn accent-background d-flex align-items-center gap-2" type="button">
-        <i class="bi bi-funnel" aria-hidden="true"></i>
+      <button
+        class="btn accent-background filter-btn"
+        type="button">
+        <i class="bi bi-funnel"></i>
         <span>Filtros</span>
+        <span *ngIf="activeFiltersCount > 0" class="filter-count">{{ activeFiltersCount }}</span>
       </button>
+    </div>
+
+    <!-- Active Filters Chips -->
+    <div *ngIf="activeFiltersCount > 0" class="filter-chips">
+      <span *ngFor="let filter of activeFilters" class="chip">
+        {{ filter }}
+        <i class="bi bi-x" (click)="removeFilter(filter)"></i>
+      </span>
+      <button class="btn btn-link btn-sm" (click)="clearAllFilters()">Limpar tudo</button>
     </div>
   </div>
 
-  <!-- Enhanced Loading State -->
-  <div *ngIf="loading" class="loading" role="status" aria-label="Carregando serviços">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading" role="status">
     <div class="row g-4">
       <div *ngFor="let skeleton of [1, 2, 3, 4, 5, 6]" class="col-md-6 col-lg-4">
-        <div class="card service-card h-100 loading">
+        <div class="card service-card loading">
           <div class="card-body">
             <div class="skeleton skeleton-title mb-3"></div>
             <div class="skeleton skeleton-text mb-2"></div>
@@ -48,178 +60,133 @@
     </div>
   </div>
 
-  <!-- Enhanced Empty State -->
+  <!-- Empty State -->
   <div *ngIf="!loading && filteredServices.length === 0" class="empty-state text-center">
-    <div class="empty-icon">
-      <i class="bi bi-search" aria-hidden="true"></i>
-    </div>
+    <div class="empty-icon"><i class="bi bi-search"></i></div>
     <h4 class="mb-3">Nenhum serviço encontrado</h4>
     <p class="lead mb-4">
       <span *ngIf="searchQuery; else noServicesMsg">
         Não encontramos serviços que correspondam à sua busca por "<strong>{{ searchQuery }}</strong>".
       </span>
-      <ng-template #noServicesMsg>
-        Não há serviços disponíveis no momento.
-      </ng-template>
+      <ng-template #noServicesMsg>Não há serviços disponíveis no momento.</ng-template>
     </p>
     <div *ngIf="searchQuery" class="d-flex justify-content-center gap-3">
-      <button class="btn btn-outline-primary" (click)="clearSearch()" type="button">
-        <i class="bi bi-x-circle" aria-hidden="true"></i>
-        Limpar busca
+      <button class="btn btn-outline-primary" (click)="clearSearch()">
+        <i class="bi bi-x-circle"></i> Limpar busca
       </button>
-      <button class="btn btn-primary" (click)="refreshFeed()" type="button">
-        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
-        Atualizar feed
+      <button class="btn btn-primary" (click)="refreshFeed()">
+        <i class="bi bi-arrow-clockwise"></i> Atualizar feed
       </button>
     </div>
   </div>
 
-  <!-- Enhanced Service Feed -->
+  <!-- Service Feed -->
   <div *ngIf="!loading && filteredServices.length > 0" class="services-grid">
     <!-- Results Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="results-header">
       <p class="text-muted mb-0">
         <strong>{{ filteredServices.length }}</strong>
         {{ filteredServices.length === 1 ? 'serviço encontrado' : 'serviços encontrados' }}
         <span *ngIf="searchQuery"> para "<strong>{{ searchQuery }}</strong>"</span>
       </p>
-      <button *ngIf="searchQuery" class="btn btn-sm btn-outline-secondary" (click)="clearSearch()" type="button">
-        <i class="bi bi-x" aria-hidden="true"></i>
-        Limpar
+      <button *ngIf="searchQuery" class="btn btn-sm btn-outline-secondary" (click)="clearSearch()">
+        <i class="bi bi-x"></i> Limpar
       </button>
     </div>
 
-    <!-- Service Cards Grid -->
+    <!-- Cards -->
     <div class="row g-4">
       <div class="col-md-6 col-lg-4" *ngFor="let service of filteredServices; trackBy: trackByServiceId">
-        <article class="card service-card h-100" [attr.aria-label]="'Serviço: ' + service.service.title">
-          <div class="card-body">
-            <h5 class="card-title">{{ service.service.title }}</h5>
-            <p class="card-text">{{ service.service.description }}</p>
+      <article class="card service-card h-100" (click)="openModal(service)">
 
-            <!-- Enhanced Rating Display -->
-            <div class="rating-container">
-              <div class="d-flex align-items-center gap-2">
-                <div class="stars" [attr.aria-label]="'Classificação: ' + service.providerRating + ' de 5 estrelas'">
-                  <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
-                    <i class="bi accent-star"
-                       [ngClass]="{
-                         'bi-star-fill': star <= service.providerRating,
-                         'bi-star': star > service.providerRating
-                       }"
-                       [attr.aria-hidden]="true"></i>
-                  </ng-container>
-                </div>
-                <small class="text-muted">
-                  ({{ service.providerRating.toFixed(1) }})
-                </small>
-              </div>
-            </div>
+        <div class="card-body d-flex flex-column">
+          <!-- Title -->
+          <h5 class="card-title mb-2">{{ service.service.title }}</h5>
 
-            <!-- Price with enhanced styling -->
-            <div class="price-container">
-              <h6 class="card-subtitle">
-                <i class="bi bi-currency-exchange me-1" aria-hidden="true"></i>
-                {{ service.service.price }} MZN
-              </h6>
+          <!-- Short description -->
+          <p class="card-text text-truncate mb-3">
+            {{ service.service.description }}
+          </p>
+
+          <!-- Rating -->
+          <div class="rating-container mb-3 d-flex align-items-center">
+            <div class="stars">
+              <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+                <i class="bi accent-star"
+                  [ngClass]="{
+                    'bi-star-fill': star <= service.providerRating,
+                    'bi-star': star > service.providerRating
+                  }"></i>
+              </ng-container>
             </div>
+            <span class="rating-text">({{ service.providerRating.toFixed(1) }})</span>
           </div>
 
-          <div class="card-footer">
-            <button
-              class="btn btn-outline-secondary btn-sm w-100"
-              (click)="openModal(service)"
-              type="button"
-              [attr.aria-label]="'Ver detalhes do serviço ' + service.service.title">
-              <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
-              Ver Detalhes
-            </button>
+          <!-- Price -->
+          <div class="price-container mb-3">
+            <h6 class="price mb-0">
+              <i class="bi bi-currency-exchange me-1"></i>{{ service.service.price }} <span class="currency">MZN</span>
+            </h6>
           </div>
-        </article>
-      </div>
+
+          <!-- Provider info -->
+          <div class="d-flex align-items-center mt-auto">
+            <div class="avatar rounded-circle text-white fw-bold me-2" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+              {{ service.providerUsername.charAt(0).toUpperCase() }}
+            </div>
+            <span>{{ service.providerUsername }}</span>
+          </div>
+        </div>
+
+        <!-- Footer button -->
+        <div class="card-footer">
+          <button class="btn btn-outline-secondary w-100 btn-sm"
+            (click)="openModal(service); $event.stopPropagation()">
+            <i class="bi bi-info-circle me-2"></i> Ver Detalhes
+          </button>
+        </div>
+      </article>
+    </div>
     </div>
   </div>
 </div>
 
-<!-- Enhanced Modal -->
-<div class="modal-backdrop-custom" *ngIf="showModal" (click)="closeModal()" aria-hidden="true"></div>
-
-<div class="modal-card-wrapper" *ngIf="showModal" role="dialog" aria-modal="true" [attr.aria-labelledby]="'modal-title-' + selectedService?.service?.id">
+<!-- Modal -->
+<div class="modal-backdrop-custom" *ngIf="showModal" (click)="closeModal()"></div>
+<div class="modal-card-wrapper" *ngIf="showModal">
   <div class="modal-card card" (click)="$event.stopPropagation()">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0" [id]="'modal-title-' + selectedService?.service?.id">
-        {{ selectedService?.service?.title }}
-      </h5>
-      <button
-        class="btn-close"
-        (click)="closeModal()"
-        type="button"
-        aria-label="Fechar detalhes do serviço">
-        <i class="bi bi-x-lg" aria-hidden="true"></i>
-      </button>
+      <h5 class="mb-0">{{ selectedService?.service?.title }}</h5>
+      <button class="btn-close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
     </div>
-
     <div class="card-body">
-      <div class="service-details">
-        <p><strong>Descrição:</strong> {{ selectedService?.service?.description }}</p>
-
-        <p><strong>Preço:</strong>
-          <span class="text-primary fw-bold">{{ selectedService?.service?.price }} MZN</span>
-        </p>
-
-        <p><strong>Provedor:</strong>
-          <span class="fw-medium">{{ selectedService?.providerUsername }}</span>
-        </p>
-
-        <p><strong>Contacto:</strong>
-          <a [href]="'mailto:' + selectedService?.providerEmail" class="text-decoration-none">
-            <i class="bi bi-envelope me-1" aria-hidden="true"></i>
-            {{ selectedService?.providerEmail }}
-          </a>
-        </p>
-
-        <div class="rating-section">
-          <strong>Classificação do Provedor:</strong>
-          <div class="rating-display mt-2">
-            <div class="stars" [attr.aria-label]="'Classificação: ' + (selectedService?.providerRating || 0) + ' de 5 estrelas'">
-              <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
-                <i class="bi accent-star"
-                   [ngClass]="{
-                     'bi-star-fill': star <= (selectedService?.providerRating || 0),
-                     'bi-star': star > (selectedService?.providerRating || 0)
-                   }"
-                   [attr.aria-hidden]="true"></i>
-              </ng-container>
-            </div>
-            <span class="ms-2 text-muted">
-              {{ (selectedService?.providerRating || 0).toFixed(1) }}/5.0
-            </span>
-          </div>
+      <p><strong>Descrição:</strong> {{ selectedService?.service?.description }}</p>
+      <p><strong>Preço:</strong> <span class="text-primary fw-bold">{{ selectedService?.service?.price }} MZN</span></p>
+      <p><strong>Provedor:</strong> {{ selectedService?.providerUsername }}</p>
+      <p><strong>Contacto:</strong>
+        <a [href]="'mailto:' + selectedService?.providerEmail">
+          <i class="bi bi-envelope me-1"></i>{{ selectedService?.providerEmail }}
+        </a>
+      </p>
+      <div class="rating-display">
+        <div class="stars">
+          <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+            <i class="bi accent-star"
+               [ngClass]="{
+                 'bi-star-fill': star <= (selectedService?.providerRating || 0),
+                 'bi-star': star > (selectedService?.providerRating || 0)
+               }"></i>
+          </ng-container>
+          <span class="ms-2 text-muted">{{ (selectedService?.providerRating || 0).toFixed(1) }}/5.0</span>
         </div>
       </div>
     </div>
-
     <div class="card-footer text-end">
-      <div class="d-flex justify-content-end gap-2">
-        <button
-          class="btn btn-outline-secondary"
-          (click)="closeModal()"
-          type="button">
-          <i class="bi bi-x-circle me-1" aria-hidden="true"></i>
-          Cancelar
-        </button>
-        <button
-          class="btn btn-primary"
-          (click)="bookService()"
-          [disabled]="hasBooked"
-          type="button"
-          [attr.aria-label]="hasBooked ? 'Serviço já agendado' : 'Agendar este serviço'">
-          <i class="bi me-1"
-             [ngClass]="hasBooked ? 'bi-check-circle' : 'bi-calendar-plus'"
-             aria-hidden="true"></i>
-          {{ hasBooked ? 'Já Agendado' : 'Agendar Serviço' }}
-        </button>
-      </div>
+      <button class="btn btn-outline-secondary" (click)="closeModal()"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
+      <button class="btn btn-primary" (click)="bookService()" [disabled]="hasBooked">
+        <i class="bi me-1" [ngClass]="hasBooked ? 'bi-check-circle' : 'bi-calendar-plus'"></i>
+        {{ hasBooked ? 'Já Agendado' : 'Agendar Serviço' }}
+      </button>
     </div>
   </div>
 </div>

@@ -18,17 +18,23 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 export class FeedComponent implements OnInit, OnDestroy {
   services: ServiceFeedDTO[] = [];
   filteredServices: ServiceFeedDTO[] = [];
-  bookingRequest: BookingRequestDTO = {
-    serviceId: 0,
-    date: ''
-  };
+
+  bookingRequest: BookingRequestDTO = { serviceId: 0, date: '' };
+
   loading = true;
   searchQuery = '';
+
+  // New: active filters state
+  activeFilters: string[] = [];
+  get activeFiltersCount(): number {
+    return this.activeFilters.length;
+  }
+
   selectedService: ServiceFeedDTO | null = null;
-  showModal: boolean = false;
+  showModal = false;
   currentBookingId: number | null = null;
-  hasBooked: boolean = false;
-  isBookingInProgress: boolean = false;
+  hasBooked = false;
+  isBookingInProgress = false;
 
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
@@ -37,7 +43,6 @@ export class FeedComponent implements OnInit, OnDestroy {
     private feedService: FeedService,
     private bookingService: BookingService
   ) {
-    // Enhanced search with debouncing
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -56,12 +61,8 @@ export class FeedComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Load the service feed with error handling
-   */
   loadServiceFeed(): void {
     this.loading = true;
-
     this.feedService.getServiceFeed()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -69,6 +70,7 @@ export class FeedComponent implements OnInit, OnDestroy {
           this.services = data;
           this.filteredServices = data;
           this.loading = false;
+          this.applyFiltersAndSearch();
         },
         error: (error) => {
           console.error('Error loading service feed:', error);
@@ -78,71 +80,94 @@ export class FeedComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Enhanced search functionality with debouncing
-   */
+  // Called on input event
   filterServices(): void {
     this.searchSubject.next(this.searchQuery);
   }
 
-  /**
-   * Perform the actual search filtering
-   */
-  private performSearch(query: string): void {
-    if (!query.trim()) {
-      this.filteredServices = this.services;
-      return;
+  // Apply search + filters combined
+  private applyFiltersAndSearch(): void {
+    let filtered = [...this.services];
+
+    // Apply text search
+    if (this.searchQuery.trim()) {
+      const term = this.searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(s =>
+        s.service.title.toLowerCase().includes(term) ||
+        s.service.description.toLowerCase().includes(term) ||
+        s.providerUsername.toLowerCase().includes(term)
+      );
     }
 
-    const searchTerm = query.toLowerCase().trim();
-    this.filteredServices = this.services.filter(service => {
-      const titleMatch = service.service.title.toLowerCase().includes(searchTerm);
-      const descriptionMatch = service.service.description.toLowerCase().includes(searchTerm);
-      const providerMatch = service.providerUsername.toLowerCase().includes(searchTerm);
-
-      return titleMatch || descriptionMatch || providerMatch;
+    // Apply active filters
+    this.activeFilters.forEach(filter => {
+      switch (filter) {
+        // case 'Mais recentes':
+        //   filtered = filtered.sort((a, b) =>
+        //     new Date(b.service.createdAt).getTime() - new Date(a.service.createdAt).getTime()
+        //   );
+        //   break;
+        case 'Mais populares':
+          filtered = filtered.sort((a, b) => b.providerRating - a.providerRating);
+          break;
+        case 'Preço baixo':
+          filtered = filtered.sort((a, b) => a.service.price - b.service.price);
+          break;
+        case 'Preço alto':
+          filtered = filtered.sort((a, b) => b.service.price - a.service.price);
+          break;
+        // Add other filters here if needed
+      }
     });
+
+    this.filteredServices = filtered;
   }
 
-  /**
-   * Clear search and show all services
-   */
+  private performSearch(query: string): void {
+    this.searchQuery = query; // sync just in case
+    this.applyFiltersAndSearch();
+  }
+
+  // Filter management methods
+  addFilter(filter: string): void {
+    if (!this.activeFilters.includes(filter)) {
+      this.activeFilters.push(filter);
+      this.applyFiltersAndSearch();
+    }
+  }
+
+  removeFilter(filter: string): void {
+    this.activeFilters = this.activeFilters.filter(f => f !== filter);
+    this.applyFiltersAndSearch();
+  }
+
+  clearAllFilters(): void {
+    this.activeFilters = [];
+    this.applyFiltersAndSearch();
+  }
+
   clearSearch(): void {
     this.searchQuery = '';
-    this.filteredServices = this.services;
+    this.applyFiltersAndSearch();
   }
 
-  /**
-   * Refresh the service feed
-   */
   refreshFeed(): void {
     this.loadServiceFeed();
   }
 
-  /**
-   * Enhanced modal opening with better state management
-   */
   openModal(service: ServiceFeedDTO): void {
     this.selectedService = service;
     this.showModal = true;
     this.hasBooked = false;
     this.currentBookingId = null;
-
-    // Check if user has already booked this service
     this.checkExistingBooking(service.service.id);
 
-    // Focus management for accessibility
     setTimeout(() => {
       const modalElement = document.querySelector('.modal-card');
-      if (modalElement) {
-        (modalElement as HTMLElement).focus();
-      }
+      if (modalElement) (modalElement as HTMLElement).focus();
     }, 100);
   }
 
-  /**
-   * Close modal with proper cleanup
-   */
   closeModal(): void {
     this.showModal = false;
     this.selectedService = null;
@@ -150,18 +175,15 @@ export class FeedComponent implements OnInit, OnDestroy {
     this.hasBooked = false;
   }
 
-  /**
-   * Check if user has existing booking for this service
-   */
   private checkExistingBooking(serviceId: number): void {
     this.bookingService.getLatestBookingByService(serviceId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (booking) => {
+        next: booking => {
           this.currentBookingId = booking?.id || null;
           this.hasBooked = !!this.currentBookingId;
         },
-        error: (error) => {
+        error: error => {
           console.error('Error fetching booking:', error);
           this.currentBookingId = null;
           this.hasBooked = false;
@@ -169,13 +191,8 @@ export class FeedComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Enhanced booking functionality
-   */
   bookService(): void {
-    if (!this.selectedService || this.hasBooked || this.isBookingInProgress) {
-      return;
-    }
+    if (!this.selectedService || this.hasBooked || this.isBookingInProgress) return;
 
     this.isBookingInProgress = true;
     this.bookingRequest.serviceId = this.selectedService.service.id;
@@ -185,20 +202,14 @@ export class FeedComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.isBookingInProgress = false;
-
-          // Handle response (array or single object)
           const bookingResponse = Array.isArray(response) ? response[0] : response;
 
           if (bookingResponse && bookingResponse.id) {
             this.currentBookingId = bookingResponse.id;
             this.hasBooked = true;
-
             this.showSuccessMessage('Serviço agendado com sucesso! Pode deixar uma avaliação nos seus agendamentos.');
 
-            // Auto-close modal after success
-            setTimeout(() => {
-              this.closeModal();
-            }, 2000);
+            setTimeout(() => this.closeModal(), 2000);
           } else {
             console.error('No booking ID returned from the server');
             this.showErrorMessage('Serviço agendado, mas houve um problema ao recuperar os detalhes.');
@@ -220,9 +231,6 @@ export class FeedComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Load detailed service information
-   */
   loadServiceDetails(serviceId: number): void {
     this.feedService.getServiceDetails(serviceId)
       .pipe(takeUntil(this.destroy$))
@@ -241,9 +249,6 @@ export class FeedComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Close service details and reset state
-   */
   closeServiceDetails(): void {
     this.selectedService = null;
     this.currentBookingId = null;
@@ -251,53 +256,30 @@ export class FeedComponent implements OnInit, OnDestroy {
     this.showModal = false;
   }
 
-  /**
-   * Track by function for better performance in *ngFor
-   */
   trackByServiceId(index: number, service: ServiceFeedDTO): number {
     return service.service.id;
   }
 
-  /**
-   * Handle keyboard events for accessibility
-   */
   onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape' && this.showModal) {
       this.closeModal();
     }
   }
 
-  /**
-   * Show success message to user
-   * In production, consider using a toast service
-   */
   private showSuccessMessage(message: string): void {
-    // For now, using alert - implement toast notification service for better UX
     alert(message);
     console.log('Success:', message);
   }
 
-  /**
-   * Show error message to user
-   * In production, consider using a toast service
-   */
   private showErrorMessage(message: string): void {
-    // For now, using alert - implement toast notification service for better UX
     alert(message);
     console.error('Error:', message);
   }
 
-  /**
-   * Get service availability status
-   */
   getServiceStatus(service: ServiceFeedDTO): 'available' | 'booked' | 'unavailable' {
-    // This would typically check against user's bookings or service availability
     return this.hasBooked ? 'booked' : 'available';
   }
 
-  /**
-   * Format price for display
-   */
   formatPrice(price: number): string {
     return new Intl.NumberFormat('pt-MZ', {
       style: 'currency',
@@ -307,9 +289,6 @@ export class FeedComponent implements OnInit, OnDestroy {
     }).format(price);
   }
 
-  /**
-   * Get rating description for accessibility
-   */
   getRatingDescription(rating: number): string {
     if (rating >= 4.5) return 'Excelente';
     if (rating >= 4.0) return 'Muito bom';
@@ -318,25 +297,16 @@ export class FeedComponent implements OnInit, OnDestroy {
     return 'Baixo';
   }
 
-  /**
-   * Check if service is bookable
-   */
   isServiceBookable(service: ServiceFeedDTO): boolean {
     return !this.hasBooked && !this.isBookingInProgress && !!service;
   }
 
-  /**
-   * Get button text based on state
-   */
   getBookingButtonText(): string {
     if (this.isBookingInProgress) return 'Agendando...';
     if (this.hasBooked) return 'Já Agendado';
     return 'Agendar Serviço';
   }
 
-  /**
-   * Get button icon based on state
-   */
   getBookingButtonIcon(): string {
     if (this.isBookingInProgress) return 'bi-hourglass-split';
     if (this.hasBooked) return 'bi-check-circle';

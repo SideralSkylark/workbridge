@@ -31,9 +31,10 @@
       transition: border-color 0.2s ease-in-out;
 
       &:focus {
-        outline: none;
-        border-color: var(--primary);
         box-shadow: 0 0 0 2px oklch(0.6 0.18 250 / 0.4);
+      }
+      &::placeholder {
+        color: var(--text-secondary);
       }
     }
 
@@ -141,6 +142,10 @@
       background-color: oklab(64.942% 0.10738 0.05368);
     }
 
+    .online-icon {
+      color: oklch(54.879% 0.11914 145.174);
+    }
+
     .card-text {
       color: var(--text-secondary);
       margin-bottom: var(--space-xs);
@@ -158,6 +163,7 @@
       border-radius: var(--radius-sm);
       padding: 0.4rem 0.8rem;
     }
+
   }
 
   &.loading {

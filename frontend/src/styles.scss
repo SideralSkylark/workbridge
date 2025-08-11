@@ -370,6 +370,17 @@ a {
     --btn-focus-shadow: var(--focus-ring);
   }
 
+  &.btn-outline-warning {
+    --btn-bg: transparent;
+    --btn-color: var(--warning-500);
+    --btn-border: 1px solid var(--warning-500);
+    --btn-hover-bg: var(--warning-500);
+    --btn-hover-color: var(--primary-600);
+    --btn-hover-border: 1px solid var(--primary-600);
+    --btn-active-bg: var(--primary-100);
+    --btn-focus-shadow: var(--focus-ring);
+  }
+
   /* Button States */
   &.btn-loading {
     position: relative;
