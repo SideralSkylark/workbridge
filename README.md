@@ -3,7 +3,7 @@
 **WorkBridge** is a digital platform designed to seamlessly connect service-based entrepreneurs with clients seeking their services. It offers an intuitive, secure environment for discovering, booking, and paying for services.
 
 ---
-
+ 
 ## **Overview**
 
 ### **Purpose**
